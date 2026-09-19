@@ -86,6 +86,6 @@ When modifying code or docs, follow these rules across the SDCS files:
 4. **Format Commits:** Use conventional commit messages:
    * `feat(evals): add automated fixture collision reporter`
    * `fix(init): handle missing .env files gracefully`
-   * `docs(spec): bump SPEC-001 to v1.2.0`
+   * `docs(spec): bump SPEC-001 to v1.3.0`
 
 5. **Open PR:** Provide a brief summary of what was changed, the test results, and any relevant ADR numbers from `decisions.md`.

@@ -29,7 +29,7 @@ SPEC_VERSION = "1.3.0"
 # -----------------------------------------------------------------------------
 
 TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
-<!-- SPEC-001 v1.2.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
+<!-- SPEC-001 v1.3.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
 
 ## Non-Negotiable Domain Axioms
 1. Determinism First: No silent fallbacks, unverified mocks, or unhandled exceptions in production pathways.
@@ -48,9 +48,9 @@ TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
 """
 
 TEMPLATE_WIRING = """# Declarative Topology (The Mesh)
-# SPEC-001 v1.2.0 Pillar 2 | Mutability: STATIC (Explicit PR)
+# SPEC-001 v1.3.0 Pillar 2 | Mutability: STATIC (Explicit PR)
 
-version: "1.2"
+version: "1.3"
 subsystems:
   core:
     path: "src/"
@@ -71,11 +71,11 @@ contracts:
 """
 
 TEMPLATE_ROADMAP = """# Macro Acceptance Contract (The North Star)
-<!-- SPEC-001 v1.2.0 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
+<!-- SPEC-001 v1.3.0 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
 <!-- Iron Invariant: NO TASK QUEUES. Ephemeral tasks belong exclusively in state.md -->
 
 ## Milestone M-001: Initial Operational Capability
-* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.2.0 invariants. Verify zero test fixture drift.
+* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.3.0 invariants. Verify zero test fixture drift.
 * [MEASURED]: Scaffolding complete; initial evals verified via SHA-256 audit. Status: VERIFIED.
 
 <!--
@@ -87,7 +87,7 @@ Template for New Milestones:
 """
 
 TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
-<!-- SPEC-001 v1.2.0 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
+<!-- SPEC-001 v1.3.0 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
 <!-- Read on Turn 1 boot. Strictly pruned after milestone completion. -->
 
 ## Active Objective
@@ -103,7 +103,7 @@ TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
 """
 
 TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
-<!-- SPEC-001 v1.2.0 Pillar 6 | Mutability: APPEND-ONLY -->
+<!-- SPEC-001 v1.3.0 Pillar 6 | Mutability: APPEND-ONLY -->
 <!-- Mandatory 3-part schema: Claim -> Measurement -> Reopen Condition -->
 
 ## REJ-001: Monolithic Session Diary Ingestion
@@ -113,7 +113,7 @@ TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
 """
 
 TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
-<!-- SPEC-001 v1.2.0 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
+<!-- SPEC-001 v1.3.0 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
 <!-- Corpus Diversity Invariant: Unique SHA-256 digests required across all golden fixtures -->
 
 ## 1. Golden Reference Corpus & Diversity
@@ -128,7 +128,7 @@ TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
 """
 
 TEMPLATE_AGENTS = """# AGENTS.md — Operational Harness Protocol
-<!-- Conforming to SPEC-001 v1.2.0 -->
+<!-- Conforming to SPEC-001 v1.3.0 -->
 
 ## Turn 1 Boot Hydration Order
 On Turn 1 of any task, you MUST hydrate state in this exact sequence:
@@ -157,7 +157,7 @@ TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
 - Shift Focus: Repository Initial Scaffolding
 
 ## Completed Actions
-- Initialized SPEC-001 v1.2.0 cognitive scaffolding.
+- Initialized SPEC-001 v1.3.0 cognitive scaffolding.
 - Registered pre-commit invariant protection hook.
 
 ## Verification Executed
@@ -321,7 +321,7 @@ def generate_flat_app_map(root: Path) -> str:
     tree = scan_repository_tree(root)
     lines = [
         "# Repository Cartography (The Compass)",
-        "<!-- SPEC-001 v1.2.0 Pillar 5 | Flat Cartography -->",
+        "<!-- SPEC-001 v1.3.0 Pillar 5 | Flat Cartography -->",
         "<!-- Golden Rule: Consult this map FIRST. Read ONLY necessary target files. -->\n",
     ]
     for directory, files in sorted(tree.items()):
@@ -354,7 +354,7 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
     # 1. Root Cartography Index
     root_lines = [
         "# Root Repository Cartography (The Compass Index)",
-        "<!-- SPEC-001 v1.2.0 Pillar 5 | Hierarchical Master Index -->",
+        "<!-- SPEC-001 v1.3.0 Pillar 5 | Hierarchical Master Index -->",
         "<!-- Golden Rule: Page package-level app_map.md ONLY when entering subsystem context. -->\n",
         "## Subsystem Registry\n",
     ]

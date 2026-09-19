@@ -13,7 +13,7 @@ from sdcs.verifier.topology import (
 )
 
 SAMPLE_WIRING = """
-version: "1.2.0"
+version: "1.3.0"
 subsystems:
   core:
     path: "src/core"

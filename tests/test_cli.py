@@ -54,7 +54,7 @@ def test_cli_verify_help():
 def test_cli_verify_topology_execution(tmp_path: Path):
     wiring_file = tmp_path / "wiring.yaml"
     wiring_file.write_text(
-        'version: "1.2.0"\nsubsystems:\n  core:\n    path: "src/core"\n    allowed_dependencies: []\n',
+        'version: "1.3.0"\nsubsystems:\n  core:\n    path: "src/core"\n    allowed_dependencies: []\n',
         encoding="utf-8",
     )
     src_core = tmp_path / "src" / "core"
