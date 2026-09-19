@@ -345,3 +345,5 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
 
 * **Author:** Adam Murphy
 * **License:** [MIT](LICENSE)
+* **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+* **Security Policy:** [SECURITY.md](SECURITY.md)
