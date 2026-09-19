@@ -1,6 +1,6 @@
 """
 sdcs.audit — Positive Ground Truth & Corpus Diversity Auditor
-Conforming to SPEC-001 v1.2.0 (Pillars 7 & Failure Mitigation 7.4)
+Conforming to SPEC-001 v1.3.0 (Pillars 7 & Failure Mitigation 7.4)
 
 Verifies:
   1. Asset Reachability: Fixtures referenced in evals.md exist on disk.
@@ -202,7 +202,7 @@ def run_audit(
         evals_file = locate_evals_file(repo_root)
 
     print("====================================================================")
-    print(" SDCS :: Corpus Integrity & Diversity Audit (SPEC-001 v1.2.0)")
+    print(" SDCS :: Corpus Integrity & Diversity Audit (SPEC-001 v1.3.0)")
     print(f" Spec Target: {evals_file}")
     print(f" Working Dir: {repo_root}")
     print(" Normalizer:  Whitespace & Comment Invariant Filter (Active)")

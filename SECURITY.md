@@ -8,6 +8,7 @@ This policy outlines how to report vulnerabilities in SDCS reference tooling, cl
 
 | Version | Supported |
 | --- | --- |
+| `1.3.x` | Yes |
 | `1.2.x` | Yes |
 | `< 1.2.0` | No (Upgrade to v1.2.0+ for invariant git hook protections) |
 

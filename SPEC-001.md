@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.2.0
+Version: 1.3.0
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.1.0
+Replaces: SPEC-001 v1.2.0
 License: MIT
 ```
 

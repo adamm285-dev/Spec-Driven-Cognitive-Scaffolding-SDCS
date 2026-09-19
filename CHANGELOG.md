@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.1] - 2026-09-19
+## [1.3.0] - 2026-09-19: Automated Topological Invariant Gating (Gate T)
 
 ### Added
 - **Topological Invariant Gate (Gate T & `sdcs verify --topology`):** Abstract Syntax Tree (AST) static boundary auditor enforcing `wiring.yaml` subsystem contracts without runtime code execution. Automatically serializes prohibited imports into Inverted Architecture Decision Records (`## REJ-XXX`) conforming to the **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema and persists them to `decisions.md` (`--append-rejections`). Pre-commit hook (`.githooks/pre-commit`) blocks structural boundary breaches while preserving unstaged rejection records for immediate agent reflection.

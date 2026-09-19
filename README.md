@@ -1,7 +1,7 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.2-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.2.1-10b981.svg?style=flat-square)](https://github.com/)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.3-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.3.0-10b981.svg?style=flat-square)](https://github.com/)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
 [![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](#)
@@ -14,7 +14,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications
 
-- **[SPEC-001 (v1.2.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.3.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 
 ---
 
@@ -359,7 +359,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.2.1},
+  version = {v1.3.0},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

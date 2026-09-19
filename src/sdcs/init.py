@@ -1,6 +1,6 @@
 """
 sdcs.init - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
-Conforming to SPEC-001 v1.2.0
+Conforming to SPEC-001 v1.3.0
 
 Scaffolds the complete 7-pillar deterministic cognitive harness:
   1. spine.md        — Constitutional Invariants
@@ -22,7 +22,7 @@ import stat
 import sys
 from pathlib import Path
 
-SPEC_VERSION = "1.2.0"
+SPEC_VERSION = "1.3.0"
 
 # -----------------------------------------------------------------------------
 # Pillar Templates
