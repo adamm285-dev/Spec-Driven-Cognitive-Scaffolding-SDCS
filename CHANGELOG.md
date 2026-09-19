@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-09-19
 
 ### Added
+- **Topological Invariant Gate (Gate T & `sdcs verify --topology`):** Abstract Syntax Tree (AST) static boundary auditor enforcing `wiring.yaml` subsystem contracts without runtime code execution. Automatically serializes prohibited imports into Inverted Architecture Decision Records (`## REJ-XXX`) conforming to the **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema and persists them to `decisions.md` (`--append-rejections`). Pre-commit hook (`.githooks/pre-commit`) blocks structural boundary breaches while preserving unstaged rejection records for immediate agent reflection.
 - **Pillar 7: `roadmap.md` (Macro Acceptance Contract):** Encodes the North Star acceptance contract directly separating human `[INTENT]` from empirical `[MEASURED]` reality. Strictly enforces that the roadmap carries NO ephemeral task queue (which belongs exclusively in `state.md`).
 - **Constitutional Invariant Gate (Gate C):** Pre-commit and CI hooks that block autonomous agents from weakening or bypassing rules in `spine.md` or `wiring.yaml` without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1` or `allow-invariant-mutation` PR label).
 - **Working Memory Sync Gate (Gate S):** CI enforcement requiring `state.md` to be updated and synchronized whenever pull requests introduce $\ge 40$ modified lines.

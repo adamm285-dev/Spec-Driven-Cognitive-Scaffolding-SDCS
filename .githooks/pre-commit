@@ -121,6 +121,39 @@ if [ "$SPINE_STAGED" = true ] && [ "$SDCS_ALLOW_INVARIANT_MUTATION" != "1" ] && 
     fi
 fi
 
+# Gate T: AST Topology Boundary Audit & Negative Memory Persistence (wiring.yaml)
+# Checks codebase AST against declared subsystem boundaries and appends violations to decisions.md
+WIRING_EXISTS=false
+if [ -f "wiring.yaml" ] || [ -f ".agent/wiring.yaml" ]; then
+    WIRING_EXISTS=true
+fi
+
+if [ "$WIRING_EXISTS" = true ]; then
+    PYTHON_BIN="python3"
+    if ! command -v python3 &> /dev/null; then
+        PYTHON_BIN="python"
+    fi
+
+    echo "[SDCS::GATE_T] Auditing codebase AST against wiring.yaml contracts..."
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "💡 [SDCS Advisory] Topology boundary violation detected but running in advisory mode."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Gate T: Architectural Boundary Violation Detected!"
+            echo "   Failure footprint recorded to decisions.md (unstaged)."
+            echo ""
+            echo "Actions required before re-commit:"
+            echo "  1. Review decisions.md to inspect the rejection constraints."
+            echo "  2. Refactor code to conform to declared subsystem boundaries."
+            echo "  3. Stage your source fixes and updated decisions.md, then re-commit:"
+            echo "     git add <source_files> decisions.md && git commit"
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
 # --- Step 5: Exit Evaluation ---
 if [ "$ERRORS" -gt 0 ]; then
     echo "Commit rejected by SDCS pre-commit hook."

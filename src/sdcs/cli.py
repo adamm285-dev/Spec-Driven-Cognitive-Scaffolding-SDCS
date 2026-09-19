@@ -95,6 +95,39 @@ def main():
         help="Target milestone ID (e.g. M-001) to contextualize prompt",
     )
 
+    # Subcommand: verify
+    verify_parser = subparsers.add_parser(
+        "verify",
+        help="Run specification, invariant, and topological verification checks",
+    )
+    verify_parser.add_argument(
+        "--topology",
+        action="store_true",
+        help="Audit codebase AST against wiring.yaml boundary contracts",
+    )
+    verify_parser.add_argument(
+        "--append-rejections",
+        action="store_true",
+        help="Automatically persist unique boundary violations into decisions.md",
+    )
+    verify_parser.add_argument(
+        "--wiring-path",
+        type=Path,
+        default=None,
+        help="Path to wiring.yaml file (default: auto-detect)",
+    )
+    verify_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+    verify_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Execute all verification checks (topology and evals)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -117,6 +150,31 @@ def main():
         from sdcs.init import generate_grillme_md
 
         print(generate_grillme_md(args.milestone))
+    elif args.command == "verify":
+        from sdcs.verifier.topology import run_topology_audit
+
+        repo_root = args.repo_root.resolve()
+        exit_code = 0
+
+        # Execute topology audit if requested, if --all is set, or as default verify action
+        if args.topology or args.all or not any([args.topology, args.all]):
+            code = run_topology_audit(
+                repo_root=repo_root,
+                wiring_path=args.wiring_path,
+                append_rejections=args.append_rejections,
+            )
+            if code != 0:
+                exit_code = code
+
+        # If --all is requested, also run the evals audit
+        if args.all:
+            evals_file = locate_evals_file(repo_root)
+            if evals_file and evals_file.is_file():
+                evals_passed = run_audit(evals_file=evals_file, repo_root=repo_root)
+                if not evals_passed:
+                    exit_code = 1
+
+        sys.exit(exit_code)
     else:
         parser.print_help()
         sys.exit(0)

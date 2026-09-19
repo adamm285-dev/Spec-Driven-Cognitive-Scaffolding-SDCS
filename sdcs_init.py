@@ -207,6 +207,34 @@ if [ "${DIFF_LINES:-0}" -ge 40 ]; then
       echo " [SDCS ADVISORY] Working memory warning: >= 40 lines modified"
       echo " Remember to sync active objectives in state.md."
       echo "--------------------------------------------------------------------"
+# 3. Topological Invariant Gate (Gate T: wiring.yaml AST audit)
+WIRING_FILE=""
+if [ -f "wiring.yaml" ]; then
+  WIRING_FILE="wiring.yaml"
+elif [ -f ".agent/wiring.yaml" ]; then
+  WIRING_FILE=".agent/wiring.yaml"
+fi
+
+if [ -n "$WIRING_FILE" ]; then
+  PYTHON_BIN="python3"
+  if ! command -v python3 &> /dev/null; then
+    PYTHON_BIN="python"
+  fi
+
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] GATE T: TOPOLOGICAL BOUNDARY VIOLATION DETECTED"
+      echo "===================================================================="
+      echo "Import boundaries declared in $WIRING_FILE were violated."
+      echo "Failure signature appended to decisions.md."
+      echo "Please refactor code, stage the fix and decisions.md, then re-commit."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Gate T: Topology boundary violation detected."
+      echo "--------------------------------------------------------------------"
     fi
   fi
 fi

@@ -106,7 +106,18 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
-      # Gate 4: Automated Verification Test Suite
+      # Gate 4: Topological Invariant Boundary Audit (Gate T, SPEC-001 §7.5)
+      # -----------------------------------------------------------------------
+      - name: Gate T — AST Topology Boundary Audit
+        run: |
+          if [ -f "wiring.yaml" ] || [ -f ".agent/wiring.yaml" ]; then
+            sdcs verify --topology
+          else
+            echo "No wiring.yaml detected in root or .agent/, skipping topology audit."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Gate 5: Automated Verification Test Suite
       # -----------------------------------------------------------------------
       - name: Run Test Harness
         run: |

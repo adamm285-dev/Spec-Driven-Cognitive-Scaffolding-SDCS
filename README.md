@@ -209,6 +209,9 @@ SDCS provides deterministic Python tooling to bootstrap repositories and enforce
   - Generates compliant `AGENTS.md` behavioral guidance, `sessions/template.md`, and `prompts/grillme.md`.
 * **`sdcs grill` (`python sdcs_init.py --grill`):**
   - Emits the `/grillme` adversarial spec elicitation prompt to interview human stakeholders and harden requirements into quantifiable `[INTENT]` contracts before code is generated.
+* **`sdcs verify --topology` (`sdcs verify`):**
+  - Statically audits codebase Abstract Syntax Trees (AST) against `wiring.yaml` subsystem boundaries without importing code (Gate T).
+  - Automatically formats prohibited import edges into Inverted Architecture Decision Records (`## REJ-XXX`) and appends them to `decisions.md` (`--append-rejections`).
 * **`audit_evals_corpus.py` (`sdcs audit`):**
   - Validates that all benchmark fixtures listed in `evals.md` physically exist on disk.
   - Recalculates SHA-256 hashes to catch unversioned drift or corrupted test assets.
@@ -265,7 +268,24 @@ python audit_evals_corpus.py
 
 ---
 
-### 3. Adversarial Spec Elicitation (`/grillme`)
+### 3. Verify AST Topology Boundaries (Gate T)
+
+```bash
+# Statically audit codebase imports against wiring.yaml subsystem boundaries
+sdcs verify --topology
+
+# Automatically format boundary violations into inverted ADRs (## REJ-XXX)
+# and append them directly to decisions.md
+sdcs verify --topology --append-rejections
+```
+
+* **Zero Execution Risk:** Audits Abstract Syntax Trees (AST) using Python's standard `ast` module without importing or executing runtime code.
+* **Negative Memory Serialization:** Programmatically binds architectural failures to Pillar 6 (`decisions.md`) using the strict **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema.
+* **Pre-Commit Hook Integration:** Enforced automatically during `git commit` to block structural boundary violations before code enters the repository.
+
+---
+
+### 4. Adversarial Spec Elicitation (`/grillme`)
 
 Deterministic runtime execution requires unambiguous specifications. SDCS includes the **`/grillme` Adversarial Spec Elicitation Protocol** as an authoring tool to eliminate fuzzy requirements:
 
@@ -302,11 +322,13 @@ SDCS is built for **autonomous, multi-turn shifts** where context drift causes e
 ## Pragmatic Enforcement & The Permission Boundary
 
 ### Defense-in-Depth: Stopping the "Soft Invariant" Hole
-When an autonomous agent encounters a failing test gate on Turn 12, a known failure mode is **rationalization**: editing `spine.md` or altering test runner flags to force "task completion." SDCS secures invariants across three distinct architectural layers:
+When an autonomous agent encounters a failing test gate on Turn 12, a known failure mode is **rationalization**: editing `spine.md` or altering test runner flags to force "task completion." SDCS secures invariants across distinct architectural layers:
 
-1. **Behavioral Layer (`AGENTS.md`):** Non-negotiable system rules prohibiting invariant tampering.
-2. **VCS Pre-Commit Layer (Gate C):** Repository pre-commit hook automatically rejects any commit modifying `spine.md` or `wiring.yaml` unless explicitly bypassed by a human engineer via `export SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
-3. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
+1. **Behavioral Layer (`AGENTS.md`):** Non-negotiable system rules prohibiting invariant tampering and requiring structured hydration.
+2. **Topological Invariant Gate (Gate T):** AST-level static import audit ensuring code respects `wiring.yaml` subsystem boundaries, serializing violations into `decisions.md`.
+3. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly overridden via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
+4. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
+5. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
 ### Git Hook Modes
 
@@ -314,7 +336,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 | :--- | :--- | :--- | :--- |
 | **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order and close-out requirements into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
-| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing or if constitutional invariants (`spine.md`) were mutated. | **High rigor.** Guarantees memory synchronization and invariant integrity. |
+| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, constitutional invariants are mutated (Gate C), or AST topology boundaries are breached (Gate T). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 
 ### Activating Git Hooks
 
