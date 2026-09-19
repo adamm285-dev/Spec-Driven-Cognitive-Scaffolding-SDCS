@@ -1,6 +1,6 @@
+import sys
 import tempfile
 from pathlib import Path
-import sys
 
 # Ensure src is in sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -30,7 +30,7 @@ def test_init_scaffold_root():
 
         # Verify content markers
         wiring = (root / "wiring.yaml").read_text(encoding="utf-8")
-        assert "version: \"1.2\"" in wiring
+        assert 'version: "1.2"' in wiring
 
         spine = (root / "spine.md").read_text(encoding="utf-8")
         assert "Constitutional Invariants" in spine

@@ -14,10 +14,10 @@ Verifies:
 
 import argparse
 import hashlib
-from pathlib import Path
 import re
 import sys
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from pathlib import Path
+from typing import NamedTuple
 
 
 class FixtureEntry(NamedTuple):
@@ -43,7 +43,7 @@ def strip_comments_and_whitespace(content: str, extension: str) -> str:
     Strips comments, removes leading/trailing line padding, and drops empty lines.
     """
     lines = content.splitlines()
-    normalized_lines: List[str] = []
+    normalized_lines: list[str] = []
 
     ext = extension.lower()
     is_hash_comment = ext in {".py", ".sh", ".bash", ".yaml", ".yml", ".toml", ".ini"}
@@ -90,14 +90,12 @@ def calculate_normalized_sha256(file_path: Path) -> str:
             content = f.read()
         normalized = strip_comments_and_whitespace(content, file_path.suffix)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-    except (UnicodeDecodeError, PermissionError):
+    except (UnicodeDecodeError, PermissionError, OSError):
         # Binary fixture fallback (PDF, PNG, etc.): hash raw bytes directly
         return calculate_sha256(file_path)
-    except Exception:
-        return calculate_sha256(file_path)
 
 
-def locate_evals_file(base_dir: Path, explicit_path: Optional[str] = None) -> Path:
+def locate_evals_file(base_dir: Path, explicit_path: str | None = None) -> Path:
     """Finds evals.md in the root, .agent/, or at an explicit user path."""
     if explicit_path:
         p = Path(explicit_path)
@@ -122,7 +120,7 @@ def locate_evals_file(base_dir: Path, explicit_path: Optional[str] = None) -> Pa
 find_evals_file = locate_evals_file
 
 
-def parse_evals_table(evals_input: Union[str, Path]) -> List[FixtureEntry]:
+def parse_evals_table(evals_input: str | Path) -> list[FixtureEntry]:
     """Parses markdown table entries from evals.md content or file path."""
     if isinstance(evals_input, Path):
         evals_content = evals_input.read_text(encoding="utf-8", errors="ignore")
@@ -134,7 +132,7 @@ def parse_evals_table(evals_input: Union[str, Path]) -> List[FixtureEntry]:
     else:
         evals_content = str(evals_input)
 
-    entries: List[FixtureEntry] = []
+    entries: list[FixtureEntry] = []
     lines = evals_content.splitlines()
     table_started = False
 
@@ -183,8 +181,8 @@ def parse_evals_table(evals_input: Union[str, Path]) -> List[FixtureEntry]:
 
 
 def run_audit(
-    evals_file: Optional[Path] = None,
-    repo_root: Optional[Path] = None,
+    evals_file: Path | None = None,
+    repo_root: Path | None = None,
     update_pending: bool = False,
 ) -> bool:
     """
@@ -199,7 +197,7 @@ def run_audit(
         if evals_file is not None and evals_file.is_file():
             repo_root = evals_file.parent
         else:
-            repo_root = Path(".").resolve()
+            repo_root = Path.cwd()
             evals_file = locate_evals_file(repo_root)
     elif evals_file is None:
         evals_file = locate_evals_file(repo_root)
@@ -220,8 +218,8 @@ def run_audit(
         print("[WARN] No fixture rows found in evals.md table.")
         return True
 
-    seen_hashes: Dict[str, List[str]] = {}
-    pending_entries: List[Tuple[FixtureEntry, str]] = []
+    seen_hashes: dict[str, list[str]] = {}
+    pending_entries: list[tuple[FixtureEntry, str]] = []
     failures = 0
 
     print(f"Found {len(entries)} fixture entries. Executing verification...\n")
@@ -247,9 +245,8 @@ def run_audit(
             print(f"  · [PENDING] {entry.fixture_id:<12} => Computed: {computed_hash[:16]}...")
         else:
             rec_clean = entry.recorded_hash.strip().lower()
-            matches = (
-                computed_hash == rec_clean
-                or (len(rec_clean) in (8, 12, 16) and computed_hash.startswith(rec_clean))
+            matches = computed_hash == rec_clean or (
+                len(rec_clean) in (8, 12, 16) and computed_hash.startswith(rec_clean)
             )
             if not matches:
                 print(f"  [HASH DRIFT FAIL]  {entry.fixture_id:<12} (line {entry.line_number})")
@@ -266,7 +263,7 @@ def run_audit(
     for h, fixtures in seen_hashes.items():
         if len(fixtures) > 1:
             diversity_violations += 1
-            print(f"\n[PHANTOM CORPUS ERROR] Duplicate or trivially padded fixtures detected:")
+            print("\n[PHANTOM CORPUS ERROR] Duplicate or trivially padded fixtures detected:")
             print(f"  Digest: {h}")
             for f in fixtures:
                 print(f"    - {f}")
@@ -320,7 +317,9 @@ def main():
     repo_root = Path(args.repo_root).resolve()
     evals_file = locate_evals_file(repo_root, args.evals_path)
 
-    success = run_audit(evals_file=evals_file, repo_root=repo_root, update_pending=args.update_pending)
+    success = run_audit(
+        evals_file=evals_file, repo_root=repo_root, update_pending=args.update_pending
+    )
     sys.exit(0 if success else 1)
 
 

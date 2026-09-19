@@ -19,10 +19,9 @@ Scaffolds the complete 7-pillar deterministic cognitive harness:
 
 import argparse
 import os
-from pathlib import Path
 import stat
 import sys
-from typing import Dict, List
+from pathlib import Path
 
 SPEC_VERSION = "1.2.0"
 
@@ -222,7 +221,11 @@ def generate_grillme_md(milestone: str | None = None) -> str:
         if (milestone and milestone.lower().startswith("milestone"))
         else f"Milestone {milestone}" if milestone else None
     )
-    target_text = f"target `{milestone_str}`" if milestone_str else "the target milestone (e.g., `Milestone M-001`)"
+    target_text = (
+        f"target `{milestone_str}`"
+        if milestone_str
+        else "the target milestone (e.g., `Milestone M-001`)"
+    )
     return f"""# /grillme — Adversarial Spec Elicitation Protocol
 
 Act as a relentless Principal Systems Architect. Your objective is to extract unambiguous, falsifiable requirements from the user to populate `roadmap.md` ([INTENT]) and `spine.md` (Constitutional Invariants).
@@ -249,21 +252,38 @@ Act as a relentless Principal Systems Architect. Your objective is to extract un
 # -----------------------------------------------------------------------------
 
 EXCLUDE_DIRS = {
-    ".git", ".githooks", "__pycache__", "node_modules", ".venv", "venv",
-    ".pytest_cache", ".ruff_cache", "dist", "build", ".egg-info", "sessions",
-    ".idea", ".vscode", ".tox", ".mypy_cache"
+    ".git",
+    ".githooks",
+    "__pycache__",
+    "node_modules",
+    ".venv",
+    "venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "dist",
+    "build",
+    ".egg-info",
+    "sessions",
+    ".idea",
+    ".vscode",
+    ".tox",
+    ".mypy_cache",
 }
 
 
-def scan_repository_tree(root: Path) -> Dict[str, List[str]]:
+def scan_repository_tree(root: Path) -> dict[str, list[str]]:
     """Index files grouped by directory, filtering noisy runtime artifacts."""
-    tree: Dict[str, List[str]] = {}
+    tree: dict[str, list[str]] = {}
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS and not d.endswith(".egg-info")]
         rel_dir = os.path.relpath(dirpath, root).replace("\\", "/")
         if rel_dir == ".":
             rel_dir = "root"
-        valid_files = [f for f in filenames if not f.endswith((".pyc", ".pyo", ".so", ".DS_Store", "Thumbs.db"))]
+        valid_files = [
+            f
+            for f in filenames
+            if not f.endswith((".pyc", ".pyo", ".so", ".DS_Store", "Thumbs.db"))
+        ]
         if valid_files:
             tree[rel_dir] = sorted(valid_files)
     return tree
@@ -275,7 +295,7 @@ def generate_flat_app_map(root: Path) -> str:
     lines = [
         "# Repository Cartography (The Compass)",
         "<!-- SPEC-001 v1.2.0 Pillar 5 | Flat Cartography -->",
-        "<!-- Golden Rule: Consult this map FIRST. Read ONLY necessary target files. -->\n"
+        "<!-- Golden Rule: Consult this map FIRST. Read ONLY necessary target files. -->\n",
     ]
     for directory, files in sorted(tree.items()):
         lines.append(f"### `{directory}/`")
@@ -285,9 +305,9 @@ def generate_flat_app_map(root: Path) -> str:
     return "\n".join(lines)
 
 
-def detect_subpackages(root: Path) -> List[Path]:
+def detect_subpackages(root: Path) -> list[Path]:
     """Detect independent packages or major subsystems for hierarchical maps."""
-    subpackages: List[Path] = []
+    subpackages: list[Path] = []
     indicators = {"__init__.py", "package.json", "Cargo.toml", "go.mod", "pyproject.toml"}
 
     for dirpath, dirnames, filenames in os.walk(root):
@@ -309,11 +329,15 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
         "# Root Repository Cartography (The Compass Index)",
         "<!-- SPEC-001 v1.2.0 Pillar 5 | Hierarchical Master Index -->",
         "<!-- Golden Rule: Page package-level app_map.md ONLY when entering subsystem context. -->\n",
-        "## Subsystem Registry\n"
+        "## Subsystem Registry\n",
     ]
 
     if not subpackages:
-        top_dirs = [d for d in root.iterdir() if d.is_dir() and d.name not in EXCLUDE_DIRS and not d.name.startswith(".")]
+        top_dirs = [
+            d
+            for d in root.iterdir()
+            if d.is_dir() and d.name not in EXCLUDE_DIRS and not d.name.startswith(".")
+        ]
         for d in sorted(top_dirs):
             rel = d.relative_to(root).as_posix()
             root_lines.append(f"- **Subsystem `{rel}/`**: Domain component root")
@@ -326,7 +350,7 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
             pkg_tree = scan_repository_tree(pkg)
             pkg_lines = [
                 f"# Cartography: `{rel}/`",
-                f"<!-- Sub-domain map for `{rel}` | Consult prior to modifying package files -->\n"
+                f"<!-- Sub-domain map for `{rel}` | Consult prior to modifying package files -->\n",
             ]
             for sub_dir, files in sorted(pkg_tree.items()):
                 sub_dir_clean = sub_dir.replace("\\", "/")
@@ -355,6 +379,7 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
 # Scaffolding Engine
 # -----------------------------------------------------------------------------
 
+
 def write_file(path: Path, content: str, force: bool = False):
     if path.exists() and not force:
         print(f"  · Exists:  {path} (skipping)")
@@ -374,7 +399,7 @@ def install_githook(root: Path):
     try:
         st = hook_file.stat()
         hook_file.chmod(st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    except Exception:
+    except OSError:
         pass
     print(f"  + Hook:    {hook_file} (executable set)")
 
@@ -395,12 +420,12 @@ def init_scaffold(
     scaffold_dir = (repo_root / ".agent") if use_agent_dir else repo_root
     scaffold_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n====================================================================")
+    print("\n====================================================================")
     print(f" SDCS v{SPEC_VERSION} Initializer :: 7-Pillar Cognitive Scaffolding")
     print(f" Target Root: {repo_root}")
     print(f" Harness Dir: {scaffold_dir}")
     print(f" Mode:        {'Hierarchical' if hierarchical else 'Flat Cartography'}")
-    print(f"====================================================================\n")
+    print("====================================================================\n")
 
     # 1. Primary Pillars
     write_file(scaffold_dir / "spine.md", TEMPLATE_SPINE, force)
@@ -449,21 +474,44 @@ def init_scaffold(
         print("\nTo activate invariant enforcement in your local repository, run:")
         print("  git config core.hooksPath .githooks")
         print("  git config sdcs.mode advisory   # or 'strict'")
-    print("")
+    print()
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Bootstrap the 7-Pillar Spec-Driven Cognitive Scaffolding (SDCS) Architecture."
     )
-    parser.add_argument("--target-dir", default=".", help="Root repository directory (default: current directory)")
-    parser.add_argument("--use-agent-dir", action="store_true", help="Place SDCS pillars inside .agent/ control directory")
-    parser.add_argument("--hierarchical", action="store_true", help="Generate hierarchical multi-tiered cartography maps")
+    parser.add_argument(
+        "--target-dir", default=".", help="Root repository directory (default: current directory)"
+    )
+    parser.add_argument(
+        "--use-agent-dir",
+        action="store_true",
+        help="Place SDCS pillars inside .agent/ control directory",
+    )
+    parser.add_argument(
+        "--hierarchical",
+        action="store_true",
+        help="Generate hierarchical multi-tiered cartography maps",
+    )
     parser.add_argument("--skip-agents-md", action="store_true", help="Skip generating AGENTS.md")
-    parser.add_argument("--skip-hooks", action="store_true", help="Skip generating .githooks/pre-commit protection hook")
+    parser.add_argument(
+        "--skip-hooks",
+        action="store_true",
+        help="Skip generating .githooks/pre-commit protection hook",
+    )
     parser.add_argument("--force", action="store_true", help="Overwrite existing scaffolding files")
-    parser.add_argument("--grill", action="store_true", help="Display the /grillme adversarial spec elicitation prompt and exit")
-    parser.add_argument("--milestone", type=str, default=None, help="Target milestone ID (e.g. M-001) for --grill output")
+    parser.add_argument(
+        "--grill",
+        action="store_true",
+        help="Display the /grillme adversarial spec elicitation prompt and exit",
+    )
+    parser.add_argument(
+        "--milestone",
+        type=str,
+        default=None,
+        help="Target milestone ID (e.g. M-001) for --grill output",
+    )
 
     args = parser.parse_args()
 

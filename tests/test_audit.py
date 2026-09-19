@@ -1,7 +1,6 @@
-from pathlib import Path
 import sys
 import tempfile
-import pytest
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
@@ -12,7 +11,6 @@ from audit_evals_corpus import (
     calculate_sha256,
     parse_evals_table,
     run_audit,
-    strip_comments_and_whitespace,
 )
 
 
@@ -124,8 +122,7 @@ def test_normalization_collides_on_comments_and_whitespace(tmp_path):
     js_padded = tmp_path / "padded.js"
     js_clean.write_text("export const add = (a, b) => a + b;\n", encoding="utf-8")
     js_padded.write_text(
-        "// Header comment\n"
-        "export const add = (a, b) => a + b;   // inline logic\n",
+        "// Header comment\n" "export const add = (a, b) => a + b;   // inline logic\n",
         encoding="utf-8",
     )
     assert calculate_normalized_sha256(js_clean) == calculate_normalized_sha256(js_padded)

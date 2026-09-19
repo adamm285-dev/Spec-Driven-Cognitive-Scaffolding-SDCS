@@ -4,8 +4,8 @@ sdcs.cli - Unified CLI Router for Spec-Driven Cognitive Scaffolding (SPEC-001 v1
 """
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from sdcs import __version__
 from sdcs.audit import locate_evals_file, run_audit
@@ -110,10 +110,13 @@ def main():
     elif args.command == "audit":
         repo_root = args.repo_root.resolve()
         evals_file = locate_evals_file(repo_root, args.evals_path)
-        passed = run_audit(evals_file=evals_file, repo_root=repo_root, update_pending=args.update_pending)
+        passed = run_audit(
+            evals_file=evals_file, repo_root=repo_root, update_pending=args.update_pending
+        )
         sys.exit(0 if passed else 1)
     elif args.command == "grill":
         from sdcs.init import generate_grillme_md
+
         print(generate_grillme_md(args.milestone))
     else:
         parser.print_help()

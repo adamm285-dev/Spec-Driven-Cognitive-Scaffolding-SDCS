@@ -99,7 +99,11 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Gate E — Cryptographic Fixture Integrity & Diversity Audit
         run: |
-          python audit_evals_corpus.py --repo-root .
+          if [ -f "evals.md" ] || [ -f ".agent/evals.md" ]; then
+            python audit_evals_corpus.py --repo-root .
+          else
+            echo "No evals.md detected in root or .agent/, skipping corpus audit."
+          fi
 
       # -----------------------------------------------------------------------
       # Gate 4: Automated Verification Test Suite

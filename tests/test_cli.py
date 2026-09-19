@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 ENV = dict(os.environ)
 ENV["PYTHONPATH"] = str(Path(__file__).parent.parent / "src")
@@ -40,4 +40,3 @@ def test_cli_audit_help():
     assert "--evals-path" in result.stdout
     assert "--repo-root" in result.stdout
     assert "--update-pending" in result.stdout
-
