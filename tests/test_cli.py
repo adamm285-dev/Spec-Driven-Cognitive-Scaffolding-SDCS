@@ -10,7 +10,7 @@ ENV["PYTHONPATH"] = str(Path(__file__).parent.parent / "src")
 def test_cli_version():
     cmd = [sys.executable, "-m", "sdcs.cli", "--version"]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
-    assert "sdcs 1.2.0" in result.stdout or "sdcs 1.2.0" in result.stderr
+    assert "sdcs 1.2.1" in result.stdout or "sdcs 1.2.1" in result.stderr
 
 
 def test_cli_help():

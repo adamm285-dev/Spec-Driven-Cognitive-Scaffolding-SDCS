@@ -10,7 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple
 
-import yaml
+try:
+    import yaml
+except ImportError:  # pragma: no cover
+    yaml = None
 
 
 class ImportViolation(NamedTuple):
@@ -70,6 +73,11 @@ class TopologyValidator:
         self._load_wiring(wiring_path)
 
     def _load_wiring(self, wiring_path: Path):
+        if yaml is None:
+            raise ImportError(
+                "PyYAML is required for SDCS topology validation. "
+                "Install it with: pip install 'sdcs[dev]' or pip install pyyaml"
+            )
         with open(wiring_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
