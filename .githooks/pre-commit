@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# .git/hooks/pre-commit
+# SDCS Enforcer: Guarantees working memory and decisions are kept current.
+# Supports both Strict Mode (blocking) and Advisory Mode (warning only, zero flow-state friction).
+
+set -e
+
+# --- Configuration ---
+# Minimum lines changed in source code to trigger a "major change" check
+LINE_THRESHOLD=40
+
+# Enforcement mode: 'strict' (blocks commit) or 'advisory' (prints warning, allows commit)
+# Configurable via: git config sdcs.mode advisory|strict
+# Or via environment variable: export SDCS_WARN_ONLY=1 or export SDCS_MODE=advisory
+CONFIG_MODE=$(git config sdcs.mode 2>/dev/null || echo "strict")
+SDCS_MODE="${SDCS_MODE:-$CONFIG_MODE}"
+if [ "$SDCS_WARN_ONLY" = "1" ]; then
+    SDCS_MODE="advisory"
+fi
+
+# Source code extensions to monitor for major logic changes
+CODE_EXTENSIONS="\.(py|kt|rs|go|ts|js|jsx|tsx|sol|c|cpp|h)$"
+
+# Candidate paths for SDCS scaffolding files (root or .agent/)
+STATE_FILES=("state.md" ".agent/state.md" "STATE.md" ".agent/STATE.md")
+DECISION_FILES=("decisions.md" ".agent/decisions.md" "DECISIONS.md" ".agent/DECISIONS.md")
+SPINE_FILES=("spine.md" ".agent/spine.md" "SPINE.md" ".agent/SPINE.md" "wiring.yaml" ".agent/wiring.yaml")
+
+# --- Step 1: Detect Staged Files ---
+STAGED_FILES=$(git diff --cached --name-only)
+
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+# --- Step 2: Check if Scaffolding Files are Staged ---
+STATE_STAGED=false
+DECISIONS_STAGED=false
+SPINE_STAGED=false
+
+for file in $STAGED_FILES; do
+    for state_candidate in "${STATE_FILES[@]}"; do
+        if [ "$file" == "$state_candidate" ]; then
+            STATE_STAGED=true
+        fi
+    done
+    for decision_candidate in "${DECISION_FILES[@]}"; do
+        if [ "$file" == "$decision_candidate" ]; then
+            DECISIONS_STAGED=true
+        fi
+    done
+    for spine_candidate in "${SPINE_FILES[@]}"; do
+        if [ "$file" == "$spine_candidate" ]; then
+            SPINE_STAGED=true
+        fi
+    done
+done
+
+# --- Step 3: Calculate Code Diff Velocity ---
+TOTAL_CODE_CHANGES=0
+
+while read -r added deleted filepath; do
+    # Skip binary files or unmapped rows
+    if [ "$added" == "-" ] || [ "$deleted" == "-" ]; then
+        continue
+    fi
+
+    # Check if the file matches monitored source code extensions
+    if echo "$filepath" | grep -Eq "$CODE_EXTENSIONS"; then
+        FILE_DELTA=$((added + deleted))
+        TOTAL_CODE_CHANGES=$((TOTAL_CODE_CHANGES + FILE_DELTA))
+    fi
+done < <(git diff --cached --numstat)
+
+# --- Step 4: Evaluate Invariant Gates ---
+ERRORS=0
+
+# Gate A: Working Memory Gate (state.md)
+# Any code mutation >= LINE_THRESHOLD requires updating the blackboard
+if [ "$TOTAL_CODE_CHANGES" -ge "$LINE_THRESHOLD" ] && [ "$STATE_STAGED" = false ]; then
+    if [ "$SDCS_MODE" = "advisory" ]; then
+        echo "💡 [SDCS Advisory] Major code changes detected ($TOTAL_CODE_CHANGES lines modified)."
+        echo "   Reminder: Remember to update state.md before declaring task complete."
+        echo ""
+    else
+        echo "❌ [SDCS Gate Failure] Major code changes detected ($TOTAL_CODE_CHANGES lines modified)."
+        echo "   Missing: state.md (or .agent/state.md) is not staged."
+        echo "   Action: Update your active objective, verification gates, and edge cases in state.md."
+        echo "   Tip: Run 'git config sdcs.mode advisory' if solo coding in flow state."
+        echo ""
+        ERRORS=$((ERRORS + 1))
+    fi
+fi
+
+# Gate B: Episodic Memory Gate (decisions.md)
+# High-velocity modifications (e.g., > 120 lines) require checking if an ADR was added/updated
+ARCH_THRESHOLD=$((LINE_THRESHOLD * 3))
+if [ "$TOTAL_CODE_CHANGES" -ge "$ARCH_THRESHOLD" ] && [ "$DECISIONS_STAGED" = false ]; then
+    echo "⚠️ [SDCS Warning] High-impact architectural mutation ($TOTAL_CODE_CHANGES lines modified)."
+    echo "   Missing: decisions.md (or .agent/decisions.md) was not touched."
+    echo "   Rule: Large refactors and multi-module shifts must document tradeoffs to avoid amnesia loops."
+    echo ""
+fi
+
+# Gate C: Constitutional Invariant Protection Gate (spine.md & wiring.yaml)
+# Addresses the "Permission Illusion / Soft Invariant Hole":
+# Autonomous agents are forbidden from mutating spine.md or wiring.yaml to bypass failing test gates.
+# Human engineers must set SDCS_ALLOW_INVARIANT_MUTATION=1 (or SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1) to edit these files.
+if [ "$SPINE_STAGED" = true ] && [ "$SDCS_ALLOW_INVARIANT_MUTATION" != "1" ] && [ "$SDCS_ALLOW_CONSTITUTIONAL_MUTATION" != "1" ]; then
+    if [ "$SDCS_MODE" = "advisory" ]; then
+        echo "💡 [SDCS Advisory] Constitutional file (spine.md / wiring.yaml) modified in this commit."
+        echo "   Ensure this change was authorized by a human, not an autonomous agent bypassing test gates."
+        echo ""
+    else
+        echo "🛑 [SDCS Gate Failure] Constitutional Invariant Protection Gate Triggered!"
+        echo "   Detected staged modifications to spine.md or wiring.yaml."
+        echo "   Autonomous agents are strictly forbidden from weakening constitutional rules to pass gates."
+        echo "   To commit human-authorized edits: export SDCS_ALLOW_INVARIANT_MUTATION=1"
+        echo ""
+        ERRORS=$((ERRORS + 1))
+    fi
+fi
+
+# --- Step 5: Exit Evaluation ---
+if [ "$ERRORS" -gt 0 ]; then
+    echo "Commit rejected by SDCS pre-commit hook."
+    echo "To bypass (emergency hotfixes only): git commit --no-verify"
+    echo "To switch to advisory mode: git config sdcs.mode advisory"
+    exit 1
+fi
+
+exit 0

@@ -1,0 +1,51 @@
+name: Verify PR
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  verify:
+    name: SDCS Verification Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black mypy pytest
+
+      - name: Gate 1 - Lint & Formatting
+        run: |
+          ruff check .
+          black --check .
+
+      - name: Gate 2 - Static Type Analysis
+        run: |
+          mypy sdcs_init.py audit_evals_corpus.py
+
+      - name: Gate 3 - Unit Test Suite
+        run: |
+          if [ -d "tests" ]; then
+            pytest -v
+          else
+            echo "No tests directory found, skipping pytest."
+          fi
+
+      - name: Gate 4 - SDCS Corpus Diversity & Ground Truth Audit
+        run: |
+          if [ -f "evals.md" ] || [ -f ".agent/evals.md" ]; then
+            python audit_evals_corpus.py
+          else
+            echo "No evals.md detected in root or .agent/, skipping corpus audit."
+          fi
