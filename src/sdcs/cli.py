@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 sdcs.cli - Unified CLI Router for Spec-Driven Cognitive Scaffolding (SPEC-001 v1.2)
 """

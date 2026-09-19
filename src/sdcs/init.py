@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 sdcs.init - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
 Conforming to SPEC-001 v1.2.0

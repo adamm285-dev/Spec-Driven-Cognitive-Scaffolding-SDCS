@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 sdcs.audit — Positive Ground Truth & Corpus Diversity Auditor
 Conforming to SPEC-001 v1.2.0 (Pillars 7 & Failure Mitigation 7.4)
