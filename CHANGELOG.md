@@ -11,13 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Pillar 7: `roadmap.md` (Macro Acceptance Contract):** Encodes the North Star acceptance contract directly separating human `[INTENT]` from empirical `[MEASURED]` reality. Strictly enforces that the roadmap carries NO ephemeral task queue (which belongs exclusively in `state.md`).
+- **Constitutional Invariant Gate (Gate C):** Pre-commit and CI hooks that block autonomous agents from weakening or bypassing rules in `spine.md` or `wiring.yaml` without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1` or `allow-invariant-mutation` PR label).
+- **Working Memory Sync Gate (Gate S):** CI enforcement requiring `state.md` to be updated and synchronized whenever pull requests introduce $\ge 40$ modified lines.
+- **Anti-Evasion Ground Truth Auditor (`audit_evals_corpus.py` & `sdcs audit`):** Hardened fixture audit with comment stripping (Python `#`, JS/C `//`, HTML comments) and whitespace normalization to defeat trivial evasion. Added `--update-pending` to automatically resolve and populate hashes into `evals.md`.
 - **Authoring Protocol (`prompts/grillme.md` & `sdcs grill`):** Added the `/grillme` Adversarial Spec Elicitation Protocol to interrogate human stakeholders and harden requirements into quantifiable `[INTENT]` contracts before code generation. Scaffolded automatically and callable via `sdcs grill` / `python sdcs_init.py --grill`.
+- **Operational Scale Profiles (§5):** Formalized token budgets and structural tiers: Lite (~400 tokens), Standard (~1,500 tokens), and Full Shift (~2,500–3,500 tokens).
+- **Failure Modes & Operational Mitigations (§7):** Hardened against Permission Illusion (OS write-isolation), Cartographic Scaling Cliff (hierarchical index), Epistemic Bloat (TTL & active rejection set compaction), and Trivial Hashing Evasion.
+- **Security Policy & Hardening (`SECURITY.md`):** Complete vulnerability reporting guidelines (`security@adammurphy.dev`), threat model boundary, and production operational hardening recommendations.
 - **Presentation Slide Deck Integration:** Embedded all 10 presentation slides into `README.md` with fully refreshed 7-pillar graphics (`media/slides/slide_03.png`).
 - **Architectural Lineage & Theoretical Foundations:** Formalized direct citations to classical computer science paradigms (Blackboard Pattern, Design by Contract, Virtual Memory Page Tables, Optative vs Indicative Requirements, Cybernetic Feedback, and Cryptographic Diversity Guards).
-- **Standard Python Packaging (`pyproject.toml`):** Shipped zero-dependency package setup with standard CLI entry points (`sdcs`, `sdcs-init`, `sdcs-audit`).
-- **Automated Regression Suite (`tests/`):** 9 comprehensive unit tests covering scaffolding, SHA-256 calculation, duplicate fixture detection, and CLI invocation.
+- **Standard Python Packaging (`pyproject.toml`):** Zero-dependency package setup with standard CLI entry points (`sdcs`, `sdcs-init`, `sdcs-audit`).
+- **Automated Regression Suite (`tests/`):** 15 comprehensive unit and CLI tests covering scaffolding, anti-evasion hashing, phantom corpus detection, pending hash resolution, and CLI flags.
+- **Dual CI Pipelines (`.github/workflows/`):** Comprehensive `sdcs-ci.yml` (Gates C, S, E, T) and `verify-pr.yml` (Ruff, Black, Mypy, Pytest).
 - **GitHub Governance & Templates:** Added `.github/ISSUE_TEMPLATE/adr_rejection.md`, `.github/ISSUE_TEMPLATE/feature_intent.md`, and `.github/pull_request_template.md`.
-- **GitHub Actions CI Workflow:** Added `.github/workflows/verify-pr.yml` enforcing linting (`ruff`, `black`), static type checking (`mypy`), `pytest`, and `audit_evals_corpus.py` on PRs.
 
 ---
 
