@@ -33,11 +33,20 @@ When modifying code or docs, follow these rules across the SDCS files:
 
 ### `spine.md` (Constitutional Invariants)
 * **Status:** Human-governed.
-* Pull requests modifying `spine.md` must include explicit rationale in the PR body. Agents and automated contributors are strictly forbidden from weakening or removing axioms.
+* Pull requests modifying `spine.md` must include explicit rationale in the PR body. Agents and automated contributors are strictly forbidden from weakening or removing axioms without the `allow-invariant-mutation` label or `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+
+### `wiring.yaml` (Declarative Topology & Contracts)
+* **Status:** Protected architecture contract.
+* Encodes subsystem boundaries, service interfaces, external tool whitelists, and runtime environment contracts.
+* If your PR introduces a new dependency, alters component contracts, or expands tool permissions, update `wiring.yaml` to reflect the change. Like `spine.md`, unauthorized mutations to `wiring.yaml` trigger Gate C pre-commit and CI verification blocks.
 
 ### `roadmap.md` (Macro Acceptance Contract)
 * Encodes user acceptance criteria (`[INTENT]`) and verified implementation states (`[MEASURED]`).
 * Strictly carries **no ephemeral task queue**; active tasks live in `state.md`.
+
+### `state.md` (Dynamic Working Memory)
+* Houses the active milestone objective, immediate blockers, and pending test gates (~300 token budget).
+* Do not commit local, personal scratchpad tasks to `state.md`. Reset `state.md` to reflect the branch's clean, ready-for-review state. Any PR touching $\ge 40$ lines of code must synchronize `state.md` (enforced by Gate S).
 
 ### `app_map.md` (Cartography)
 * If you introduce, rename, or delete a source file, update `app_map.md` with the new physical path and a concise description of module responsibility.
@@ -52,12 +61,12 @@ When modifying code or docs, follow these rules across the SDCS files:
 
 ### `evals.md` (Positive Ground Truth)
 * Any new test asset added to `/tests/fixtures` must be registered in the Golden Reference table.
-* Compute and record the first 8 characters of the fixture's SHA-256 hash.
-* Run `python audit_evals_corpus.py` to confirm zero hash collisions with existing benchmarks.
+* Compute and record the fixture's SHA-256 hash (or run `sdcs audit --update-pending`).
+* Run `python audit_evals_corpus.py` to confirm zero hash collisions or near-duplicate fixtures.
 
-### `state.md` & `sessions/`
-* Do not commit local, personal scratchpad tasks to `state.md`. Reset `state.md` to reflect the branch's clean, ready-for-review state.
-* Do not commit temporary agent session runs from `sessions/` unless specifically documenting a persistent multi-day research spike.
+### `sessions/*.md` (Historical Shift Handoffs)
+* Immutable post-shift engineering handoffs. Do not commit temporary agent session scratchpads unless documenting a persistent multi-day research spike.
+* Never ingest past session files into Turn 1 system boot context.
 
 ---
 
