@@ -46,6 +46,11 @@ def test_init_scaffold_root():
         evals = (root / "evals.md").read_text(encoding="utf-8")
         assert "Golden Reference Corpus" in evals
 
+        agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+        assert "Turn 1 Boot Hydration Order (7 Pillars)" in agents
+        assert "wiring.yaml" in agents
+        assert "Flight Recorder Invariant" in agents
+
         grillme = (root / "prompts" / "grillme.md").read_text(encoding="utf-8")
         assert "/grillme" in grillme
         assert "[INTENT]" in grillme

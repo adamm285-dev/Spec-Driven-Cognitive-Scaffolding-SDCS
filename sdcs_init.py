@@ -131,23 +131,35 @@ TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
 TEMPLATE_AGENTS = """# AGENTS.md — Operational Harness Protocol
 <!-- Conforming to SPEC-001 v1.3.0 -->
 
-## Turn 1 Boot Hydration Order
-On Turn 1 of any task, you MUST hydrate state in this exact sequence:
-1. `spine.md`        -> Invariants & forbidden actions
-2. `roadmap.md`      -> Active milestone [INTENT] vs [MEASURED]
-3. `app_map.md`      -> Repository cartography (resolve target paths first)
-4. `decisions.md`    -> Negative memory (rejected hypotheses)
-5. `evals.md`        -> Verified empirical baseline
-6. `state.md`        -> Turn-by-turn active working memory
+## Turn 1 Boot Hydration Order (7 Pillars)
+On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in this exact sequence:
+1. `spine.md`        -> Constitutional invariants & forbidden actions (Pillar 1: The Law)
+2. `roadmap.md`      -> Active milestone [INTENT] vs [MEASURED] (Pillar 3: The North Star)
+3. `app_map.md`      -> Repository cartography (resolve target paths first) (Pillar 5: The Compass)
+4. `decisions.md`    -> Negative episodic memory (rejected hypotheses) (Pillar 6: The Graveyard)
+5. `evals.md`        -> Verified empirical baseline & ground truth (Pillar 7: Positive Ground Truth)
+6. `state.md`        -> Turn-by-turn active working memory (Pillar 4: The Blackboard)
+7. `wiring.yaml`     -> Declarative topology & subsystem boundaries (Pillar 2: The Mesh)
 
+## +1 Flight Recorder Invariant
 CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
+`sessions/*.md` serves as an immutable post-hoc flight recorder, NOT boot context. Auto-loading historical sessions recreates context drift and episodic amnesia. Query individual sessions only on demand for forensic debugging.
 
-## Close-Out Protocol
+## Invariant Rules
+- **Context Isolation:** Consult `app_map.md` and load only what is strictly relevant to the task.
+- **No Task Queue in Roadmap:** Active tasks live strictly in `state.md`.
+- **Non-Regression:** Never undo a decision or retry a measured rejection documented in `decisions.md` without explicit human sign-off.
+- **Topological Invariant (Gate T):** Code must respect subsystem boundary contracts declared in `wiring.yaml`. Prohibited imports will be rejected and serialized to `decisions.md`.
+- **Empirical Standing:** Verify changes against the baseline scorecard in `evals.md`. Run `audit_evals_corpus.py` when adding or modifying test fixtures.
+- **Empirical Verification:** Always run existing tests, typechecks, and eval gates before reporting completion.
+
+## Close-Out Protocol (Mandatory)
 Before completing your shift:
-1. Prune and overwrite `state.md` (~300 token budget).
+1. Prune and overwrite `state.md` with current verification status (~300 token budget).
 2. Update `roadmap.md` [MEASURED] blocks with real test telemetry.
-3. If an attempted optimization failed, log it to `decisions.md`.
-4. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md`.
+3. If an attempted optimization or architecture failed, log it to `decisions.md`.
+4. Update `app_map.md` if new files were created.
+5. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md`.
 """
 
 TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
