@@ -52,9 +52,9 @@ sdcs-init = "sdcs.init:main"
 sdcs-audit = "sdcs.audit:main"
 
 [project.urls]
-Homepage = "https://github.com/adammurphy/sdcs"
-Repository = "https://github.com/adammurphy/sdcs"
-Specification = "https://github.com/adammurphy/sdcs/blob/main/SPEC-001.md"
+Homepage = "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS"
+Repository = "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS"
+Specification = "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/SPEC-001.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

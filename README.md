@@ -339,7 +339,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   year = {2026},
   version = {v1.2.0},
   publisher = {GitHub},
-  howpublished = {\url{https://github.com/adammurphy/sdcs}}
+  howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }
 ```
 
