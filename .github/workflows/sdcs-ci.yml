@@ -1,0 +1,109 @@
+name: SDCS Invariant & Ground Truth CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  verify-sdcs:
+    name: Verify SDCS Specification & Invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full git history required for branch diff inspection
+
+      - name: Set up Python 3.10+
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e ".[dev]"; else pip install pytest; fi
+
+      # -----------------------------------------------------------------------
+      # Gate 1: Constitutional Invariant Protection Gate (SPEC-001 §7.1)
+      # -----------------------------------------------------------------------
+      - name: Gate C — Constitutional Invariant Immutability Check
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Checking for unauthorized alterations to constitutional files..."
+          BASE_REF="origin/${{ github.base_ref }}"
+          
+          # Inspect files changed between PR branch and base branch
+          TAMPERED_INVARIANTS=$(git diff --name-only "$BASE_REF"...HEAD | grep -E '^(spine\.md|wiring\.yaml|\.agent/spine\.md|\.agent/wiring\.yaml)$' || true)
+          
+          if [ -n "$TAMPERED_INVARIANTS" ]; then
+            # Allow bypass only if PR has explicit label 'allow-invariant-mutation'
+            PR_LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+            if echo "$PR_LABELS" | grep -q "allow-invariant-mutation"; then
+              echo "WARNING: Invariant modifications detected, but allowed by 'allow-invariant-mutation' label:"
+              echo "$TAMPERED_INVARIANTS"
+            else
+              echo "===================================================================="
+              echo " [SDCS VIOLATION] CONSTITUTIONAL INVARIANT TAMPERING DETECTED"
+              echo "===================================================================="
+              echo "Pull requests cannot modify constitutional invariants:"
+              echo "$TAMPERED_INVARIANTS"
+              echo ""
+              echo "If this is an intentional human architecture change, attach the"
+              echo "'allow-invariant-mutation' label to this PR to authorize."
+              echo "===================================================================="
+              exit 1
+            fi
+          else
+            echo "✓ Constitutional invariants untouched."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Gate 2: Working Memory Synchronization Gate (state.md)
+      # -----------------------------------------------------------------------
+      - name: Gate S — Working Memory (state.md) Synchronization Check
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE_REF="origin/${{ github.base_ref }}"
+          
+          # Calculate net diff lines
+          DIFF_STAT=$(git diff --shortstat "$BASE_REF"...HEAD)
+          DIFF_LINES=$(echo "$DIFF_STAT" | awk '{print $4+$6}')
+          
+          echo "PR diff stat: $DIFF_STAT (${DIFF_LINES:-0} lines modified)"
+          
+          if [ "${DIFF_LINES:-0}" -ge 40 ]; then
+            STATE_TOUCHED=$(git diff --name-only "$BASE_REF"...HEAD | grep -E '^(state\.md|\.agent/state\.md)$' || true)
+            if [ -z "$STATE_TOUCHED" ]; then
+              echo "===================================================================="
+              echo " [SDCS ERROR] STATE SYNCHRONIZATION REQUIRED"
+              echo "===================================================================="
+              echo "PR introduces >= 40 modified lines, but state.md was not updated."
+              echo "Update and stage state.md reflecting active milestone ground truth."
+              echo "===================================================================="
+              exit 1
+            else
+              echo "✓ Working memory synchronized in state.md."
+            fi
+          else
+            echo "✓ Diff size under threshold (< 40 lines). State sync check passed."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Gate 3: Cryptographic Fixture Audit & Corpus Diversity (SPEC-001 §7.4)
+      # -----------------------------------------------------------------------
+      - name: Gate E — Cryptographic Fixture Integrity & Diversity Audit
+        run: |
+          python audit_evals_corpus.py --repo-root .
+
+      # -----------------------------------------------------------------------
+      # Gate 4: Automated Verification Test Suite
+      # -----------------------------------------------------------------------
+      - name: Run Test Harness
+        run: |
+          pytest -v tests/
