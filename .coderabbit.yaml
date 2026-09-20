@@ -1,7 +1,8 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit Configuration for Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.4.1)
 # Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
 
-version: "2"
+version: 2
 language: "en-US"
 tone_instructions: >-
   You are an expert systems architecture and compiler reviewer specializing in
@@ -17,6 +18,8 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+    base_branches:
+      - ".*"
   path_instructions:
     - path: "**"
       instructions: |
