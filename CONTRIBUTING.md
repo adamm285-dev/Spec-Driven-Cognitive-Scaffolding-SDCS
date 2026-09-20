@@ -19,10 +19,12 @@ Before opening a pull request, your branch should satisfy the verification gates
 | Gate | Check | Command / Verification |
 | :--- | :--- | :--- |
 | **Lint & Style** | Ruff & Black formatting | `ruff check . && black --check .` |
+| **Gate C** | Constitutional Immutability | Authorization required to mutate `spine.md` or `wiring.yaml` |
+| **Gate S** | Working Memory Synchronization | Synchronize `state.md` for PRs with $\ge 40$ net modified lines |
 | **Gate T** | AST Subsystem Boundaries | `sdcs verify --topology` |
 | **Gate M** | Cartographic Synchronization | `sdcs map --check` |
 | **Gate A** | Working Memory Token Ceiling | `sdcs verify --state --max-tokens 350` |
-| **Gate E** | Empirical Corpus Diversity | `sdcs audit` |
+| **Gate E** | Empirical Corpus Diversity | `python audit_evals_corpus.py --repo-root .` |
 | **Unit Suite** | Automated regression checks | `pytest -v` |
 
 All pull requests are evaluated against these kinetic gates in GitHub Actions CI and reviewed by CodeRabbit AI for architectural boundary adherence. Pull requests with failing checks or broken integrity hashes will not be merged.
