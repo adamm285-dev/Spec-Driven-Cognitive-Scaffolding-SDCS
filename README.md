@@ -268,24 +268,24 @@ SDCS provides deterministic Python tooling to bootstrap repositories and enforce
 
 ### Installation
 
-You can install `sdcs` via standard `pip` or run the standalone script directly:
+Install `sdcs` directly from PyPI via `pip`:
 
-#### Option 1: 1-Line Install directly from GitHub (No manual clone needed)
 ```bash
-pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
+pip install sdcs
 ```
 
-#### Option 2: Clone and Install locally (For contributors / development)
+*(Alternatively, you can install directly from GitHub or run the standalone script):*
+
 ```bash
+# Direct from GitHub
+pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
+
+# Or clone for local development
 git clone https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
 cd Spec-Driven-Cognitive-Scaffolding-SDCS
 pip install -e .
-```
 
-#### Option 3: Zero-Install Standalone Script
-If you don't want to install a package into your Python environment, `sdcs_init.py` is completely self-contained with zero non-standard library dependencies:
-```bash
-# Run directly with Python
+# Or run the zero-dependency standalone script directly
 python sdcs_init.py --help
 ```
 
