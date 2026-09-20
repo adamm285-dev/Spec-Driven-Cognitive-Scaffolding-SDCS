@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Topological Invariant Gate (Gate T & `sdcs verify --topology`):** Abstract Syntax Tree (AST) static boundary auditor enforcing `wiring.yaml` subsystem contracts without runtime code execution. Automatically serializes prohibited imports into Inverted Architecture Decision Records (`## REJ-XXX`) conforming to the **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema and persists them to `decisions.md` (`--append-rejections`). Pre-commit hook (`.githooks/pre-commit`) blocks structural boundary breaches while preserving unstaged rejection records for immediate agent reflection.
+- **Mid-Shift Checkpoint Protocol ("prepare for compact"):** Standardized an operational 5-step checklist across `AGENTS.md` and `TEMPLATE_AGENTS` for lossless context compaction. Guides agents through topology verification (`sdcs verify --topology`), immutable flight recorder checkpointing (`sessions/YYYY-MM-DD_<topic>.md`), aggressive working memory pruning (`state.md` $\le 300$ tokens), and episodic memory sweeps (`decisions.md` & `app_map.md`).
+- **Wiring Mutation Invariant (Pillar 2):** Formalized that agents must update `wiring.yaml` in-stride with code modifications when creating new modules or packages, while strictly prohibiting relaxing architectural constraints or bypassing Gate T violations without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`).
 - **PyYAML Runtime Dependency:** Added `PyYAML>=6.0` to `pyproject.toml` dependencies for deterministic AST wiring validation across local and CI environments.
 
 ---

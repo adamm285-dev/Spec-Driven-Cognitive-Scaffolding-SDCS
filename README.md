@@ -334,7 +334,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 
 | Strategy | Ideal Scenario | Mechanics | Velocity Impact |
 | :--- | :--- | :--- | :--- |
-| **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order and close-out requirements into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
+| **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order, wiring invariants, and mid-shift checkpoint ("prepare for compact") protocols into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
 | **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, constitutional invariants are mutated (Gate C), or AST topology boundaries are breached (Gate T). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 

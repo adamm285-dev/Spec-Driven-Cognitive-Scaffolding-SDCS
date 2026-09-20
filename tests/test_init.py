@@ -50,6 +50,8 @@ def test_init_scaffold_root():
         assert "Turn 1 Boot Hydration Order (7 Pillars)" in agents
         assert "wiring.yaml" in agents
         assert "Flight Recorder Invariant" in agents
+        assert "Wiring Mutation Invariant" in agents
+        assert "prepare for compact" in agents
 
         grillme = (root / "prompts" / "grillme.md").read_text(encoding="utf-8")
         assert "/grillme" in grillme
@@ -100,3 +102,17 @@ def test_init_scaffold_hierarchical():
         pkg_map = (pkg / "app_map.md").read_text(encoding="utf-8")
         assert "Cartography: `packages/auth/`" in pkg_map
         assert "service.py" in pkg_map
+
+
+def test_template_agents_sync():
+    """Ensure sdcs_init.py and src/sdcs/init.py have 100% identical TEMPLATE_AGENTS."""
+    import importlib.util
+
+    standalone_path = Path(__file__).parent.parent / "sdcs_init.py"
+    spec = importlib.util.spec_from_file_location("sdcs_init_standalone", standalone_path)
+    standalone = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(standalone)
+
+    from sdcs.init import TEMPLATE_AGENTS as PACKAGE_TEMPLATE_AGENTS
+
+    assert standalone.TEMPLATE_AGENTS == PACKAGE_TEMPLATE_AGENTS

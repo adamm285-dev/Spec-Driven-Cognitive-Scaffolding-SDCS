@@ -150,16 +150,32 @@ CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
 - **No Task Queue in Roadmap:** Active tasks live strictly in `state.md`.
 - **Non-Regression:** Never undo a decision or retry a measured rejection documented in `decisions.md` without explicit human sign-off.
 - **Topological Invariant (Gate T):** Code must respect subsystem boundary contracts declared in `wiring.yaml`. Prohibited imports will be rejected and serialized to `decisions.md`.
+- **Wiring Mutation Invariant (Pillar 2):** When introducing new subsystems, modules, or packages, update `wiring.yaml` in-stride with code modifications. Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T rejections without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly forbidden.
 - **Empirical Standing:** Verify changes against the baseline scorecard in `evals.md`. Run `audit_evals_corpus.py` when adding or modifying test fixtures.
 - **Empirical Verification:** Always run existing tests, typechecks, and eval gates before reporting completion.
 
+## Mid-Shift Checkpoint Protocol ("prepare for compact")
+When instructed to "prepare for compact", or when context window exhaustion nears prior to session compaction:
+1. **Topology & Subsystem Audit:** Run `sdcs verify --topology` to verify that all imports comply with `wiring.yaml`. If new modules or packages were created during the shift, ensure they are declared in `wiring.yaml`.
+2. **Flight Recorder Checkpoint:** Write an immutable checkpoint log to `sessions/YYYY-MM-DD_<topic>.md` capturing work completed, verification status, active blockers, and immediate post-compact next steps.
+3. **Blackboard Pruning (`state.md`):** Aggressively prune and overwrite `state.md` strictly to <= 300 tokens containing only:
+   - `## Current Objective`
+   - `## Status & Gate Verification`
+   - `## Immediate Next Action (Post-Compact)`
+4. **Episodic Sweeps:**
+   - Log any rejected approaches or failed experiments to `decisions.md`.
+   - Synchronize `app_map.md` if files were created, moved, or deleted.
+   - Update `roadmap.md` [MEASURED] blocks if milestones or acceptance criteria were met.
+5. **Readiness Signal:** Output a brief confirmation that all 7 pillars and the flight recorder are synchronized, and state: "Ready for compaction."
+
 ## Close-Out Protocol (Mandatory)
 Before completing your shift:
-1. Prune and overwrite `state.md` with current verification status (~300 token budget).
+1. Prune and overwrite `state.md` with current verification status (<= 300 token budget).
 2. Update `roadmap.md` [MEASURED] blocks with real test telemetry.
 3. If an attempted optimization or architecture failed, log it to `decisions.md`.
 4. Update `app_map.md` if new files were created.
-5. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md`.
+5. Verify `wiring.yaml` matches codebase topology (`sdcs verify --topology`).
+6. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md`.
 """
 
 TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
