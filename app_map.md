@@ -14,6 +14,18 @@
 - `sdcs-ci.yml`
 - `verify-pr.yml`
 
+### `docs/wiki/`
+- `Agent-Runbooks-&-SOPs.md`
+- `Architecture-&-Cybernetic-Ontology.md`
+- `CLI-Command-Reference.md`
+- `Home.md`
+- `Kinetic-Enforcement-Gates.md`
+- `Lossless-Compaction-Protocol.md`
+- `Ontology-Lexicon-&-Glossary.md`
+- `The-7-Cognitive-Pillars.md`
+- `_Footer.md`
+- `_Sidebar.md`
+
 ### `media/`
 - `Deterministic_Agent_Architecture_(3) (1).pdf`
 
@@ -85,6 +97,9 @@
 - `audit_evals_corpus.py`
 - `pyproject.toml`
 - `sdcs_init.py`
+
+### `scripts/`
+- `publish_wiki.py`
 
 ### `src/sdcs/`
 - `__init__.py`
