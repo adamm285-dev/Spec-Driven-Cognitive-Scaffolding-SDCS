@@ -76,9 +76,9 @@ def parse_mapped_files(map_content: str, repo_root: Path | None = None) -> set[s
             continue
 
         # Check for bullet list item: - `filename` or * `filename`
-        bullet_match = re.match(r"^[-*]\s+`?([^`\s]+)`?", trimmed)
+        bullet_match = re.match(r"^[-*]\s+(?:`([^`]+)`|([^\s:]+))", trimmed)
         if bullet_match:
-            raw_path = bullet_match.group(1).replace("\\", "/")
+            raw_path = (bullet_match.group(1) or bullet_match.group(2)).replace("\\", "/")
             if "/" in raw_path:
                 mapped.add(raw_path)
             elif current_dir is not None:
@@ -175,10 +175,10 @@ def sync_cartography(
             current_dir = "" if d.lower() == "root" else d
             continue
 
-        bullet_match = re.match(r"^[-*]\s+`?([^`\s]+)`?(.*)$", trimmed)
+        bullet_match = re.match(r"^[-*]\s+(?:`([^`]+)`|([^\s:]+))(.*)$", trimmed)
         if bullet_match:
-            fname = bullet_match.group(1)
-            extra = bullet_match.group(2)
+            fname = bullet_match.group(1) or bullet_match.group(2)
+            extra = bullet_match.group(3)
             if "/" in fname:
                 rel = fname
             elif current_dir is not None:
@@ -271,10 +271,10 @@ def slice_cartography(
             continue
 
         if trimmed.startswith(("-", "*")) and current_dir is not None:
-            bullet_match = re.match(r"^[-*]\s+`?([^`\s]+)`?(.*)$", trimmed)
+            bullet_match = re.match(r"^[-*]\s+(?:`([^`]+)`|([^\s:]+))(.*)$", trimmed)
             if bullet_match:
-                fname = bullet_match.group(1)
-                extra = bullet_match.group(2)
+                fname = bullet_match.group(1) or bullet_match.group(2)
+                extra = bullet_match.group(3)
                 file_rel = fname if current_dir == "" else f"{current_dir}/{fname}"
                 if (
                     dir_matches

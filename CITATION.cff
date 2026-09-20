@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software or specification in your research or system, please cite it as below."
+authors:
+  - family-names: "Murphy"
+    given-names: "Adam"
+title: "Spec-Driven Cognitive Scaffolding (SDCS): Deterministic AI Engineering & Cybernetic Control"
+version: "1.4.1"
+date-released: "2026-09-20"
+url: "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS"
+license: "MIT"
+keywords:
+  - "autonomous agents"
+  - "agentic coding"
+  - "cognitive scaffolding"
+  - "cybernetic ontology"
+  - "deterministic AI"
+  - "AST verification"

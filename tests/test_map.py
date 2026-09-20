@@ -15,12 +15,16 @@ def test_parse_mapped_files():
 ### `src/core/`
 - `engine.py` - Core engine
 - `utils.py`
+
+### `media/`
+- `file with spaces (1).pdf`
 """
     mapped = parse_mapped_files(content)
     assert "AGENTS.md" in mapped
     assert "README.md" in mapped
     assert "src/core/engine.py" in mapped
     assert "src/core/utils.py" in mapped
+    assert "media/file with spaces (1).pdf" in mapped
 
 
 def test_check_cartography_detects_unmapped_and_orphaned(tmp_path: Path):
