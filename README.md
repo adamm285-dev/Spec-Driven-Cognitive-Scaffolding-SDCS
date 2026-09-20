@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
 [![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.4-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.4.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.4.0)
+[![Version](https://img.shields.io/badge/release-v1.4.1-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.4.1)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
 [![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](SPEC-001.md)
@@ -223,6 +223,144 @@ The agent executes every turn through a deterministic, 4-phase continuous engine
 | **Phase 2: Planning** | Formulate atomic diffs against `state.md`. Read `wiring.yaml` + strictly relevant target files identified via `app_map.md`. | **Semantic Layer** (`wiring.yaml`) to verify that the proposed import topology is valid. |
 | **Phase 3: Execution** | Apply code mutations and run empirical test/linter gates. | **Kinetic Layer** (`Gate T` & git hooks): AST parser physically blocks illegal imports.<br>**Dynamic Layer** (`evals.md`): Benchmark telemetry scores delta. |
 | **Phase 4: Close-Out** | Prune `state.md` ($\le 300$ tokens), record rejections in `decisions.md`, and log shift handoff in `sessions/`. | **Dynamic Layer** (`decisions.md`, `state.md`, `sessions/*.md`): Updates closed-loop state for subsequent turns. |
+
+---
+
+## How the Autonomous Agent Understands & Executes SDCS Upgrades
+
+An autonomous coding agent operating inside SDCS does not view the repository as a loose collection of folders and scripts. Governed by [`AGENTS.md`](AGENTS.md), the LLM adopts a **deterministic cybernetic mindset** structured around strict epistemological rules, kinetic boundaries, and memory feedback loops.
+
+```mermaid
+flowchart TD
+    subgraph BOOT ["1. Turn 1 Boot Hydration Order (Rigid Epistemological Sequence)"]
+        direction TB
+        B1["1. spine.md (The Law: What is forbidden?)"] --> B2["2. roadmap.md (The Target: [INTENT] vs [MEASURED])"]
+        B2 --> B3["3. app_map.md (The Compass: Where are the files?)"]
+        B3 --> B4["4. decisions.md (The Graveyard: What failed before?)"]
+        B4 --> B5["5. evals.md (The Scorecard: Verified golden hashes)"]
+        B5 --> B6["6. state.md (The Blackboard: Turn objective <= 300 tokens)"]
+        B6 --> B7["7. wiring.yaml (The Mesh: Subsystem boundaries)"]
+    end
+
+    subgraph KINETIC ["2. Kinetic Gate Defenses (Physical Barriers on Disk)"]
+        direction TB
+        GT["Gate T: AST Boundary Audits (sdcs verify --topology)"]
+        GM["Gate M: Cartography Drift Check (sdcs map --check)"]
+        GC["Gate C: Constitutional Immutability (spine.md / wiring.yaml lock)"]
+        GA["Gate A: Working Memory Budget (sdcs verify --state <= 300 tokens)"]
+    end
+
+    subgraph TACTICAL ["3. Tactical In-Stride Agent Tools"]
+        direction TB
+        MAP["sdcs map -s <subsystem> (Page focused cartography slices)"]
+        EVAL["sdcs eval record <ID> (Atomically update verified fixture hashes)"]
+        REJ["sdcs verify --topology --append-rejections (Serialize Inverted ADRs)"]
+        COMPACT["prepare for compact (5-step lossless context checkpointing)"]
+    end
+
+    BOOT --> KINETIC
+    KINETIC --> TACTICAL
+```
+
+### 1. Turn 1 Boot Hydration Order: Why the Sequence is Rigid
+
+When an agent initializes or restarts after a context reset, it MUST hydrate state across the 7 cognitive pillars in an exact, non-negotiable sequence. This sequence prevents hallucination, context dilution, and premature planning:
+
+1. **`spine.md` (The Law - Invariants & Forbidden Actions):**
+   *Why First:* The agent must know what it is physically forbidden from doing (e.g. tampering with test definitions, committing secrets, altering invariants) *before* it considers what to build.
+2. **`roadmap.md` (The North Star - The Target Setpoint):**
+   *Why Second:* Establishes the macro mission. The agent reads the active milestone and identifies the cybernetic delta: `Δ = [INTENT] - [MEASURED]`. Its sole objective is driving this delta to zero.
+3. **`app_map.md` (The Compass - Repository Cartography):**
+   *Why Third:* Provides an explicit page table of physical file paths. The agent resolves target file locations immediately—completely eliminating expensive `find` or `grep` search loops.
+4. **`decisions.md` (The Graveyard - Negative Episodic Memory):**
+   *Why Fourth:* Informs the agent of previously measured dead ends (`Claim` → `Measurement` → `Reopen Condition`). The agent is epistemologically primed *never* to retry an architecture that already failed in prior turns.
+5. **`evals.md` (Positive Ground Truth - Cryptographic Scorecard):**
+   *Why Fifth:* Ingests current empirical benchmark standing and golden SHA-256 fixture locks, establishing ground truth reality.
+6. **`state.md` (The Blackboard - Active Working Memory):**
+   *Why Sixth:* Hydrates the immediate turn-by-turn context: current subtask objective, active blockers, and pending verification gates ($\le 300$ tokens).
+7. **`wiring.yaml` (The Mesh - Declarative Topology):**
+   *Why Seventh:* Ingests component boundaries, service mesh interfaces, and forbidden import edges immediately prior to proposing code diffs in Phase 2 (Planning).
+
+> **The +1 Flight Recorder Invariant:**
+> The agent is **strictly prohibited from auto-loading `sessions/*.md` on boot**. Historical shift handoffs are immutable, write-once flight logs. Loading them on boot recreates conversational bloat, pollutes working memory, and triggers context drift. Instead, agents query `sessions/manifest.jsonl` on-demand via `sdcs session list --query <topic>` only when forensic debugging is required.
+
+---
+
+### 2. Navigating the Kinetic Gates: Zero Argumentative Loops
+
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.4.1, the agent treats repository constraints as **physical laws of motion** enforced by automated gates:
+
+* **Gate T (Topological AST Boundary Audits):**
+  - The agent tests code mutations with `sdcs verify --topology`.
+  - If an import violates `wiring.yaml`, Gate T physically blocks the mutation.
+  - The agent does not debate the boundary: it runs `sdcs verify --topology --append-rejections` to automatically serialize the failure into `decisions.md` as an Inverted ADR (`## REJ-XXX`), then refactors via dependency inversion.
+* **Gate M (Cartography Drift Pre-Commit Gate — New in v1.4.1):**
+  - Integrated into `.githooks/pre-commit`, Gate M runs `sdcs map --check`.
+  - If the agent created new files or deleted tracked files without updating `app_map.md`, git commit is physically aborted on disk.
+  - The agent understands this constraint and runs `sdcs map --sync` in-stride to reconcile the cartography table while preserving human annotations.
+* **Gate C (Constitutional Immutability):**
+  - The pre-commit hook physically blocks any unauthorized modification to `spine.md` or `wiring.yaml`.
+  - The agent understands that softening rules to fake progress is impossible without explicit human authorization (`SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`).
+* **Gate A (Working Memory Budget Gate):**
+  - The agent audits its active working memory with `sdcs verify --state`.
+  - Enforces a strict $\le 300$ token ceiling on `state.md`, ensuring the agent never exhausts its attention budget before milestone completion.
+
+---
+
+### 3. Subsystem Cartography Slicing (`sdcs map -s`)
+
+In enterprise monorepos or multi-module projects (>100 files), ingesting the entire `app_map.md` consumes valuable context tokens. SDCS v1.4.1 gives agents **cartographic paging**:
+
+```bash
+# Agent pages only the proxy subsystem cartography into its working context
+sdcs map --subsystem proxy
+# (or: sdcs map -s src/sdcs)
+```
+
+The agent resolves subsystem boundaries declared in `wiring.yaml` to their physical directories and extracts an isolated, high-density Markdown page table. This reduces cartographic token consumption by up to **85%** on large repositories.
+
+---
+
+### 4. First-Class Baseline Recalibration (`sdcs eval record`)
+
+When legitimate engineering refactors or milestone upgrades intentionally alter test fixtures or benchmark scores, agents in v1.4.1 use a first-class recalibration protocol:
+
+```bash
+# Atomically recalibrate a single fixture's SHA-256 digest in evals.md
+sdcs eval record TC-001
+
+# Recalibrate all registered fixtures simultaneously
+sdcs eval record all
+```
+
+- **Anti-Phantom Corpus Protection:** Computes normalized SHA-256 digests (stripping trivial whitespace and dummy comments) to guarantee that test fixtures are genuine, diverse benchmarks.
+- **Zero Manual Editing:** The agent never manually edits hash columns in Markdown tables, eliminating human error and accidental table corruption.
+
+---
+
+### 5. Mid-Shift Checkpoint Protocol ("prepare for compact")
+
+When pair programming sessions approach context saturation (~70–80%), or when the developer issues `"prepare for compact"` before running `/compact` or resetting chat, the agent executes a standardized 5-step checklist:
+
+1. **Topology Audit:** Runs `sdcs verify --topology` to verify all new packages are declared in `wiring.yaml`.
+2. **Flight Recorder Snapshot:** Appends an immutable log to `sessions/YYYY-MM-DD_<topic>.md` capturing completed work, test standing, and post-compact next actions. Syncs `sessions/manifest.jsonl` via `sdcs session index`.
+3. **Blackboard Pruning:** Overwrites `state.md` strictly to $\le 300$ tokens containing only `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action (Post-Compact)`.
+4. **Episodic Memory Sweeps:** Logs rejected experiments to `decisions.md` and synchronizes cartography with `sdcs map --sync`.
+5. **Readiness Signal:** Emits confirmation: *"Ready for compaction."*
+
+Post-compact Turn 1 boot reads the pristine $\le 300$-token `state.md`, completely eliminating **Compaction Amnesia**.
+
+---
+
+### 6. The Mandatory Shift Close-Out Protocol
+
+Before an agent declares any task complete or stages files at the end of an engineering shift, it executes the mandatory close-out sequence:
+1. Prune and overwrite `state.md` with current verification status ($\le 300$ tokens via `sdcs verify --state`).
+2. Update `roadmap.md` `[MEASURED]` blocks with empirical test numbers and commit hashes.
+3. Serialize any failed attempts or rejected architectures to `decisions.md`.
+4. Verify cartography matches disk via Gate M (`sdcs map --check` / `sdcs map --sync`).
+5. Verify topology complies with `wiring.yaml` via Gate T (`sdcs verify --topology`).
+6. Append an immutable flight recorder log in `sessions/YYYY-MM-DD_<topic>.md` and sync index (`sdcs session index`).
 
 ---
 
@@ -483,9 +621,11 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 
 1. **Behavioral Layer (`AGENTS.md`):** Non-negotiable system rules prohibiting invariant tampering and requiring structured hydration.
 2. **Topological Invariant Gate (Gate T):** AST-level static import audit ensuring code respects `wiring.yaml` subsystem boundaries, serializing violations into `decisions.md`.
-3. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly overridden via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
-4. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
-5. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
+3. **Cartography Drift Gate (Gate M):** Pre-commit verification (`sdcs map --check`) asserting zero unmapped or orphaned files in `app_map.md` before code can be staged.
+4. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly overridden via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
+5. **Working Memory Budget Gate (Gate A):** Token-budget linter guaranteeing `state.md` never exceeds 300–350 tokens (`sdcs verify --state`), preventing context window saturation.
+6. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
+7. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
 ### Git Hook Modes
 
@@ -493,7 +633,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 | :--- | :--- | :--- | :--- |
 | **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order, wiring invariants, and mid-shift checkpoint ("prepare for compact") protocols into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
-| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, constitutional invariants are mutated (Gate C), or AST topology boundaries are breached (Gate T). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
+| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), or AST topology boundaries are breached (Gate T). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 
 ### Activating Git Hooks
 
@@ -516,7 +656,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.4.0},
+  version = {v1.4.1},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }
