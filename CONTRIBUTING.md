@@ -14,16 +14,18 @@ Thank you for contributing to SDCS and the SPEC-001 specification. We treat agen
 
 ## 2. The Contribution Verification Gate
 
-Before opening a pull request, your branch must satisfy the four verification gates defined in `spine.md`:
+Before opening a pull request, your branch should satisfy the verification gates defined in SPEC-001:
 
 | Gate | Check | Command / Verification |
 | :--- | :--- | :--- |
 | **Lint & Style** | Ruff & Black formatting | `ruff check . && black --check .` |
-| **Static Types** | Mypy strict adherence | `mypy .` |
+| **Gate T** | AST Subsystem Boundaries | `sdcs verify --topology` |
+| **Gate M** | Cartographic Synchronization | `sdcs map --check` |
+| **Gate A** | Working Memory Token Ceiling | `sdcs verify --state --max-tokens 350` |
+| **Gate E** | Empirical Corpus Diversity | `sdcs eval record all` |
 | **Unit Suite** | Automated regression checks | `pytest -v` |
-| **Corpus Diversity** | No duplicate test fixtures | `python audit_evals_corpus.py` |
 
-Pull requests with failing checks or broken integrity hashes will not be reviewed.
+All pull requests are evaluated against these kinetic gates in GitHub Actions CI and reviewed by CodeRabbit AI for architectural boundary adherence. Pull requests with failing checks or broken integrity hashes will not be merged.
 
 ---
 
