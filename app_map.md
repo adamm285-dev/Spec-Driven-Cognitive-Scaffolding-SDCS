@@ -30,10 +30,13 @@
 - `slide_10.png`
 - `slide_11.png`
 - `slide_12.png`
+- `slide_13.png`
 
 ### `media/v141slides/`
 - `Deterministic_AI_Engineering.pdf`
 - `SDCS_Deterministic_Control.pdf`
+- `The_Kinetic_Enforcement_Gates.pdf`
+- `The_Kinetic_Enforcement_Gates.png`
 
 ### `media/v141slides/deck_a_deterministic_ai/`
 - `slide_01.png`

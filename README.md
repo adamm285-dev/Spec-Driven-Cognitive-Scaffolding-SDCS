@@ -15,7 +15,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications
 
-- **[SPEC-001 (v1.4.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.4.1)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 
 ---
 
@@ -194,6 +194,7 @@ flowchart TD
 
     subgraph KINETIC ["2. Kinetic Layer (The Physics / What Moves)"]
         GT["Gate T (AST Import Verification)"]
+        GM["Gate M (Cartography Drift Check)"]
         GC["Gate C (Contract Immutability)"]
         GH[".githooks/pre-commit (Physical Disk Barrier)"]
     end
@@ -242,12 +243,14 @@ flowchart TD
         B6 --> B7["7. wiring.yaml (The Mesh: Subsystem boundaries)"]
     end
 
-    subgraph KINETIC ["2. Kinetic Gate Defenses (Physical Barriers on Disk)"]
+    subgraph KINETIC ["2. Kinetic Gate Defenses (Closed-Loop Defense-in-Depth)"]
         direction TB
         GT["Gate T: AST Boundary Audits (sdcs verify --topology)"]
         GM["Gate M: Cartography Drift Check (sdcs map --check)"]
         GC["Gate C: Constitutional Immutability (spine.md / wiring.yaml lock)"]
         GA["Gate A: Working Memory Budget (sdcs verify --state <= 300 tokens)"]
+        GE["Gate E: Evaluation Standing (sdcs eval / sdcs audit)"]
+        GS["Gate S: Working Memory Sync (CI PR >= 40 lines)"]
     end
 
     subgraph TACTICAL ["3. Tactical In-Stride Agent Tools"]
@@ -286,26 +289,29 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 
 ---
 
-### 2. Navigating the Kinetic Gates: Zero Argumentative Loops
+### 2. Navigating the Kinetic Gates: Closed-Loop Defense-in-Depth
 
-![Kinetic Defenses in Action](media/slides/slide_10.png)
+![The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth](media/slides/slide_10.png)
 
-Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.4.1, the agent treats repository constraints as **physical laws of motion** enforced by automated gates:
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.4.1, the agent treats repository constraints as **physical laws of motion** organized across two ontological defense tiers:
 
-* **Gate T (Topological AST Boundary Audits):**
-  - The agent tests code mutations with `sdcs verify --topology`.
-  - If an import violates `wiring.yaml`, Gate T physically blocks the mutation.
-  - The agent does not debate the boundary: it runs `sdcs verify --topology --append-rejections` to automatically serialize the failure into `decisions.md` as an Inverted ADR (`## REJ-XXX`), then refactors via dependency inversion.
-* **Gate M (Cartography Drift Pre-Commit Gate — New in v1.4.1):**
-  - Integrated into `.githooks/pre-commit`, Gate M runs `sdcs map --check`.
-  - If the agent created new files or deleted tracked files without updating `app_map.md`, git commit is physically aborted on disk.
-  - The agent understands this constraint and runs `sdcs map --sync` in-stride to reconcile the cartography table while preserving human annotations.
-* **Gate C (Constitutional Immutability):**
-  - The pre-commit hook physically blocks any unauthorized modification to `spine.md` or `wiring.yaml`.
-  - The agent understands that softening rules to fake progress is impossible without explicit human authorization (`SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`).
-* **Gate A (Working Memory Budget Gate):**
-  - The agent audits its active working memory with `sdcs verify --state`.
-  - Enforces a strict $\le 300$ token ceiling on `state.md`, ensuring the agent never exhausts its attention budget before milestone completion.
+| Defense Tier | Gate | Name | Enforcement Trigger | Physical Failure Prevented |
+| :--- | :--- | :--- | :--- | :--- |
+| **Spatial & Structural** | **Gate T** | Topological Invariant Gate | `sdcs verify --topology` | Prohibited AST cross-subsystem imports violating `wiring.yaml`. |
+| **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked or orphaned files in `app_map.md`. |
+| **Spatial & Structural** | **Gate C** | Constitutional Immutability | `.githooks/pre-commit` | Unauthorized mutation of `spine.md` or `wiring.yaml`. |
+| **Cognitive & Temporal** | **Gate A** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia (`state.md` > 300–350 tokens). |
+| **Cognitive & Temporal** | **Gate E** | Evaluation Standing Gate | `sdcs eval` / `sdcs audit` | Phantom corpus duplicate fixtures and SHA-256 hash drift. |
+| **Cognitive & Temporal** | **Gate S** | Working Memory Sync Gate | CI diff trigger ($\ge 40$ lines) | Merging large pull requests without updating `state.md`. |
+
+#### Kinetic Defenses in Action: Automated Inverted ADR Serialization
+
+![Kinetic Defenses in Action](media/slides/slide_11.png)
+
+When an agent encounters a Gate T boundary violation during code generation, it follows a zero-argumentation protocol:
+1. **Physical AST Rejection:** Gate T statically audits the AST and blocks the commit with `exit 1`.
+2. **Automated Memory Serialization:** The agent invokes `sdcs verify --topology --append-rejections`, which extracts monotonic IDs and serializes an Inverted ADR (`## REJ-XXX`) conforming to the **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema directly into `decisions.md`.
+3. **Epistemological Reflection:** The rejection record remains unstaged on disk, forcing the agent to reflect upon the negative memory and refactor via dependency inversion or interface decoupling.
 
 ---
 
@@ -368,7 +374,7 @@ Before an agent declares any task complete or stages files at the end of an engi
 
 ## Lossless Compaction: The "Prepare for Compact" Protocol
 
-![Lossless Compaction Protocol](media/slides/slide_11.png)
+![Lossless Compaction Protocol](media/slides/slide_12.png)
 
 In long engineering sessions spanning dozens of turns, AI context windows inevitably fill up. Development environments (such as Claude Code's `/compact`, Cursor chat resets, Aider history truncations, or LLM context window roll-offs) periodically summarize or prune the conversation transcript. When an un-scaffolded agent undergoes compaction, it suffers from **Compaction Amnesia**: active hypothesis chains, test gate states, unrecorded dead ends, and mental model cartography are wiped out. The agent wakes up on post-compact Turn 1 confused, prone to regression, and repeating measured errors.
 
@@ -415,7 +421,7 @@ During extended engineering sessions, agents often add new packages or refactor 
 
 ## Automated Integrity Enforcement
 
-![Deploying Deterministic Agents](media/slides/slide_12.png)
+![Deploying Deterministic Agents](media/slides/slide_13.png)
 
 SDCS provides deterministic Python tooling to bootstrap repositories and enforce verification gates:
 
@@ -628,8 +634,9 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 3. **Cartography Drift Gate (Gate M):** Pre-commit verification (`sdcs map --check`) asserting zero unmapped or orphaned files in `app_map.md` before code can be staged.
 4. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly overridden via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
 5. **Working Memory Budget Gate (Gate A):** Token-budget linter guaranteeing `state.md` never exceeds 300–350 tokens (`sdcs verify --state`), preventing context window saturation.
-6. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
-7. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
+6. **Evaluation Standing Gate (Gate E):** Anti-evasion SHA-256 fixture auditor (`sdcs eval` / `sdcs audit`) preventing phantom test suites and baseline drift.
+7. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
+8. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
 ### Git Hook Modes
 
