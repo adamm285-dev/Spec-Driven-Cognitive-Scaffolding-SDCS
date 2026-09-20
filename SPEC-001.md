@@ -52,8 +52,8 @@ Autonomous coding agents cannot operate reliably within an unstructured software
    - **Ontological Role:** Defines the universe of legal entities, system axioms, subsystem boundaries, and repository cartography. An agent is strictly prohibited from hallucinating or inventing entities outside this declared ontology.
 
 3. **The Kinetic Layer (Actions / The Laws of Motion):**
-   - **Artifacts & Engines:** Gate T AST boundary compiler (`sdcs verify --topology`), Gate C (Contract Immutability), and physical VCS hooks (`.githooks/pre-commit`).
-   - **Ontological Role:** Enforces physical transition rules. Every code modification represents a state transition $y = f(x)$. If an agent attempts an illegal cross-subsystem import or uncontracted mutation, the kinetic layer physically halts the operation on disk.
+   - **Artifacts & Engines:** Gate T AST boundary compiler (`sdcs verify --topology`), Gate M cartography drift engine (`sdcs map --check`), Gate C (Contract Immutability), Gate A token budget linter (`sdcs verify --state`), Gate E evaluation standing auditor (`sdcs eval` / `sdcs audit`), Gate S working memory sync gate, and physical VCS hooks (`.githooks/pre-commit`).
+   - **Ontological Role:** Enforces physical transition rules across Spatial/Structural (Gates T, M, C) and Cognitive/Temporal (Gates A, E, S) tiers. Every code modification represents a state transition $y = f(x)$. If an agent attempts an illegal cross-subsystem import, uncontracted mutation, or drifted file commit, the kinetic layer physically halts the operation on disk (`exit 1`).
 
 4. **The Dynamic Layer (Memory, Causality, and Time Evolution):**
    - **Artifacts & Ledgers:** `decisions.md` (Pillar 6: Negative Memory), `evals.md` (Pillar 7: Positive Memory & Merkle/SHA-256 standing), `state.md` (Pillar 4: Working Memory Blackboard), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
@@ -200,18 +200,19 @@ Autonomous agents conforming to SPEC-001 MUST execute within a deterministic 4-p
 
 Autonomous multi-turn agent systems exhibit distinct operational failure modes when executing against repository scaffolding. Conforming implementations of SPEC-001 MUST address these failure modes through the following defensive mitigations.
 
-### 7.1 The Permission Illusion & Invariant Tampering
+### 7.1 Gate C: Constitutional Invariant Gating & Permission Boundary
 
 * **Failure Mode (Soft Invariant Bypass):** Because LLM coding agents typically execute with ambient shell or filesystem privileges, an agent encountering a failing test gate or strict invariant in `spine.md` may attempt to edit `spine.md`, relax linter configurations, or bypass validation flags in order to declare a task complete.
+* **REQ-GATE-C-01 (Constitutional Immutability):** Pre-commit and CI hooks MUST block any commit transaction that modifies `spine.md` or `wiring.yaml` unless explicitly bypassed by human authorization (`SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1` or `SDCS_ALLOW_INVARIANT_MUTATION=1`).
 * **Mitigations:**
   1. **OS-Level Write Isolation:** Production deployments SHOULD set explicit POSIX filesystem permissions rendering `spine.md` and `wiring.yaml` read-only to the agent process:
      ```bash
      chmod 444 spine.md wiring.yaml
      ```
-  2. **Pre-Commit Integrity Gating:** The repository's git hook harness (`.githooks/pre-commit`) MUST verify that staged diffs do not mutate `spine.md` or `wiring.yaml` during autonomous runs. If mutations are detected without an explicit human override flag (e.g., `SDCS_ALLOW_INVARIANT_MUTATION=1`), the commit MUST abort:
+  2. **Pre-Commit Integrity Gating (Gate C):** The repository's git hook harness (`.githooks/pre-commit`) MUST verify that staged diffs do not mutate `spine.md` or `wiring.yaml` during autonomous runs. If mutations are detected without an explicit human override flag, the commit MUST abort:
      ```bash
      if git diff --cached --name-only | grep -E '^(spine\.md|wiring\.yaml|\.agent/spine\.md|\.agent/wiring\.yaml)$'; then
-       echo "CRITICAL: Autonomous mutation of constitutional invariants is prohibited."
+       echo "CRITICAL: Autonomous mutation of constitutional invariants is prohibited (Gate C)."
        exit 1
      fi
      ```
@@ -241,11 +242,13 @@ Autonomous multi-turn agent systems exhibit distinct operational failure modes w
      * Agents MUST prune completed milestone steps, intermediate debug thoughts, and resolved blockers during Phase 4 (Close-Out).
      * `state.md` MUST NOT exceed approximately 300 tokens. Violation of this ceiling triggers an advisory warning from `sdcs audit`.
 
-### 7.4 Trivial Hashing Evasion (Phantom Corpus Drift)
+### 7.4 Gate E: Evaluation Standing & Anti-Evasion Fixture Locks
 
-* **Failure Mode (Trivial Fixture Mutation):** While SHA-256 fingerprinting in `evals.md` prevents verbatim file duplication, an autonomous agent attempting to artificially inflate test coverage could bypass duplicate detection by injecting trailing whitespace, comments, or dummy bytes into duplicate fixtures.
+* **Failure Mode (Phantom Corpus Drift & Trivial Mutation):** While SHA-256 fingerprinting in `evals.md` prevents verbatim file duplication, an autonomous agent attempting to artificially inflate test coverage could bypass duplicate detection by injecting trailing whitespace, comments, or dummy bytes into duplicate fixtures.
+* **REQ-GATE-E-01 (Corpus Diversity Invariant):** Evaluation auditing tools (`sdcs eval`, `sdcs audit`) MUST assert that no two declared test fixtures share identical normalized SHA-256 digests. Duplicate digests across distinct asset paths constitute an immediate *Phantom Corpus Violation* and halt execution.
+* **REQ-GATE-E-02 (Digest Verification & Freshness):** Recorded digests in `evals.md` MUST match current normalized on-disk fixture content. Discrepancies MUST be resolved via the First-Class Recalibration Protocol (`sdcs eval record <Asset-ID>|all`).
 * **Mitigations:**
-  1. **Canonical Normalization Before Hashing:** Conforming audit tools (`audit_evals_corpus.py`) SHOULD strip insignificant whitespace, formatting tokens, or comment blocks prior to digest calculation for supported text formats.
+  1. **Canonical Normalization Before Hashing:** Conforming audit tools (`audit_evals_corpus.py`, `src/sdcs/audit.py`) MUST strip insignificant trailing whitespace, formatting tokens, and comment blocks (Python `#`, JS/C `//`, HTML `<!-- -->`) prior to digest calculation for supported text formats.
   2. **Structural Size & Dimension Diversity:** Benchmark sets containing structured inputs (e.g., images, PDFs, tabular data) MUST define secondary diversity attributes (byte size distribution, dimensional variances, or token counts) alongside cryptographic hashes to ensure representative corpus coverage.
 
 ### 7.5 Gate T: Automated Topological Invariant Gating (AST Verification & Negative Memory Serialization)
@@ -339,7 +342,7 @@ sdcs eval record TC-001
 sdcs eval record all
 ```
 
-### 7.7 Cross-Platform Pre-Commit Hook Portability & Gate M
+### 7.7 Cross-Platform Pre-Commit Hook Portability
 
 Autonomous agent environments run across diverse host platforms (Linux, macOS, Windows Git Bash, MSYS2). Pre-commit hooks MUST maintain execution portability without hanging or failing on OS-specific execution aliases.
 
@@ -348,9 +351,9 @@ Autonomous agent environments run across diverse host platforms (Linux, macOS, W
   2. System candidate binaries (`python3`, `python`, `py`).
   3. Non-interactive validation test: `candidate -c "import sys"` to safely bypass Windows Store 0-byte execution stubs.
 * **REQ-HOOK-02 (Graceful Degradation):** If no functional Python interpreter is available on the host PATH, the hook MUST issue a descriptive warning rather than hanging or blocking legitimate manual human operations.
-* **REQ-HOOK-03 (Gate M: Cartography Drift Gate):** Pre-commit hooks MUST execute `sdcs map --check`. If any tracked files on disk are unmapped in `app_map.md` or orphaned, the commit transaction MUST be rejected with instructions to execute `sdcs map --sync`.
+* **REQ-HOOK-03 (Gate M: Pre-Commit Enforcement):** Pre-commit hooks MUST execute `sdcs map --check`. If any tracked files on disk are unmapped in `app_map.md` or orphaned, the commit transaction MUST be rejected with instructions to execute `sdcs map --sync`.
 
-### 7.8 Automated Cartography Drift Detection & Subsystem Paging (`sdcs map`)
+### 7.8 Gate M: Automated Cartography Drift Detection & Subsystem Paging (`sdcs map`)
 
 As an autonomous agent creates new files or refactors modules, `app_map.md` can drift out of synchronization, inducing cartographic amnesia on subsequent turns.
 
@@ -373,11 +376,12 @@ sdcs map --subsystem proxy
 sdcs map -s src/storage
 ```
 
-### 7.9 Deterministic Working Memory Token Budget Linter (`sdcs verify --state`)
+### 7.9 Gate A: Deterministic Working Memory Token Budget Linter (`sdcs verify --state`)
 
 To prevent working memory bloat and context exhaustion prior to session compaction, `state.md` is strictly constrained to a finite token budget.
 
-* **REQ-STATE-01 (Token Ceiling Enforcement):** `state.md` MUST NOT exceed 350 tokens (default threshold) during engineering turn checkpoints.
+* **REQ-GATE-A-01 (Working Memory Budget Ceiling):** Active working memory in `state.md` MUST NOT exceed 300–350 tokens (default threshold: 350 tokens) during engineering turn checkpoints.
+* **REQ-STATE-01 (Token Ceiling Enforcement):** `sdcs verify --state` MUST fail with exit code `1` if word-count token estimations exceed the configured threshold.
 * **REQ-STATE-02 (Canonical Section Schema):** `state.md` MUST conform to the three canonical sections:
   1. `## Current Objective`
   2. `## Status & Gate Verification`
@@ -427,17 +431,37 @@ sdcs graph --format ascii
 sdcs graph --format mermaid --output docs/topology.mmd
 ```
 
+### 7.12 Gate S: Working Memory Synchronization Gate (CI / Pull Request Verification)
+
+When developers or autonomous agents submit large feature pull requests without updating `state.md`, future agents waking up on subsequent shifts inherit stale blackboard states, inducing amnesia loops.
+
+* **REQ-GATE-S-01 (Diff Velocity Threshold):** CI workflows (`sdcs-ci.yml`) and pre-commit hooks MUST calculate modified source code lines across tracked programming language extensions (`CODE_EXTENSIONS="\.(py|kt|rs|go|ts|js|jsx|tsx|sol|c|cpp|h)$"`).
+* **REQ-GATE-S-02 (Atomic State Sync):** If total code additions and deletions exceed 40 lines (`LINE_THRESHOLD=40`), the pull request or commit transaction MUST stage and modify `state.md`. Pull requests breaching this threshold with an untouched `state.md` MUST fail CI validation.
+
+### 7.13 The Lossless Compaction Protocol ("prepare for compact") & In-Stride Wiring
+
+In multi-turn autonomous coding shifts, AI context windows inevitably saturate. Environments like Claude Code (`/compact`), Cursor resets, and LLM context roll-offs summarize conversation history, wiping un-scaffolded working memory. Conforming systems eliminate Compaction Amnesia through mid-shift checkpoints and in-stride topology mutation:
+
+* **REQ-COMPACT-01 (5-Step Checkpoint Cycle):** Upon receiving `"prepare for compact"` or nearing context capacity (~70–80%), agents MUST execute:
+  1. *Topology Audit:* Verify all active packages are declared in `wiring.yaml` via `sdcs verify --topology`.
+  2. *Flight Recorder Checkpoint:* Append an immutable shift log to `sessions/YYYY-MM-DD_<topic>.md` and update `sessions/manifest.jsonl` (`sdcs session index`).
+  3. *Blackboard Pruning:* Overwrite `state.md` strictly to $\le 300$ tokens containing only `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action (Post-Compact)`.
+  4. *Episodic Memory Sweeps:* Serialize rejected approaches into `decisions.md` and synchronize cartography via `sdcs map --sync`.
+  5. *Readiness Signal:* Emit explicit confirmation: *"Ready for compaction."*
+* **REQ-WIRING-01 (Additive In-Stride Rule):** When introducing new modules, packages, or subsystems, agents MUST update `wiring.yaml` in the same commit transaction as the code.
+* **REQ-WIRING-02 (Prohibited Boundary Relaxation):** Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T violations without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly prohibited.
+
 ---
 
 ## 8. Verification and Compliance Tooling
 
-Conformity with SPEC-001 v1.4.0 is validated via reference CLI tools:
+Conformity with SPEC-001 v1.4.1 is validated via reference CLI tools:
 
 * `sdcs init` (`python sdcs_init.py`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
 * `sdcs grill` (`python sdcs_init.py --grill`): Runs the `/grillme` Adversarial Spec Elicitation Protocol to harden requirements into quantifiable `[INTENT]` contracts.
 * `sdcs verify` (`sdcs verify [--topology] [--state] [--all]`): Audits codebase AST against `wiring.yaml` (Gate T), lints `state.md` token budgets (Gate A), and runs evals (Gate E).
-* `sdcs audit` (`sdcs audit [--update-pending] [--recalibrate <ID>]`): Cryptographically verifies fixture integrity, normalizes anti-evasion variance, enforces corpus diversity, and recalibrates golden digests.
-* `sdcs map` (`sdcs map [--check] [--sync]`): Audits and synchronizes `app_map.md` against disk state to eliminate cartographic drift.
+* `sdcs eval` / `sdcs audit` (`sdcs eval record <ID>|all`, `sdcs audit [--update-pending] [--recalibrate <ID>]`): Cryptographically verifies fixture integrity, normalizes anti-evasion variance, enforces corpus diversity, and recalibrates golden digests atomically.
+* `sdcs map` (`sdcs map [--check] [--sync] [--subsystem <path|name>]`): Audits and synchronizes `app_map.md` against disk state (Gate M), and pages focused cartographic slices to conserve tokens.
 * `sdcs session` (`sdcs session [index|list]`): Indexes and forensically queries flight recorder shift handoffs via `sessions/manifest.jsonl`.
 * `sdcs graph` (`sdcs graph [--format mermaid|ascii]`): Visualizes subsystem architecture and dependency flow as Mermaid diagrams or ASCII terminal DAGs.
 
