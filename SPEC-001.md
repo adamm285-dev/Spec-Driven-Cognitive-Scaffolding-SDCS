@@ -39,6 +39,26 @@ The system MUST decouple operational memory across seven specialized files maint
 | **7** | `evals.md` | Positive Episodic Memory | **Cryptographic (SHA-256 bound)** | Read Turn 1 & during verification |
 | **+** | `sessions/*.md` | Flight Recorder Handoffs | **Immutable (Write-once per session)** | **NEVER ingested on boot** |
 
+### 2.1 The Operational Ontology & Cybernetic Closure
+
+Autonomous coding agents cannot operate reliably within an unstructured software repository. SPEC-001 models the codebase not as passive files, but as a closed cybernetic control system structured across three physical layers governed by an external setpoint:
+
+1. **The Teleological Anchor (Set-Point / The "Why"):**
+   - **Artifact:** `roadmap.md` (Pillar 3: The North Star).
+   - **Ontological Role:** Anchors human optative intent (`[INTENT]`) against indicative empirical reality (`[MEASURED]`). It supplies the cybernetic control loop with its error signal ($\Delta = \text{Intent} - \text{Measured}$). The agent's sole objective is driving $\Delta \to 0$.
+
+2. **The Semantic Layer (Definitions / What Exists):**
+   - **Artifacts:** `spine.md` (Pillar 1: Axioms & Laws), `wiring.yaml` (Pillar 2: Declarative Mesh), and `app_map.md` (Pillar 5: Spatial Cartography).
+   - **Ontological Role:** Defines the universe of legal entities, system axioms, subsystem boundaries, and repository cartography. An agent is strictly prohibited from hallucinating or inventing entities outside this declared ontology.
+
+3. **The Kinetic Layer (Actions / The Laws of Motion):**
+   - **Artifacts & Engines:** Gate T AST boundary compiler (`sdcs verify --topology`), Gate C (Contract Immutability), and physical VCS hooks (`.githooks/pre-commit`).
+   - **Ontological Role:** Enforces physical transition rules. Every code modification represents a state transition $y = f(x)$. If an agent attempts an illegal cross-subsystem import or uncontracted mutation, the kinetic layer physically halts the operation on disk.
+
+4. **The Dynamic Layer (Memory, Causality, and Time Evolution):**
+   - **Artifacts & Ledgers:** `decisions.md` (Pillar 6: Negative Memory), `evals.md` (Pillar 7: Positive Memory & Merkle/SHA-256 standing), `state.md` (Pillar 4: Working Memory Blackboard), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
+   - **Ontological Role:** Models state evolution over time with symmetric episodic memory. Failed hypotheses are serialized into negative memory (`REJ-XXX`), verified milestones are locked into cryptographic standing (`evals.md`), working memory is pruned to $\le 300$ tokens, and shift causality is tracked via immutable flight recorder indexes.
+
 ---
 
 ## 3. Pillar Specifications

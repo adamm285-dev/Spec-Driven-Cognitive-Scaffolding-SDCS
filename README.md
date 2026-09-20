@@ -176,25 +176,53 @@ A critical failure mode of agent architectures is token exhaustion caused by aut
 
 ---
 
-## The Autonomous Execution Cycle
+## The Operational Ontology & Autonomous Execution Cycle
 
 ![The Autonomous Execution Cycle](media/slides/slide_09.png)
 
-SDCS transforms passive static files into a deterministic, 4-phase continuous execution engine:
+SDCS models the codebase not as arbitrary files, but as an **operational cybernetic ontology** operating across three physical layers governed by an external setpoint:
 
-1. **Phase 1: Orientation**
-   - Hydrate constraints and current ground truth in strict order:
-   - `spine.md` → `roadmap.md` → `app_map.md` → `decisions.md` → `evals.md` → `state.md`.
-2. **Phase 2: Planning**
-   - Formulate atomic diffs against `state.md`.
-   - Read `wiring.yaml` + strictly relevant target files identified via `app_map.md`.
-3. **Phase 3: Execution**
-   - Apply isolated code mutations.
-   - Run empirical verification gates defined in `evals.md` (linters, test suites, benchmarks).
-4. **Phase 4: Close-Out**
-   - Prune and update `state.md`.
-   - Append rejected hypotheses to `decisions.md`.
-   - Write an immutable flight recorder log in `sessions/YYYY-MM-DD_<topic>.md`.
+```mermaid
+flowchart TD
+    subgraph SETPOINT ["0. Teleological Anchor (The Target)"]
+        RM["roadmap.md (Human Intent vs. Measured Reality)"]
+    end
+
+    subgraph SEMANTIC ["1. Semantic Layer (The Universe / What Exists)"]
+        SP["spine.md (Constitutional Invariants & Laws)"]
+        WY["wiring.yaml (Subsystem Boundaries & Dependency Mesh)"]
+        AM["app_map.md (Repository Cartography Page Table)"]
+    end
+
+    subgraph KINETIC ["2. Kinetic Layer (The Physics / What Moves)"]
+        GT["Gate T (AST Import Verification)"]
+        GC["Gate C (Contract Immutability)"]
+        GH[".githooks/pre-commit (Physical Disk Barrier)"]
+    end
+
+    subgraph DYNAMIC ["3. Dynamic Layer (Memory & Time Evolution)"]
+        DM["decisions.md (Negative Memory: Rejection Graveyard)"]
+        EV["evals.md (Positive Memory: Empirical Ground Truth)"]
+        ST["state.md (Active Working Blackboard <= 300 tokens)"]
+        FR["sessions/manifest.jsonl (Causal Flight Recorder)"]
+    end
+
+    SETPOINT -->|Defines Target Setpoint| DYNAMIC
+    SEMANTIC -->|Defines Permitted Structure| KINETIC
+    KINETIC -->|Physically Halts Illegal Mutations| DYNAMIC
+    DYNAMIC -.->|Closed-Loop Feedback: Error -> 0| SETPOINT
+```
+
+### The 4-Phase Continuous Execution Engine
+
+The agent executes every turn through a deterministic, 4-phase continuous engine operating directly within this ontology:
+
+| Execution Phase | Operational Actions | Interacting Ontological Layer |
+| :--- | :--- | :--- |
+| **Phase 1: Orientation** | Hydrate constraints and ground truth in strict sequence: `spine.md` → `roadmap.md` → `app_map.md` → `decisions.md` → `evals.md` → `state.md`. | **Semantic Layer** (`spine.md`, `app_map.md`) to establish what exists.<br>**Dynamic Layer** (`decisions.md`, `evals.md`, `state.md`) to load memory. |
+| **Phase 2: Planning** | Formulate atomic diffs against `state.md`. Read `wiring.yaml` + strictly relevant target files identified via `app_map.md`. | **Semantic Layer** (`wiring.yaml`) to verify that the proposed import topology is valid. |
+| **Phase 3: Execution** | Apply code mutations and run empirical test/linter gates. | **Kinetic Layer** (`Gate T` & git hooks): AST parser physically blocks illegal imports.<br>**Dynamic Layer** (`evals.md`): Benchmark telemetry scores delta. |
+| **Phase 4: Close-Out** | Prune `state.md` ($\le 300$ tokens), record rejections in `decisions.md`, and log shift handoff in `sessions/`. | **Dynamic Layer** (`decisions.md`, `state.md`, `sessions/*.md`): Updates closed-loop state for subsequent turns. |
 
 ---
 
