@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **First-Class Recalibration Command (`sdcs eval record <Asset-ID>|all` & `sdcs audit record`):** Added a top-level `eval` command family with `record` and `audit` subcommands. Allows agents to recalibrate individual fixtures or all fixtures atomically in a single pass without manual table manipulation.
 - **Subsystem Cartography Paging (`sdcs map --subsystem <path|name>` / `-s`):** Enables agents to filter `app_map.md` to output only the cartography matching a specific subsystem name (resolved via `wiring.yaml`) or directory prefix, drastically reducing token consumption during the Planning phase in monorepos.
 - **Robust Table Header Detection:** Enhanced `parse_evals_table` across `src/sdcs/audit.py` and `audit_evals_corpus.py` to support `ID`, `Asset ID`, `Fixture ID`, and compound headers (`Path / Scenario`).
+- **Dark-Format Presentation Slide Deck (v1.4.1):** Modernized embedded slide deck in `README.md` to an all-new 12-slide cybernetic HUD deck (`media/slides/slide_01.png` - `slide_12.png`), visualizing the operational ontology, kinetic gates, subsystem slicing, eval recalibration, and lossless compaction.
 
 ---
 

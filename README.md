@@ -69,7 +69,7 @@ SDCS is not reinventing software theory; it is the deliberate, pragmatic applica
 
 ## Pillars 1 & 2: Boundary & Topology
 
-![Pillars 1 and 2: Boundary and Topology](media/slides/slide_04.png)
+![Boundary & Topology Enforcement](media/slides/slide_05.png)
 
 Constraining an autonomous agent's operational blast radius requires rigorous, explicit boundaries:
 
@@ -86,6 +86,8 @@ Constraining an autonomous agent's operational blast radius requires rigorous, e
 
 ## Pillar 3: The Macro Acceptance Contract (`roadmap.md`)
 
+![The Macro Acceptance Contract](media/slides/slide_06.png)
+
 Without an explicit `roadmap.md`, autonomous agents suffer from **Specification Drift** and **Scope Creep**—they optimize proxy metrics or invent unrequested requirements.
 
 ### Key Invariants:
@@ -100,8 +102,6 @@ Without an explicit `roadmap.md`, autonomous agents suffer from **Specification 
 ---
 
 ## Pillars 4 & 5: Working Memory & Cartography
-
-![Pillars 4 and 5: Cartography and Working Memory](media/slides/slide_05.png)
 
 Agents frequently burn context windows on recursive filesystem queries. SDCS solves this with a two-tiered spatial memory:
 
@@ -119,11 +119,11 @@ Agents frequently burn context windows on recursive filesystem queries. SDCS sol
 
 ## Symmetric Episodic Memory
 
+![Symmetric Episodic Memory](media/slides/slide_07.png)
+
 Episodic memory must be bidirectional: an agent must know what **failed** just as clearly as what **passed**.
 
 ### Pillar 6: Negative Episodic Memory (`decisions.md`)
-
-![Pillar 6: Negative Episodic Memory](media/slides/slide_06.png)
 
 Without negative episodic memory, an agent encountering an edge case will repeatedly re-attempt hypotheses that failed in earlier sessions. `decisions.md` acts as an auditable **Rejection Graveyard**, enforcing a mandatory 3-part schema:
 
@@ -147,8 +147,6 @@ Blueprints scanned at < 150 DPI where contour continuity drops below 30%.
 ---
 
 ### Pillar 7: Positive Ground Truth & Standing (`evals.md`)
-
-![Pillar 7: Positive Ground Truth and Standing](media/slides/slide_07.png)
 
 To prevent the **Phantom Corpus Trap** (where agents report illusory 100% test pass rates across files that are actually duplicate copies or empty templates), `evals.md` enforces cryptographic fixture verification:
 
@@ -178,7 +176,7 @@ A critical failure mode of agent architectures is token exhaustion caused by aut
 
 ## The Operational Ontology & Autonomous Execution Cycle
 
-![The Autonomous Execution Cycle](media/slides/slide_09.png)
+![The Operational Ontology](media/slides/slide_04.png)
 
 SDCS models the codebase not as arbitrary files, but as an **operational cybernetic ontology** operating across three physical layers governed by an external setpoint:
 
@@ -214,6 +212,8 @@ flowchart TD
 ```
 
 ### The 4-Phase Continuous Execution Engine
+
+![The 4-Phase Autonomous Execution Engine](media/slides/slide_09.png)
 
 The agent executes every turn through a deterministic, 4-phase continuous engine operating directly within this ontology:
 
@@ -287,6 +287,8 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 ---
 
 ### 2. Navigating the Kinetic Gates: Zero Argumentative Loops
+
+![Kinetic Defenses in Action](media/slides/slide_10.png)
 
 Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.4.1, the agent treats repository constraints as **physical laws of motion** enforced by automated gates:
 
@@ -366,6 +368,8 @@ Before an agent declares any task complete or stages files at the end of an engi
 
 ## Lossless Compaction: The "Prepare for Compact" Protocol
 
+![Lossless Compaction Protocol](media/slides/slide_11.png)
+
 In long engineering sessions spanning dozens of turns, AI context windows inevitably fill up. Development environments (such as Claude Code's `/compact`, Cursor chat resets, Aider history truncations, or LLM context window roll-offs) periodically summarize or prune the conversation transcript. When an un-scaffolded agent undergoes compaction, it suffers from **Compaction Amnesia**: active hypothesis chains, test gate states, unrecorded dead ends, and mental model cartography are wiped out. The agent wakes up on post-compact Turn 1 confused, prone to regression, and repeating measured errors.
 
 SDCS eliminates Compaction Amnesia through the **Mid-Shift Checkpoint Protocol ("prepare for compact")** and the **Wiring Mutation Invariant (Pillar 2)**.
@@ -411,7 +415,7 @@ During extended engineering sessions, agents often add new packages or refactor 
 
 ## Automated Integrity Enforcement
 
-![Automated Integrity Enforcement](media/slides/slide_10.png)
+![Deploying Deterministic Agents](media/slides/slide_12.png)
 
 SDCS provides deterministic Python tooling to bootstrap repositories and enforce verification gates:
 
