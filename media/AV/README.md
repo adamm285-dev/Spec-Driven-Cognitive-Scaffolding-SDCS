@@ -10,9 +10,8 @@ Due to GitHub repository size guidelines, the full-fidelity binary media files a
 
 #### 1. 🎬 Executive Video Presentation
 - **Title:** *Spec-Driven Cognitive Scaffolding: The Architecture of Deterministic AI*
-- **Format:** MP4 Video (1080p)
-- **Size:** 74.1 MB
-- **Direct Link:** [Download / Stream Video](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Spec-Driven_Cognitive_Scaffolding__The_Architecture_of_Determin.mp4)
+- **Platform:** YouTube (1080p Full HD)
+- **Direct Link:** [Watch on YouTube](https://youtu.be/Ap0bXGM0MbU)
 - **Topics Covered:** The 4 physical layers (Teleological Anchor, Semantic, Kinetic, Dynamic), closed-loop cybernetic control, the 6 kinetic enforcement gates, and the Lossless Compaction Protocol.
 
 #### 2. 🎧 Audio Deep-Dive Podcast

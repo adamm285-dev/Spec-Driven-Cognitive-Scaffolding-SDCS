@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
 [![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.4-0284c7.svg?style=flat-square)](SPEC-001.md)
 [![Version](https://img.shields.io/badge/release-v1.4.1-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.4.1)
+[![YouTube](https://img.shields.io/badge/YouTube-Watch%20Overview-FF0000.svg?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/Ap0bXGM0MbU)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
 [![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](SPEC-001.md)
@@ -25,7 +26,7 @@ Prefer listening or watching? Explore the architectural foundations, cybernetic 
 
 | Format | Title & Deep-Dive | Direct Resource |
 | :--- | :--- | :--- |
-| 🎬 **Executive Video** | **Spec-Driven Cognitive Scaffolding: The Architecture of Deterministic AI**<br>Comprehensive video presentation detailing the 4 physical layers, kinetic enforcement gates, and lossless compaction. | [▶️ **Watch Video (74 MB MP4)**](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Spec-Driven_Cognitive_Scaffolding__The_Architecture_of_Determin.mp4) |
+| 🎬 **Executive Video** | **Spec-Driven Cognitive Scaffolding: The Architecture of Deterministic AI**<br>Comprehensive video presentation detailing the 4 physical layers, kinetic enforcement gates, and lossless compaction. | [▶️ **Watch on YouTube (1080p)**](https://youtu.be/Ap0bXGM0MbU) |
 | 🎧 **Audio Deep-Dive** | **Breaking the Turn 15 Wall with SDCS**<br>Deep-dive podcast discussion examining context conflation, why monolithic prompts fail after turn 15, and how SDCS achieves 50+ turn deterministic stability. | [🎧 **Listen to Podcast (39 MB M4A)**](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a) |
 | 📊 **Slide Deck** | **Deterministic Agent Architecture (13-Slide High-Resolution HUD Deck)**<br>Visual cybernetic reference covering the 7 pillars, 6 kinetic gates, and closed-loop control theory. | [📄 **Download Deck (PDF)**](media/Deterministic_Agent_Architecture_(3)%20(1).pdf) |
 | 📚 **Knowledge Base** | **Official GitHub Wiki**<br>10-page modular reference suite with SOPs, runbooks, CLI reference, and formal ontology lexicon. | [🌐 **Explore the Wiki**](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/wiki) |
