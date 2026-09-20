@@ -281,14 +281,15 @@ SDCS provides deterministic Python tooling to bootstrap repositories and enforce
   - Scaffolds the complete 7-pillar framework into any existing repository.
   - Automatically indexes existing files and directory structure into `app_map.md`.
   - Generates compliant `AGENTS.md` behavioral guidance, `sessions/template.md`, and `prompts/grillme.md`.
-* **`sdcs audit` (`audit_evals_corpus.py`):**
+* **`sdcs audit` & `sdcs eval` (`audit_evals_corpus.py` & `src/sdcs/audit.py`):**
   - Validates that all benchmark fixtures listed in `evals.md` physically exist on disk.
   - Computes normalized SHA-256 digests (anti-evasion whitespace/comment invariant).
   - **Diversity Enforcement:** Halts execution if duplicate files masquerade as independent test cases.
-  - **Atomic Recalibration:** `--recalibrate <ID>|all` computes new digests and updates `evals.md` rows directly.
+  - **First-Class Recalibration:** `sdcs eval record <ID>|all` (and `sdcs audit --recalibrate`) computes new digests and updates `evals.md` rows directly in one pass.
 * **`sdcs map` (`src/sdcs/map.py`):**
   - Audits tracked codebase files against `app_map.md` cartography (`--check`).
   - Synchronizes `app_map.md` in-stride with disk additions and deletions (`--sync`), preserving developer annotations.
+  - **Subsystem Cartography Paging:** `--subsystem <path|name>` (`-s`) outputs focused slices of `app_map.md` for specific packages or subsystems, slashing context token consumption in large codebases.
 * **`sdcs verify` (`src/sdcs/verifier/`):**
   - **Gate T (Topology):** Statically audits AST imports against `wiring.yaml` boundaries without runtime execution (`--topology`, `--append-rejections`).
   - **Gate A (Working Memory):** Lints `state.md` token budget ($\le 350$ tokens) and verifies canonical 3-section schema (`--state`, `--max-tokens`).
@@ -356,10 +357,11 @@ sdcs audit
 sdcs audit --update-pending
 
 # Recalibrate a specific fixture with newly computed SHA-256 digest
-sdcs audit --recalibrate TC-001
+sdcs eval record TC-001
+# (or: sdcs audit --recalibrate TC-001)
 
 # Recalibrate all registered fixtures simultaneously
-sdcs audit --recalibrate all
+sdcs eval record all
 ```
 
 * **Asset Reachability:** Verifies referenced fixture paths exist on disk.
@@ -395,14 +397,19 @@ sdcs verify --all
 
 ---
 
-### 4. Cartography Drift Detection & Synchronization
+### 4. Cartography Drift Detection, Synchronization & Paging
 
 ```bash
 # Check if new or deleted files caused app_map.md to drift (exit code 1 if drift found)
+# Enforced automatically by Gate M in .githooks/pre-commit
 sdcs map --check
 
 # Synchronize app_map.md with disk, preserving existing annotations
 sdcs map --sync
+
+# Page a focused cartography slice for a specific subsystem or directory prefix
+sdcs map --subsystem proxy
+sdcs map -s src/sdcs
 ```
 
 ---

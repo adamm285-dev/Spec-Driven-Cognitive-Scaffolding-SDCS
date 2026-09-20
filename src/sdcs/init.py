@@ -253,6 +253,27 @@ if [ "${DIFF_LINES:-0}" -ge 40 ]; then
   fi
 fi
 
+# Resolve Python interpreter for static verification gates (Gate T, Gate M)
+PYTHON_BIN=""
+if [ -n "$VIRTUAL_ENV" ]; then
+  if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+    PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
+  elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
+    PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+  fi
+fi
+
+if [ -z "$PYTHON_BIN" ]; then
+  for candidate in python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      if "$candidate" -c "import sys" >/dev/null 2>&1; then
+        PYTHON_BIN="$candidate"
+        break
+      fi
+    fi
+  done
+fi
+
 # 3. Topological Invariant Gate (Gate T: wiring.yaml AST audit)
 WIRING_FILE=""
 if [ -f "wiring.yaml" ]; then
@@ -262,26 +283,6 @@ elif [ -f ".agent/wiring.yaml" ]; then
 fi
 
 if [ -n "$WIRING_FILE" ]; then
-  PYTHON_BIN=""
-  if [ -n "$VIRTUAL_ENV" ]; then
-    if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
-      PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
-    elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
-      PYTHON_BIN="$VIRTUAL_ENV/bin/python"
-    fi
-  fi
-
-  if [ -z "$PYTHON_BIN" ]; then
-    for candidate in python3 python py; do
-      if command -v "$candidate" >/dev/null 2>&1; then
-        if "$candidate" -c "import sys" >/dev/null 2>&1; then
-          PYTHON_BIN="$candidate"
-          break
-        fi
-      fi
-    done
-  fi
-
   if [ -z "$PYTHON_BIN" ]; then
     echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate T verification."
   else
@@ -298,6 +299,39 @@ if [ -n "$WIRING_FILE" ]; then
       else
         echo "--------------------------------------------------------------------"
         echo " [SDCS ADVISORY] Gate T: Topology boundary violation detected."
+        echo "--------------------------------------------------------------------"
+      fi
+    fi
+  fi
+fi
+
+# 4. Cartography Drift Gate (Gate M: app_map.md drift audit)
+MAP_FILE=""
+if [ -f "app_map.md" ]; then
+  MAP_FILE="app_map.md"
+elif [ -f ".agent/app_map.md" ]; then
+  MAP_FILE=".agent/app_map.md"
+fi
+
+if [ -n "$MAP_FILE" ]; then
+  if [ -z "$PYTHON_BIN" ]; then
+    echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate M verification."
+  else
+    if ! "$PYTHON_BIN" -m sdcs.cli map --check; then
+      if [ "$SDCS_MODE" = "strict" ]; then
+        echo "===================================================================="
+        echo " [SDCS VIOLATION] GATE M: CARTOGRAPHY DRIFT DETECTED"
+        echo "===================================================================="
+        echo "One or more files on disk are unmapped in $MAP_FILE or orphaned."
+        echo "Run 'sdcs map --sync' to reconcile cartography with disk."
+        echo "Stage $MAP_FILE and re-commit:"
+        echo "  sdcs map --sync && git add $MAP_FILE"
+        echo "===================================================================="
+        exit 1
+      else
+        echo "--------------------------------------------------------------------"
+        echo " [SDCS ADVISORY] Gate M: Cartography drift detected."
+        echo " Run 'sdcs map --sync' to reconcile $MAP_FILE with disk."
         echo "--------------------------------------------------------------------"
       fi
     fi

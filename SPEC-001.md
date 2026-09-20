@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.4.0
+Version: 1.4.1
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.3.0
+Replaces: SPEC-001 v1.4.0
 License: MIT
 ```
 
@@ -323,22 +323,23 @@ sdcs verify --topology
 sdcs verify --topology --append-rejections
 ```
 
-### 7.6 Fixture Recalibration Protocol (`sdcs audit --recalibrate`)
+### 7.6 Fixture Recalibration Protocol (`sdcs eval record` / `sdcs audit --recalibrate`)
 
 When test fixtures intentionally evolve during legitimate engineering refactors or milestone upgrades, manual updates to `evals.md` risk transcription errors or table malformations. 
 
-* **REQ-AUDIT-05 (Atomic Recalibration):** Tooling MUST provide atomic recalibration via `sdcs audit --recalibrate <Asset-ID>|all`.
+* **REQ-AUDIT-05 (Atomic Recalibration):** Tooling MUST provide atomic recalibration via `sdcs eval record <Asset-ID>|all` (and `sdcs audit --recalibrate <Asset-ID>|all`).
 * **Behavior:** Computes the current normalized SHA-256 digest of target fixtures on disk and updates the recorded hashes directly within the `evals.md` markdown table in a single atomic pass, eliminating the intermediate `pending` placeholder edit dance.
 
 ```bash
-# Recalibrate a single fixture
-sdcs audit --recalibrate TC-001
+# Recalibrate a single fixture atomically
+sdcs eval record TC-001
+# (Equivalent to: sdcs audit --recalibrate TC-001)
 
 # Recalibrate all registered fixtures simultaneously
-sdcs audit --recalibrate all
+sdcs eval record all
 ```
 
-### 7.7 Cross-Platform Pre-Commit Hook Portability
+### 7.7 Cross-Platform Pre-Commit Hook Portability & Gate M
 
 Autonomous agent environments run across diverse host platforms (Linux, macOS, Windows Git Bash, MSYS2). Pre-commit hooks MUST maintain execution portability without hanging or failing on OS-specific execution aliases.
 
@@ -347,8 +348,9 @@ Autonomous agent environments run across diverse host platforms (Linux, macOS, W
   2. System candidate binaries (`python3`, `python`, `py`).
   3. Non-interactive validation test: `candidate -c "import sys"` to safely bypass Windows Store 0-byte execution stubs.
 * **REQ-HOOK-02 (Graceful Degradation):** If no functional Python interpreter is available on the host PATH, the hook MUST issue a descriptive warning rather than hanging or blocking legitimate manual human operations.
+* **REQ-HOOK-03 (Gate M: Cartography Drift Gate):** Pre-commit hooks MUST execute `sdcs map --check`. If any tracked files on disk are unmapped in `app_map.md` or orphaned, the commit transaction MUST be rejected with instructions to execute `sdcs map --sync`.
 
-### 7.8 Automated Cartography Drift Detection (`sdcs map`)
+### 7.8 Automated Cartography Drift Detection & Subsystem Paging (`sdcs map`)
 
 As an autonomous agent creates new files or refactors modules, `app_map.md` can drift out of synchronization, inducing cartographic amnesia on subsequent turns.
 
@@ -357,6 +359,7 @@ As an autonomous agent creates new files or refactors modules, `app_map.md` can 
   - Preserve developer annotations on existing entries.
   - Append unmapped files under their corresponding directory headers.
   - Prune orphaned records for deleted files.
+* **REQ-MAP-03 (Subsystem Paging):** Tooling MUST provide `sdcs map --subsystem <name|path>` (`-s`) to filter cartography to a specific subsystem (resolving declared roots in `wiring.yaml`) or directory prefix, allowing agents in large codebases or monorepos to page only focused cartographic slices into working context.
 
 ```bash
 # Check for cartographic drift (returns exit code 1 if drift detected)
@@ -364,6 +367,10 @@ sdcs map --check
 
 # Synchronize app_map.md with current disk state
 sdcs map --sync
+
+# Page a focused cartography slice for a subsystem or module prefix
+sdcs map --subsystem proxy
+sdcs map -s src/storage
 ```
 
 ### 7.9 Deterministic Working Memory Token Budget Linter (`sdcs verify --state`)

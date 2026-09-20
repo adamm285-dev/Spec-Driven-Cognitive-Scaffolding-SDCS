@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-09-20: Operational Hardening & Micro-Frictions Suite
+
+### Added
+- **Pre-Commit Cartography Drift Gate (Gate M):** Integrated `sdcs map --check` into `.githooks/pre-commit` and scaffolding templates (`src/sdcs/init.py` & `sdcs_init.py`). Automatically halts git commit transactions if an autonomous agent or developer creates new files without updating `app_map.md`, providing clear remediation: `sdcs map --sync && git add app_map.md`.
+- **First-Class Recalibration Command (`sdcs eval record <Asset-ID>|all` & `sdcs audit record`):** Added a top-level `eval` command family with `record` and `audit` subcommands. Allows agents to recalibrate individual fixtures or all fixtures atomically in a single pass without manual table manipulation.
+- **Subsystem Cartography Paging (`sdcs map --subsystem <path|name>` / `-s`):** Enables agents to filter `app_map.md` to output only the cartography matching a specific subsystem name (resolved via `wiring.yaml`) or directory prefix, drastically reducing token consumption during the Planning phase in monorepos.
+- **Robust Table Header Detection:** Enhanced `parse_evals_table` across `src/sdcs/audit.py` and `audit_evals_corpus.py` to support `ID`, `Asset ID`, `Fixture ID`, and compound headers (`Path / Scenario`).
+
+---
+
 ## [1.4.0] - 2026-09-20: Field Hardening & Tactical Tooling Suite
 
 ### Added

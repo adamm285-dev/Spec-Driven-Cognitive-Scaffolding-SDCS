@@ -121,6 +121,27 @@ if [ "$SPINE_STAGED" = true ] && [ "$SDCS_ALLOW_INVARIANT_MUTATION" != "1" ] && 
     fi
 fi
 
+# Resolve Python interpreter for static verification gates (Gate T, Gate M)
+PYTHON_BIN=""
+if [ -n "$VIRTUAL_ENV" ]; then
+    if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+        PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
+    elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
+        PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+    fi
+fi
+
+if [ -z "$PYTHON_BIN" ]; then
+    for candidate in python3 python py; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            if "$candidate" -c "import sys" >/dev/null 2>&1; then
+                PYTHON_BIN="$candidate"
+                break
+            fi
+        fi
+    done
+fi
+
 # Gate T: AST Topology Boundary Audit & Negative Memory Persistence (wiring.yaml)
 # Checks codebase AST against declared subsystem boundaries and appends violations to decisions.md
 WIRING_EXISTS=false
@@ -129,26 +150,6 @@ if [ -f "wiring.yaml" ] || [ -f ".agent/wiring.yaml" ]; then
 fi
 
 if [ "$WIRING_EXISTS" = true ]; then
-    PYTHON_BIN=""
-    if [ -n "$VIRTUAL_ENV" ]; then
-        if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
-            PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
-        elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
-            PYTHON_BIN="$VIRTUAL_ENV/bin/python"
-        fi
-    fi
-
-    if [ -z "$PYTHON_BIN" ]; then
-        for candidate in python3 python py; do
-            if command -v "$candidate" >/dev/null 2>&1; then
-                if "$candidate" -c "import sys" >/dev/null 2>&1; then
-                    PYTHON_BIN="$candidate"
-                    break
-                fi
-            fi
-        done
-    fi
-
     if [ -z "$PYTHON_BIN" ]; then
         echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate T verification."
         echo "   Skipping Gate T AST boundary check. Please ensure Python is on PATH."
@@ -167,6 +168,38 @@ if [ "$WIRING_EXISTS" = true ]; then
                 echo "  2. Refactor code to conform to declared subsystem boundaries."
                 echo "  3. Stage your source fixes and updated decisions.md, then re-commit:"
                 echo "     git add <source_files> decisions.md && git commit"
+                echo ""
+                ERRORS=$((ERRORS + 1))
+            fi
+        fi
+    fi
+fi
+
+# Gate M: Cartography Drift Audit (app_map.md)
+# Prevents cartographic amnesia by verifying all tracked files are indexed in app_map.md
+MAP_EXISTS=false
+if [ -f "app_map.md" ] || [ -f ".agent/app_map.md" ]; then
+    MAP_EXISTS=true
+fi
+
+if [ "$MAP_EXISTS" = true ]; then
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate M verification."
+        echo "   Skipping Gate M cartography check."
+    else
+        echo "[SDCS::GATE_M] Auditing repository cartography against app_map.md..."
+        if ! "$PYTHON_BIN" -m sdcs.cli map --check; then
+            if [ "$SDCS_MODE" = "advisory" ]; then
+                echo "💡 [SDCS Advisory] Cartography drift detected but running in advisory mode."
+                echo ""
+            else
+                echo "🛑 [SDCS Gate Failure] Gate M: Cartography Drift Detected!"
+                echo "   One or more files on disk are unmapped in app_map.md (or orphaned)."
+                echo ""
+                echo "Actions required before re-commit:"
+                echo "  1. Run cartography sync: 'sdcs map --sync'"
+                echo "  2. Stage your updated app_map.md and re-commit:"
+                echo "     git add app_map.md && git commit"
                 echo ""
                 ERRORS=$((ERRORS + 1))
             fi

@@ -19,7 +19,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version=f"sdcs {__version__} (SPEC-001 v1.4.0)",
+        version=f"sdcs {__version__} (SPEC-001 v1.4.1)",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
@@ -38,12 +38,12 @@ def main():
     init_parser.add_argument(
         "--use-agent-dir",
         action="store_true",
-        help="Store scaffolding files inside a '.agent/' subdirectory instead of root",
+        help="Store scaffolding files inside .agent/ directory instead of repo root",
     )
     init_parser.add_argument(
         "--hierarchical",
         action="store_true",
-        help="Generate hierarchical multi-tiered cartography maps",
+        help="Initialize hierarchical scaffolding across detected subpackages/modules",
     )
     init_parser.add_argument(
         "--skip-agents-md",
@@ -67,6 +67,18 @@ def main():
         help="Audit ground truth references in evals.md for reachability, hashes, and diversity",
     )
     audit_parser.add_argument(
+        "action_or_id",
+        nargs="?",
+        default=None,
+        help="Optional action 'record' or fixture ID to recalibrate directly",
+    )
+    audit_parser.add_argument(
+        "extra_id",
+        nargs="?",
+        default=None,
+        help="Fixture ID when using 'record <ID>'",
+    )
+    audit_parser.add_argument(
         "--evals-path",
         default=None,
         help="Path to evals.md file",
@@ -87,6 +99,58 @@ def main():
         metavar="FIXTURE_ID",
         default=None,
         help="Recalibrate one fixture ID or 'all' with newly computed SHA-256 digests in evals.md",
+    )
+
+    # Subcommand: eval (First-class positive episodic memory & recalibration)
+    eval_parser = subparsers.add_parser(
+        "eval",
+        help="Positive episodic memory and empirical standing engine (Pillar 7: evals.md)",
+    )
+    eval_subparsers = eval_parser.add_subparsers(dest="eval_action")
+
+    # eval record
+    eval_record_parser = eval_subparsers.add_parser(
+        "record",
+        help="Recalibrate one fixture ID or 'all' with newly computed SHA-256 digests in evals.md",
+    )
+    eval_record_parser.add_argument(
+        "fixture_id",
+        nargs="?",
+        default="all",
+        help="Fixture ID to record (e.g. TC-001) or 'all' (default: all)",
+    )
+    eval_record_parser.add_argument(
+        "--evals-path",
+        default=None,
+        help="Path to evals.md file (default: auto-detect)",
+    )
+    eval_record_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+
+    # eval audit
+    eval_audit_parser = eval_subparsers.add_parser(
+        "audit",
+        help="Audit ground truth references in evals.md for reachability, hashes, and diversity",
+    )
+    eval_audit_parser.add_argument(
+        "--evals-path",
+        default=None,
+        help="Path to evals.md file (default: auto-detect)",
+    )
+    eval_audit_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+    eval_audit_parser.add_argument(
+        "--update-pending",
+        action="store_true",
+        help="Automatically replace 'pending' entries in evals.md with computed hashes",
     )
 
     # Subcommand: grill
@@ -115,6 +179,13 @@ def main():
         "--sync",
         action="store_true",
         help="Synchronize app_map.md with current disk state, appending new files and pruning orphans",
+    )
+    map_parser.add_argument(
+        "--subsystem",
+        "-s",
+        type=str,
+        default=None,
+        help="Filter and display cartography for a specific subsystem or directory prefix",
     )
     map_parser.add_argument(
         "--map-path",
@@ -259,13 +330,46 @@ def main():
     elif args.command == "audit":
         repo_root = args.repo_root.resolve()
         evals_file = locate_evals_file(repo_root, args.evals_path)
+        recalibrate_target = args.recalibrate
+        if args.action_or_id:
+            if args.action_or_id == "record":
+                recalibrate_target = args.extra_id or "all"
+            elif not recalibrate_target:
+                recalibrate_target = args.action_or_id
+
         passed = run_audit(
             evals_file=evals_file,
             repo_root=repo_root,
             update_pending=args.update_pending,
-            recalibrate=args.recalibrate,
+            recalibrate=recalibrate_target,
         )
         sys.exit(0 if passed else 1)
+    elif args.command == "eval":
+        repo_root = args.repo_root.resolve()
+        evals_file = locate_evals_file(repo_root, getattr(args, "evals_path", None))
+        if getattr(args, "eval_action", None) == "record":
+            fid = getattr(args, "fixture_id", "all") or "all"
+            passed = run_audit(
+                evals_file=evals_file,
+                repo_root=repo_root,
+                recalibrate=fid,
+            )
+            sys.exit(0 if passed else 1)
+        elif getattr(args, "eval_action", None) == "audit":
+            passed = run_audit(
+                evals_file=evals_file,
+                repo_root=repo_root,
+                update_pending=getattr(args, "update_pending", False),
+            )
+            sys.exit(0 if passed else 1)
+        else:
+            # Default to audit
+            passed = run_audit(
+                evals_file=evals_file,
+                repo_root=repo_root,
+                update_pending=False,
+            )
+            sys.exit(0 if passed else 1)
     elif args.command == "grill":
         from sdcs.init import generate_grillme_md
 
@@ -279,6 +383,7 @@ def main():
             map_path=args.map_path,
             check=args.check,
             sync=args.sync,
+            subsystem=args.subsystem,
         )
         sys.exit(code)
     elif args.command == "session":

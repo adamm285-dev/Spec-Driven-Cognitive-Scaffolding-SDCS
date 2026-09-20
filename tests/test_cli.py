@@ -11,8 +11,8 @@ def test_cli_version():
     cmd = [sys.executable, "-m", "sdcs.cli", "--version"]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     output = result.stdout + result.stderr
-    assert "sdcs 1.4.0" in output
-    assert "SPEC-001 v1.4.0" in output
+    assert "sdcs 1.4.1" in output
+    assert "SPEC-001 v1.4.1" in output
 
 
 def test_cli_help():
@@ -20,7 +20,11 @@ def test_cli_help():
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     assert "init" in result.stdout
     assert "audit" in result.stdout
+    assert "eval" in result.stdout
     assert "grill" in result.stdout
+    assert "map" in result.stdout
+    assert "session" in result.stdout
+    assert "graph" in result.stdout
     assert "verify" in result.stdout
 
 
@@ -74,3 +78,69 @@ def test_cli_verify_topology_execution(tmp_path: Path):
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     assert "PASS: All import edges strictly satisfy declarative boundaries." in result.stdout
+
+
+def test_cli_eval_record(tmp_path: Path):
+    fixture = tmp_path / "fixtures" / "test.json"
+    fixture.parent.mkdir(parents=True, exist_ok=True)
+    fixture.write_text('{"status": "ok"}\n', encoding="utf-8")
+
+    evals_file = tmp_path / "evals.md"
+    evals_file.write_text(
+        """# Evals
+| ID | Path | SHA-256 Digest |
+| :--- | :--- | :--- |
+| `TC-001` | `fixtures/test.json` | `pending` |
+""",
+        encoding="utf-8",
+    )
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "sdcs.cli",
+        "eval",
+        "record",
+        "TC-001",
+        "--repo-root",
+        str(tmp_path),
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
+    assert "RECALIBRATED" in res.stdout
+    assert "TC-001" in res.stdout
+
+    updated = evals_file.read_text(encoding="utf-8")
+    assert "pending" not in updated
+
+
+def test_cli_audit_record_positional(tmp_path: Path):
+    fixture = tmp_path / "fixtures" / "smoke.txt"
+    fixture.parent.mkdir(parents=True, exist_ok=True)
+    fixture.write_text("smoke test\n", encoding="utf-8")
+
+    evals_file = tmp_path / "evals.md"
+    evals_file.write_text(
+        """# Evals
+| ID | Path | SHA-256 Digest |
+| :--- | :--- | :--- |
+| `TC-SMOKE` | `fixtures/smoke.txt` | `pending` |
+""",
+        encoding="utf-8",
+    )
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "sdcs.cli",
+        "audit",
+        "record",
+        "TC-SMOKE",
+        "--repo-root",
+        str(tmp_path),
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
+    assert "RECALIBRATED" in res.stdout
+    assert "TC-SMOKE" in res.stdout
+
+    updated = evals_file.read_text(encoding="utf-8")
+    assert "pending" not in updated

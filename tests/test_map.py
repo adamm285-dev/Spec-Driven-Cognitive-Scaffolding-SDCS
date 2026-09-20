@@ -122,3 +122,78 @@ def test_cli_map_check_and_sync(tmp_path: Path):
     res_clean = subprocess.run(cmd_check, capture_output=True, text=True, env=env, check=False)
     assert res_clean.returncode == 0
     assert "100% in sync" in res_clean.stdout
+
+
+def test_slice_cartography(tmp_path: Path):
+    from sdcs.map import slice_cartography
+
+    map_file = tmp_path / "app_map.md"
+    map_content = """# Cartography
+### `root/`
+- `AGENTS.md`
+
+### `src/auth/`
+- `login.py`
+- `token.py`
+
+### `src/storage/`
+- `db.py`
+"""
+    map_file.write_text(map_content, encoding="utf-8")
+
+    slice_auth = slice_cartography(tmp_path, "src/auth", map_file)
+    assert "Cartography Slice: `src/auth`" in slice_auth
+    assert "login.py" in slice_auth
+    assert "token.py" in slice_auth
+    assert "db.py" not in slice_auth
+    assert "AGENTS.md" not in slice_auth
+
+    # Test wiring subsystem name resolution
+    wiring_file = tmp_path / "wiring.yaml"
+    wiring_file.write_text(
+        """version: "1.3"
+subsystems:
+  auth_system:
+    path: src/auth
+""",
+        encoding="utf-8",
+    )
+
+    slice_named = slice_cartography(tmp_path, "auth_system", map_file)
+    assert "login.py" in slice_named
+    assert "token.py" in slice_named
+    assert "db.py" not in slice_named
+
+
+def test_cli_map_subsystem(tmp_path: Path):
+    import os
+
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(Path(__file__).parent.parent / "src")
+
+    map_file = tmp_path / "app_map.md"
+    map_content = """# Cartography
+### `src/proxy/`
+- `handler.py` - Proxy handler
+- `router.py`
+
+### `src/storage/`
+- `cache.py`
+"""
+    map_file.write_text(map_content, encoding="utf-8")
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "sdcs.cli",
+        "map",
+        "--subsystem",
+        "src/proxy",
+        "--repo-root",
+        str(tmp_path),
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True, env=env, check=False)
+    assert res.returncode == 0
+    assert "handler.py" in res.stdout
+    assert "router.py" in res.stdout
+    assert "cache.py" not in res.stdout

@@ -210,16 +210,112 @@ def sync_cartography(
     return True
 
 
+def slice_cartography(
+    repo_root: Path,
+    subsystem: str,
+    map_file: Path | None = None,
+) -> str:
+    """
+    Returns only the cartography section/files matching the target subsystem or directory prefix.
+    Supports subsystem names declared in wiring.yaml as well as path prefixes (e.g. 'src/sdcs').
+    """
+    if map_file is None:
+        map_file = locate_map_file(repo_root)
+
+    target_prefix = subsystem.strip("/").replace("\\", "/")
+
+    # Check if subsystem matches a declared subsystem in wiring.yaml
+    wiring_candidates = [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]
+    for w in wiring_candidates:
+        if w.is_file():
+            try:
+                import yaml
+
+                data = yaml.safe_load(w.read_text(encoding="utf-8")) or {}
+                raw_subs = data.get("subsystems", {})
+                if target_prefix in raw_subs and "path" in raw_subs[target_prefix]:
+                    target_prefix = (
+                        str(raw_subs[target_prefix]["path"]).strip("/").replace("\\", "/")
+                    )
+                    break
+            except (OSError, AttributeError, KeyError):
+                continue
+
+    if not map_file.is_file():
+        return f"# Cartography Slice: `{subsystem}`\n\n[WARN] Cartography file not found at: {map_file}\n"
+
+    content = map_file.read_text(encoding="utf-8", errors="ignore")
+    lines = content.splitlines()
+
+    matched_sections: dict[str, list[str]] = {}
+    current_dir: str | None = None
+    dir_matches = False
+
+    for line in lines:
+        trimmed = line.strip()
+        header_match = re.match(r"^#{2,4}\s+`?([^`\s:]+?)/?`?\s*$", trimmed)
+        if header_match:
+            d = header_match.group(1).rstrip("/")
+            current_dir = "" if d.lower() == "root" else d
+            if (current_dir == "" and target_prefix == "") or (
+                current_dir != ""
+                and (
+                    current_dir == target_prefix
+                    or current_dir.startswith(target_prefix + "/")
+                    or target_prefix.startswith(current_dir + "/")
+                )
+            ):
+                dir_matches = True
+            else:
+                dir_matches = False
+            continue
+
+        if trimmed.startswith(("-", "*")) and current_dir is not None:
+            bullet_match = re.match(r"^[-*]\s+`?([^`\s]+)`?(.*)$", trimmed)
+            if bullet_match:
+                fname = bullet_match.group(1)
+                extra = bullet_match.group(2)
+                file_rel = fname if current_dir == "" else f"{current_dir}/{fname}"
+                if (
+                    dir_matches
+                    or file_rel.startswith(target_prefix + "/")
+                    or file_rel == target_prefix
+                ):
+                    display_dir = current_dir if current_dir else "root"
+                    matched_sections.setdefault(display_dir, []).append(f"- `{fname}`{extra}")
+
+    if not matched_sections:
+        return f"# Cartography Slice: `{subsystem}`\n\n[INFO] No files found matching subsystem/path prefix '{subsystem}'.\n"
+
+    output_lines = [
+        f"# Cartography Slice: `{subsystem}`",
+        f"<!-- Filtered from {map_file.name} for prefix '{target_prefix}' -->\n",
+    ]
+    for d, file_lines in sorted(matched_sections.items()):
+        output_lines.append(f"### `{d}/`")
+        output_lines.extend(file_lines)
+        output_lines.append("")
+
+    return "\n".join(output_lines).strip() + "\n"
+
+
 def run_map_command(
     repo_root: Path,
     map_path: str | Path | None = None,
     check: bool = False,
     sync: bool = False,
+    subsystem: str | None = None,
 ) -> int:
     """Entrypoint for sdcs map CLI."""
     map_file = locate_map_file(repo_root, map_path)
+
+    if subsystem:
+        slice_content = slice_cartography(repo_root, subsystem, map_file)
+        print(slice_content)
+        return 0
+
     print("====================================================================")
-    print(" SDCS :: Cartography Drift Auditor & Synchronizer (SPEC-001 v1.4.0)")
+    print(" SDCS :: Cartography Drift Auditor & Synchronizer (SPEC-001 v1.4.1)")
     print(f" Map Target:  {map_file}")
     print(f" Repository:  {repo_root}")
     print("====================================================================\n")

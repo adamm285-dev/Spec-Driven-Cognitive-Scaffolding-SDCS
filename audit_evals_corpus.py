@@ -142,8 +142,10 @@ def parse_evals_table(evals_input: str | Path) -> list[FixtureEntry]:
             continue
 
         lower = stripped.lower()
-        # Detect table headers (supports both "Fixture ID" and "Asset ID")
-        if ("fixture id" in lower or "asset id" in lower) and "path" in lower:
+        # Detect table headers (supports "Fixture ID", "Asset ID", and "| ID |", along with "Path" / "Path / Scenario")
+        if "path" in lower and (
+            "fixture id" in lower or "asset id" in lower or re.search(r"\|\s*`?id`?\s*\|", lower)
+        ):
             table_started = True
             continue
 
@@ -161,7 +163,7 @@ def parse_evals_table(evals_input: str | Path) -> list[FixtureEntry]:
 
                 # Skip repeated header, divider, or empty rows
                 if (
-                    fixture_id.lower() in {"fixture id", "asset id", ":---", "---"}
+                    fixture_id.lower() in {"fixture id", "asset id", "id", ":---", "---"}
                     or not fixture_id
                     or not path_str
                 ):
