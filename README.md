@@ -1,10 +1,10 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.3-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.3.0-10b981.svg?style=flat-square)](https://github.com/)
+[![Version](https://img.shields.io/badge/release-v1.3.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.3.0)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
-[![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](#)
+[![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](SPEC-001.md)
 
 ![Spec-Driven Cognitive Scaffolding Architecture](media/slides/slide_01.png)
 
@@ -268,24 +268,21 @@ SDCS provides deterministic Python tooling to bootstrap repositories and enforce
 
 ### Installation
 
-Install `sdcs` directly from PyPI via `pip`:
+Install `sdcs` directly from GitHub using `pip`:
 
 ```bash
-pip install sdcs
+pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
 ```
 
-*(Alternatively, you can install directly from GitHub or run the standalone script):*
+*(Alternatively, you can clone for local development or run the standalone script directly):*
 
 ```bash
-# Direct from GitHub
-pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
-
-# Or clone for local development
+# Option 2: Clone and install locally for development
 git clone https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
 cd Spec-Driven-Cognitive-Scaffolding-SDCS
 pip install -e .
 
-# Or run the zero-dependency standalone script directly
+# Option 3: Zero-Install standalone script (uses standard library only)
 python sdcs_init.py --help
 ```
 

@@ -1,5 +1,5 @@
 """
-sdcs.cli - Unified CLI Router for Spec-Driven Cognitive Scaffolding (SPEC-001 v1.2)
+sdcs.cli - Unified CLI Router for Spec-Driven Cognitive Scaffolding (SPEC-001 v1.3.0)
 """
 
 import argparse
@@ -19,7 +19,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version=f"sdcs {__version__} (SPEC-001 v1.2)",
+        version=f"sdcs {__version__} (SPEC-001 v1.3.0)",
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
