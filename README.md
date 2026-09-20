@@ -197,6 +197,51 @@ SDCS transforms passive static files into a deterministic, 4-phase continuous ex
 
 ---
 
+## Lossless Compaction: The "Prepare for Compact" Protocol
+
+In long engineering sessions spanning dozens of turns, AI context windows inevitably fill up. Development environments (such as Claude Code's `/compact`, Cursor chat resets, Aider history truncations, or LLM context window roll-offs) periodically summarize or prune the conversation transcript. When an un-scaffolded agent undergoes compaction, it suffers from **Compaction Amnesia**: active hypothesis chains, test gate states, unrecorded dead ends, and mental model cartography are wiped out. The agent wakes up on post-compact Turn 1 confused, prone to regression, and repeating measured errors.
+
+SDCS eliminates Compaction Amnesia through the **Mid-Shift Checkpoint Protocol ("prepare for compact")** and the **Wiring Mutation Invariant (Pillar 2)**.
+
+### The Operational Dimensions: Why, When, Where, and How
+
+| Dimension | Specification Contract | Operational Details |
+| :--- | :--- | :--- |
+| **WHY** | **Lossless Memory Persistence & Boundary Guard** | Guarantees zero context loss across context window compactions. Externalizes fine-grained findings into the immutable flight recorder while keeping active working memory trimmed to $\le 300$ tokens so post-compact Turn 1 hydration is instant, focused, and drift-free. |
+| **WHEN** | **1. Human Trigger:** `"prepare for compact"`<br>**2. Context Saturation (~70–80%)**<br>**3. Mid-Shift Milestone Completion** | Triggered mid-shift whenever the developer issues the command `"prepare for compact"` before running `/compact`, or whenever token usage approaches window capacity during multi-hour pair programming. |
+| **WHERE** | **Cross-Pillar Synchronization:**<br>• `wiring.yaml` (Pillar 2)<br>• `sessions/*.md` (+1 Flight Recorder)<br>• `state.md` (Pillar 4)<br>• `decisions.md` (Pillar 6)<br>• `app_map.md` (Pillar 5)<br>• `roadmap.md` (Pillar 3) | Checkpoints are written to physical disk files before memory is cleared:<br>1. `wiring.yaml`: Audited and updated in-stride for newly introduced subsystems.<br>2. `sessions/YYYY-MM-DD_<topic>.md`: Discrete immutable flight recorder log.<br>3. `state.md`: Aggressively pruned strictly to $\le 300$ tokens.<br>4. `decisions.md`: Rejections and dead ends logged.<br>5. `app_map.md`: Synced with new/modified file paths.<br>6. `roadmap.md`: `[MEASURED]` telemetry logged if milestones were met. |
+| **HOW** | **5-Step Automated Execution Cycle** | The agent mechanically executes a standardized 5-step checklist and emits an explicit readiness signal before compaction proceeds. |
+
+### How It Works: The 5-Step Checkpoint Execution
+
+```
+[Developer: "prepare for compact" or Token Saturation Nears]
+                             │
+                             ▼
+  1. Topology & Subsystem Audit  ──► Runs `sdcs verify --topology` to audit wiring.yaml
+                             │
+                             ▼
+  2. Flight Recorder Snapshot    ──► Writes immutable log to `sessions/YYYY-MM-DD_<topic>.md`
+                             │
+                             ▼
+  3. Blackboard Pruning          ──► Prunes `state.md` to ≤ 300 tokens (Objective + Gate + Next Action)
+                             │
+                             ▼
+  4. Episodic Memory Sweeps      ──► Records failed approaches to `decisions.md` & updates `app_map.md`
+                             │
+                             ▼
+  5. Compact Readiness Signal    ──► Emits confirmation: "Ready for compaction." (Proceed to /compact)
+```
+
+### In-Stride Updates: The Wiring Mutation Invariant (Pillar 2)
+
+During extended engineering sessions, agents often add new packages or refactor module hierarchies. SDCS defines precise rules for when and how agents interact with `wiring.yaml`:
+
+* **In-Stride Updates (Additive):** When the agent creates new subsystems, packages, or modules, it **MUST update `wiring.yaml` in-stride** (in the same step/commit as code creation). This ensures that new components have declared boundary contracts before Gate T AST verification runs.
+* **Prohibited Relaxation (Bypasses & Cycles):** Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T rejections without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly forbidden. If an import fails Gate T, the agent must decouple via dependency inversion or serialize the failure as an Inverted ADR (`## REJ-XXX`) into `decisions.md`.
+
+---
+
 ## Automated Integrity Enforcement
 
 ![Automated Integrity Enforcement](media/slides/slide_10.png)
