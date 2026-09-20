@@ -19,6 +19,7 @@ Scaffolds the complete 7-pillar deterministic cognitive harness:
 import argparse
 import os
 import stat
+import subprocess
 import sys
 from pathlib import Path
 
@@ -399,8 +400,42 @@ EXCLUDE_DIRS = {
 
 
 def scan_repository_tree(root: Path) -> dict[str, list[str]]:
-    """Index files grouped by directory, filtering noisy runtime artifacts."""
-    tree: dict[str, list[str]] = {}
+    """Index files grouped by directory, filtering noisy runtime artifacts and respecting gitignore."""
+    if (root / ".git").exists():
+        try:
+            res = subprocess.run(
+                ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if res.returncode == 0:
+                tree: dict[str, list[str]] = {}
+                for raw_path in res.stdout.splitlines():
+                    path_str = raw_path.strip().replace("\\", "/")
+                    if not path_str:
+                        continue
+                    parts = path_str.split("/")
+                    if any(
+                        part in EXCLUDE_DIRS or part.endswith(".egg-info") for part in parts[:-1]
+                    ):
+                        continue
+                    fname = parts[-1]
+                    if fname.endswith((".pyc", ".pyo", ".so", ".DS_Store", "Thumbs.db")):
+                        continue
+                    if len(parts) == 1:
+                        rel_dir = "root"
+                    else:
+                        rel_dir = "/".join(parts[:-1])
+                    tree.setdefault(rel_dir, []).append(fname)
+                for file_list in tree.values():
+                    file_list.sort()
+                return dict(sorted(tree.items()))
+        except (subprocess.SubprocessError, OSError):
+            pass
+
+    tree = {}
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS and not d.endswith(".egg-info")]
         rel_dir = os.path.relpath(dirpath, root).replace("\\", "/")

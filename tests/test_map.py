@@ -201,3 +201,36 @@ def test_cli_map_subsystem(tmp_path: Path):
     assert "handler.py" in res.stdout
     assert "router.py" in res.stdout
     assert "cache.py" not in res.stdout
+
+
+def test_scan_repository_tree_respects_gitignore(tmp_path: Path):
+    from sdcs.init import scan_repository_tree
+
+    subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"], cwd=tmp_path, capture_output=True, check=True
+    )
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=tmp_path,
+        capture_output=True,
+        check=True,
+    )
+
+    (tmp_path / "tracked.py").write_text("# tracked", encoding="utf-8")
+    (tmp_path / "untracked.py").write_text("# untracked", encoding="utf-8")
+    (tmp_path / "ignored.secret").write_text("secret", encoding="utf-8")
+    (tmp_path / ".gitignore").write_text("*.secret\n", encoding="utf-8")
+
+    subprocess.run(
+        ["git", "add", "tracked.py", ".gitignore"], cwd=tmp_path, capture_output=True, check=True
+    )
+    subprocess.run(["git", "commit", "-m", "init"], cwd=tmp_path, capture_output=True, check=True)
+
+    tree = scan_repository_tree(tmp_path)
+    root_files = tree.get("root", [])
+
+    assert "tracked.py" in root_files
+    assert "untracked.py" in root_files
+    assert ".gitignore" in root_files
+    assert "ignored.secret" not in root_files
