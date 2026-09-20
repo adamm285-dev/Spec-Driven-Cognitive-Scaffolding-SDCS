@@ -18,6 +18,15 @@ SDCS is an open-source, file-based cognitive harness and closed-loop cybernetic 
 
 ---
 
+## 🎙️ Multimedia Overviews & Presentations
+
+Prefer listening or watching? Explore the architectural foundations and field lessons:
+* 🎬 **Executive Video Presentation:** [Watch the Full Walkthrough (MP4)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Spec-Driven_Cognitive_Scaffolding__The_Architecture_of_Determin.mp4) — *Spec-Driven Cognitive Scaffolding: The Architecture of Deterministic AI*
+* 🎧 **Audio Deep-Dive Podcast:** [Listen to the Podcast (M4A)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a) — *Breaking the Turn 15 Wall with SDCS*
+* 📊 **Slide Deck (PDF):** [Download 13-Slide High-Resolution Deck](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/media/Deterministic_Agent_Architecture_(3)%20(1).pdf)
+
+---
+
 ## Why SDCS Exists: The Crisis of Monolithic Prompting
 
 Autonomous coding agents typically fail not because of raw model capability, but because of **context conflation**. When system rules, scratchpad notes, file paths, and execution history are dumped into a single prompt window, three fatal pathologies emerge:

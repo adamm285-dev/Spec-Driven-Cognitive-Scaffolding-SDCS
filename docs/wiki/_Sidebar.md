@@ -14,4 +14,6 @@
 * [GitHub Repo](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS)
 * [SPEC-001 v1.4.1](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/SPEC-001.md)
 * [PyPI Package](https://pypi.org/project/sdcs/)
+* [Executive Video (MP4)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Spec-Driven_Cognitive_Scaffolding__The_Architecture_of_Determin.mp4)
+* [Audio Podcast (M4A)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a)
 * [Slide Deck (13 Slides)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS#the-kinetic-enforcement-gates)

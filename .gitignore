@@ -79,3 +79,9 @@ sessions/*
 
 # Local launch copy / internal scratch notes
 LAUNCH.md
+
+# Large binary multimedia assets (hosted via GitHub Releases)
+media/AV/*.mp4
+media/AV/*.m4a
+media/AV/*.mp3
+media/AV/*.wav

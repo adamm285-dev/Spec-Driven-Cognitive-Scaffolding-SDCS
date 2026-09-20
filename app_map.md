@@ -29,6 +29,11 @@
 ### `media/`
 - `Deterministic_Agent_Architecture_(3) (1).pdf`
 
+### `media/AV/`
+- `Breaking_the_Turn_15_Wall_with_SDCS.m4a`
+- `README.md`
+- `Spec-Driven_Cognitive_Scaffolding__The_Architecture_of_Determin.mp4`
+
 ### `media/slides/`
 - `slide_01.png`
 - `slide_02.png`
