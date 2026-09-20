@@ -117,7 +117,29 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
-      # Gate 5: Automated Verification Test Suite
+      # Gate 5: Cartography Drift Gate (Gate M, SPEC-001 §7.8)
+      # -----------------------------------------------------------------------
+      - name: Gate M — Cartography Drift Audit
+        run: |
+          if [ -f "app_map.md" ] || [ -f ".agent/app_map.md" ]; then
+            sdcs map --check
+          else
+            echo "No app_map.md detected in root or .agent/, skipping cartography check."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Gate 6: Working Memory Token Budget Linter (Gate A, SPEC-001 §7.9)
+      # -----------------------------------------------------------------------
+      - name: Gate A — Working Memory Token Budget Linter
+        run: |
+          if [ -f "state.md" ] || [ -f ".agent/state.md" ]; then
+            sdcs verify --state --max-tokens 350
+          else
+            echo "No state.md detected in root or .agent/, skipping state check."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Test Harness: Automated Test Suite
       # -----------------------------------------------------------------------
       - name: Run Test Harness
         run: |

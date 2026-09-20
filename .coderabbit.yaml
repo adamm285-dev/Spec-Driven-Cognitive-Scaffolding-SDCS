@@ -1,0 +1,61 @@
+# CodeRabbit Configuration for Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.4.1)
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+version: "2"
+language: "en-US"
+tone_instructions: >-
+  You are an expert systems architecture and compiler reviewer specializing in
+  deterministic cybernetic control systems, invariant theory, and agentic cognitive scaffolding.
+  Be rigorous, objective, and constructive. Prioritize architectural boundary contracts,
+  falsification records, and cognitive token economy over cosmetic feedback.
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  poem: false
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "**"
+      instructions: |
+        This repository follows Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.4.1).
+        When auditing pull requests, rigorously evaluate compliance against the 6 Kinetic Enforcement Gates:
+
+        1. Gate C (Constitutional Immutability):
+           - Alert immediately if `spine.md` or `wiring.yaml` are modified without explicit architectural authorization.
+           - These files define domain axioms and boundary contracts.
+
+        2. Gate T (AST Subsystem Boundaries):
+           - Ensure that inter-subsystem imports strictly conform to `allowed_dependencies` declared in `wiring.yaml`.
+           - Flag circular dependencies or layering violations immediately.
+
+        3. Gate M (Cartographic Synchronization):
+           - If files are added, moved, or deleted, verify that `app_map.md` has been synchronized.
+           - Ensure no orphaned entries or unmapped files exist.
+
+        4. Gate S (Working Memory Synchronization):
+           - For PRs introducing significant code velocity (>= 40 net modified lines), ensure `state.md` has been staged with updated objective and verification status.
+
+        5. Gate A (Working Memory Token Ceiling):
+           - Ensure `state.md` remains disciplined: <= 350 tokens, containing only the 3 canonical sections (Current Objective, Status & Gate Verification, Immediate Next Action).
+
+        6. Gate E (Empirical Standing & Corpus Diversity):
+           - When test fixtures in `evals.md` are added or recalibrated, verify that no two fixtures share identical normalized SHA-256 digests (Phantom Corpus prevention).
+
+    - path: "src/sdcs/**"
+      instructions: |
+        Core framework runtime. Ensure:
+        - Python 3.10+ compatibility.
+        - Proper type annotations (PEP 484).
+        - Exception safety across AST parsing and CLI dispatch subroutines.
+
+    - path: "tests/**"
+      instructions: |
+        Verify test quality:
+        - Assert that tests execute against real temporary directories rather than mock theater.
+        - Ensure both success (exit 0) and failure (exit 1) states are asserted.
+
+chat:
+  auto_reply: true

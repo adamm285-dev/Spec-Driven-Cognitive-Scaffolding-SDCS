@@ -87,6 +87,7 @@
 - `grillme.md`
 
 ### `root/`
+- `.coderabbit.yaml`
 - `.gitattributes`
 - `.gitignore`
 - `.zenodo.json`
