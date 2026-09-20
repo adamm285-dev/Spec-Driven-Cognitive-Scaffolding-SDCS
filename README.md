@@ -1,5 +1,6 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
+[![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
 [![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.3-0284c7.svg?style=flat-square)](SPEC-001.md)
 [![Version](https://img.shields.io/badge/release-v1.3.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.3.0)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
@@ -268,21 +269,24 @@ SDCS provides deterministic Python tooling to bootstrap repositories and enforce
 
 ### Installation
 
-Install `sdcs` directly from GitHub using `pip`:
+Install `sdcs` directly from [PyPI](https://pypi.org/project/sdcs/) via `pip`:
 
 ```bash
-pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
+pip install sdcs
 ```
 
-*(Alternatively, you can clone for local development or run the standalone script directly):*
+*(Alternatively, you can install directly from GitHub, clone for local development, or run the zero-dependency standalone script):*
 
 ```bash
-# Option 2: Clone and install locally for development
+# Direct from GitHub
+pip install git+https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
+
+# Or clone and install locally for development
 git clone https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS.git
 cd Spec-Driven-Cognitive-Scaffolding-SDCS
 pip install -e .
 
-# Option 3: Zero-Install standalone script (uses standard library only)
+# Or run the zero-dependency standalone script directly
 python sdcs_init.py --help
 ```
 
