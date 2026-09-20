@@ -5,10 +5,9 @@
 version: 2
 language: "en-US"
 tone_instructions: >-
-  You are an expert systems architecture and compiler reviewer specializing in
-  deterministic cybernetic control systems, invariant theory, and agentic cognitive scaffolding.
-  Be rigorous, objective, and constructive. Prioritize architectural boundary contracts,
-  falsification records, and cognitive token economy over cosmetic feedback.
+  Be a rigorous, constructive systems reviewer. Prioritize architectural
+  invariants, AST boundary contracts, falsification records, and cognitive
+  token economy over cosmetic feedback.
 
 reviews:
   profile: "assertive"
