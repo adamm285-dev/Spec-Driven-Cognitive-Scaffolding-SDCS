@@ -22,7 +22,7 @@ Before opening a pull request, your branch should satisfy the verification gates
 | **Gate T** | AST Subsystem Boundaries | `sdcs verify --topology` |
 | **Gate M** | Cartographic Synchronization | `sdcs map --check` |
 | **Gate A** | Working Memory Token Ceiling | `sdcs verify --state --max-tokens 350` |
-| **Gate E** | Empirical Corpus Diversity | `sdcs eval record all` |
+| **Gate E** | Empirical Corpus Diversity | `sdcs audit` |
 | **Unit Suite** | Automated regression checks | `pytest -v` |
 
 All pull requests are evaluated against these kinetic gates in GitHub Actions CI and reviewed by CodeRabbit AI for architectural boundary adherence. Pull requests with failing checks or broken integrity hashes will not be merged.
