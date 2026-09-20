@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-sdcs_init.py — Spec-Driven Cognitive Scaffolding (SDCS) Initializer
-Conforming to SPEC-001 v1.3.0
+sdcs_init.py - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
+Conforming to SPEC-001 v1.4.0
 
 Scaffolds the complete 7-pillar deterministic cognitive harness:
   1. spine.md        — Constitutional Invariants
-  2. wiring.yaml     — Declarative Topology
+  2. wiring.yaml     — Declarative Dependency Mesh
   3. roadmap.md      — Macro Acceptance Contract ([INTENT] vs [MEASURED])
-  4. state.md        — Dynamic Working Memory (~300 token budget)
-  5. app_map.md      — Repository Cartography (Hierarchical or Flat)
-  6. decisions.md    — Negative Episodic Memory (Rejection Graveyard)
-  7. evals.md        — Positive Ground Truth & Standing
-  +  sessions/*.md   — Flight Recorder Shift Logs
-  +  prompts/        — Authoring Protocols (/grillme)
-  +  AGENTS.md       — Operational Hydration Contract
+  4. state.md        — Working Memory Blackboard (~300 token budget)
+  5. app_map.md      — Repository Cartography (Flat or Hierarchical)
+  6. decisions.md    — Negative Episodic Memory (Rejection Log)
+  7. evals.md        — Positive Ground Truth (Empirical Scorecard & Corpus)
+  +  AGENTS.md       — Operational Boot Instructions (Behavioral Scaffolding)
+  +  sessions/       — Engineering Shift Handoff Templates (Flight Recorder)
   +  .githooks/      — Invariant Lock & State Sync Git Hook
 """
 
@@ -23,7 +22,7 @@ import stat
 import sys
 from pathlib import Path
 
-SPEC_VERSION = "1.3.0"
+SPEC_VERSION = "1.4.0"
 
 # -----------------------------------------------------------------------------
 # Pillar Templates
@@ -129,7 +128,7 @@ TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
 """
 
 TEMPLATE_AGENTS = """# AGENTS.md — Operational Harness Protocol
-<!-- Conforming to SPEC-001 v1.3.0 -->
+<!-- Conforming to SPEC-001 v1.4.0 -->
 
 ## Turn 1 Boot Hydration Order (7 Pillars)
 On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in this exact sequence:
@@ -235,6 +234,10 @@ if [ "${DIFF_LINES:-0}" -ge 40 ]; then
       echo " [SDCS ADVISORY] Working memory warning: >= 40 lines modified"
       echo " Remember to sync active objectives in state.md."
       echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
 # 3. Topological Invariant Gate (Gate T: wiring.yaml AST audit)
 WIRING_FILE=""
 if [ -f "wiring.yaml" ]; then
@@ -244,25 +247,44 @@ elif [ -f ".agent/wiring.yaml" ]; then
 fi
 
 if [ -n "$WIRING_FILE" ]; then
-  PYTHON_BIN="python3"
-  if ! command -v python3 &> /dev/null; then
-    PYTHON_BIN="python"
+  PYTHON_BIN=""
+  if [ -n "$VIRTUAL_ENV" ]; then
+    if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+      PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
+    elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
+      PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+    fi
   fi
 
-  if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
-    if [ "$SDCS_MODE" = "strict" ]; then
-      echo "===================================================================="
-      echo " [SDCS VIOLATION] GATE T: TOPOLOGICAL BOUNDARY VIOLATION DETECTED"
-      echo "===================================================================="
-      echo "Import boundaries declared in $WIRING_FILE were violated."
-      echo "Failure signature appended to decisions.md."
-      echo "Please refactor code, stage the fix and decisions.md, then re-commit."
-      echo "===================================================================="
-      exit 1
-    else
-      echo "--------------------------------------------------------------------"
-      echo " [SDCS ADVISORY] Gate T: Topology boundary violation detected."
-      echo "--------------------------------------------------------------------"
+  if [ -z "$PYTHON_BIN" ]; then
+    for candidate in python3 python py; do
+      if command -v "$candidate" >/dev/null 2>&1; then
+        if "$candidate" -c "import sys" >/dev/null 2>&1; then
+          PYTHON_BIN="$candidate"
+          break
+        fi
+      fi
+    done
+  fi
+
+  if [ -z "$PYTHON_BIN" ]; then
+    echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate T verification."
+  else
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
+      if [ "$SDCS_MODE" = "strict" ]; then
+        echo "===================================================================="
+        echo " [SDCS VIOLATION] GATE T: TOPOLOGICAL BOUNDARY VIOLATION DETECTED"
+        echo "===================================================================="
+        echo "Import boundaries declared in $WIRING_FILE were violated."
+        echo "Failure signature appended to decisions.md."
+        echo "Please refactor code, stage the fix and decisions.md, then re-commit."
+        echo "===================================================================="
+        exit 1
+      else
+        echo "--------------------------------------------------------------------"
+        echo " [SDCS ADVISORY] Gate T: Topology boundary violation detected."
+        echo "--------------------------------------------------------------------"
+      fi
     fi
   fi
 fi

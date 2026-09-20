@@ -129,27 +129,47 @@ if [ -f "wiring.yaml" ] || [ -f ".agent/wiring.yaml" ]; then
 fi
 
 if [ "$WIRING_EXISTS" = true ]; then
-    PYTHON_BIN="python3"
-    if ! command -v python3 &> /dev/null; then
-        PYTHON_BIN="python"
+    PYTHON_BIN=""
+    if [ -n "$VIRTUAL_ENV" ]; then
+        if [ -x "$VIRTUAL_ENV/Scripts/python.exe" ]; then
+            PYTHON_BIN="$VIRTUAL_ENV/Scripts/python.exe"
+        elif [ -x "$VIRTUAL_ENV/bin/python" ]; then
+            PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+        fi
     fi
 
-    echo "[SDCS::GATE_T] Auditing codebase AST against wiring.yaml contracts..."
-    if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
-        if [ "$SDCS_MODE" = "advisory" ]; then
-            echo "💡 [SDCS Advisory] Topology boundary violation detected but running in advisory mode."
-            echo ""
-        else
-            echo "🛑 [SDCS Gate Failure] Gate T: Architectural Boundary Violation Detected!"
-            echo "   Failure footprint recorded to decisions.md (unstaged)."
-            echo ""
-            echo "Actions required before re-commit:"
-            echo "  1. Review decisions.md to inspect the rejection constraints."
-            echo "  2. Refactor code to conform to declared subsystem boundaries."
-            echo "  3. Stage your source fixes and updated decisions.md, then re-commit:"
-            echo "     git add <source_files> decisions.md && git commit"
-            echo ""
-            ERRORS=$((ERRORS + 1))
+    if [ -z "$PYTHON_BIN" ]; then
+        for candidate in python3 python py; do
+            if command -v "$candidate" >/dev/null 2>&1; then
+                if "$candidate" -c "import sys" >/dev/null 2>&1; then
+                    PYTHON_BIN="$candidate"
+                    break
+                fi
+            fi
+        done
+    fi
+
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate T verification."
+        echo "   Skipping Gate T AST boundary check. Please ensure Python is on PATH."
+    else
+        echo "[SDCS::GATE_T] Auditing codebase AST against wiring.yaml contracts..."
+        if ! "$PYTHON_BIN" -m sdcs.cli verify --topology --append-rejections; then
+            if [ "$SDCS_MODE" = "advisory" ]; then
+                echo "💡 [SDCS Advisory] Topology boundary violation detected but running in advisory mode."
+                echo ""
+            else
+                echo "🛑 [SDCS Gate Failure] Gate T: Architectural Boundary Violation Detected!"
+                echo "   Failure footprint recorded to decisions.md (unstaged)."
+                echo ""
+                echo "Actions required before re-commit:"
+                echo "  1. Review decisions.md to inspect the rejection constraints."
+                echo "  2. Refactor code to conform to declared subsystem boundaries."
+                echo "  3. Stage your source fixes and updated decisions.md, then re-commit:"
+                echo "     git add <source_files> decisions.md && git commit"
+                echo ""
+                ERRORS=$((ERRORS + 1))
+            fi
         fi
     fi
 fi

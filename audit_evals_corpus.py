@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 audit_evals_corpus.py — Positive Ground Truth & Corpus Diversity Auditor
-Conforming to SPEC-001 v1.3.0 (Pillars 7 & Failure Mitigation 7.4)
+Conforming to SPEC-001 v1.4.0 (Pillars 7 & Failure Mitigation 7.4)
 
 Verifies:
   1. Asset Reachability: Fixtures referenced in evals.md exist on disk.
@@ -180,10 +180,74 @@ def parse_evals_table(evals_input: str | Path) -> list[FixtureEntry]:
     return entries
 
 
+def recalibrate_fixture(
+    evals_file: Path,
+    repo_root: Path,
+    target_id: str = "all",
+) -> bool:
+    """
+    Recalibrates one or all fixtures in evals.md by computing their current normalized
+    SHA-256 digests and atomically updating the recorded hashes in the markdown table.
+    """
+    if not evals_file.is_file():
+        print(f"[FATAL] evals.md not found at: {evals_file}", file=sys.stderr)
+        return False
+
+    content = evals_file.read_text(encoding="utf-8", errors="ignore")
+    entries = parse_evals_table(content)
+    if not entries:
+        print("[WARN] No fixture rows found in evals.md table.")
+        return False
+
+    target_id_clean = target_id.strip().lower()
+    matched = False
+    updated_content = content
+
+    for entry in entries:
+        if target_id_clean != "all" and entry.fixture_id.lower() != target_id_clean:
+            continue
+
+        fixture_path = repo_root / entry.path_str
+        if not fixture_path.exists():
+            print(
+                f"  [ERROR] Cannot recalibrate '{entry.fixture_id}': file not found on disk: {fixture_path}"
+            )
+            continue
+
+        computed_hash = calculate_normalized_sha256(fixture_path)
+
+        # Match table row pattern: | FIXTURE_ID | PATH | OLD_HASH |
+        pattern = rf"(\|\s*`?{re.escape(entry.fixture_id)}`?\s*\|\s*`?{re.escape(entry.path_str)}`?\s*\|\s*)([^|]+?)(\s*\|)"
+        new_content, count = re.subn(
+            pattern, rf"\g<1>`{computed_hash}`\g<3>", updated_content, flags=re.IGNORECASE
+        )
+        if count == 0:
+            pattern_raw = rf"(\|\s*{re.escape(entry.fixture_id)}\s*\|\s*{re.escape(entry.path_str)}\s*\|\s*)([^|]+?)(\s*\|)"
+            new_content, count = re.subn(
+                pattern_raw, rf"\g<1>{computed_hash}\g<3>", updated_content, flags=re.IGNORECASE
+            )
+
+        if count > 0:
+            updated_content = new_content
+            matched = True
+            print(f"  ✓ [RECALIBRATED] {entry.fixture_id:<14} => {computed_hash}")
+        else:
+            print(f"  [WARN] Failed to replace row for fixture '{entry.fixture_id}'.")
+
+    if matched:
+        evals_file.write_text(updated_content, encoding="utf-8")
+        print(f"\nSuccessfully recalibrated fixture(s) in {evals_file}.")
+        return True
+    else:
+        print(f"\n[ERROR] No fixture matching '{target_id}' found in {evals_file}.")
+        return False
+
+
 def run_audit(
     evals_file: Path | None = None,
     repo_root: Path | None = None,
     update_pending: bool = False,
+    recalibrate: str | None = None,
 ) -> bool:
     """
     Audits ground truth references in evals.md against repository fixtures.
@@ -203,7 +267,7 @@ def run_audit(
         evals_file = locate_evals_file(repo_root)
 
     print("====================================================================")
-    print(" SDCS :: Corpus Integrity & Diversity Audit (SPEC-001 v1.3.0)")
+    print(" SDCS :: Corpus Integrity & Diversity Audit (SPEC-001 v1.4.0)")
     print(f" Spec Target: {evals_file}")
     print(f" Working Dir: {repo_root}")
     print(" Normalizer:  Whitespace & Comment Invariant Filter (Active)")
@@ -212,6 +276,9 @@ def run_audit(
     if not evals_file.is_file():
         print(f"[FATAL] evals.md file not found at: {evals_file}", file=sys.stderr)
         return False
+
+    if recalibrate is not None:
+        return recalibrate_fixture(evals_file, repo_root, target_id=recalibrate)
 
     entries = parse_evals_table(evals_file.read_text(encoding="utf-8", errors="ignore"))
     if not entries:
@@ -314,13 +381,22 @@ def main():
         action="store_true",
         help="Automatically replace 'pending' entries in evals.md with computed hashes",
     )
+    parser.add_argument(
+        "--recalibrate",
+        metavar="FIXTURE_ID",
+        default=None,
+        help="Recalibrate one fixture ID or 'all' with newly computed SHA-256 digests in evals.md",
+    )
 
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     evals_file = locate_evals_file(repo_root, args.evals_path)
 
     success = run_audit(
-        evals_file=evals_file, repo_root=repo_root, update_pending=args.update_pending
+        evals_file=evals_file,
+        repo_root=repo_root,
+        update_pending=args.update_pending,
+        recalibrate=args.recalibrate,
     )
     sys.exit(0 if success else 1)
 

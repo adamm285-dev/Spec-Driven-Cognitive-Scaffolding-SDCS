@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.3.0
+Version: 1.4.0
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.2.0
+Replaces: SPEC-001 v1.3.0
 License: MIT
 ```
 
@@ -303,13 +303,114 @@ sdcs verify --topology
 sdcs verify --topology --append-rejections
 ```
 
+### 7.6 Fixture Recalibration Protocol (`sdcs audit --recalibrate`)
+
+When test fixtures intentionally evolve during legitimate engineering refactors or milestone upgrades, manual updates to `evals.md` risk transcription errors or table malformations. 
+
+* **REQ-AUDIT-05 (Atomic Recalibration):** Tooling MUST provide atomic recalibration via `sdcs audit --recalibrate <Asset-ID>|all`.
+* **Behavior:** Computes the current normalized SHA-256 digest of target fixtures on disk and updates the recorded hashes directly within the `evals.md` markdown table in a single atomic pass, eliminating the intermediate `pending` placeholder edit dance.
+
+```bash
+# Recalibrate a single fixture
+sdcs audit --recalibrate TC-001
+
+# Recalibrate all registered fixtures simultaneously
+sdcs audit --recalibrate all
+```
+
+### 7.7 Cross-Platform Pre-Commit Hook Portability
+
+Autonomous agent environments run across diverse host platforms (Linux, macOS, Windows Git Bash, MSYS2). Pre-commit hooks MUST maintain execution portability without hanging or failing on OS-specific execution aliases.
+
+* **REQ-HOOK-01 (Multi-Tier Python Resolution):** Pre-commit hooks (`.githooks/pre-commit`) MUST inspect runtime environments in the following order:
+  1. Active virtual environment binaries: `$VIRTUAL_ENV/Scripts/python.exe` (Windows) and `$VIRTUAL_ENV/bin/python` (Unix).
+  2. System candidate binaries (`python3`, `python`, `py`).
+  3. Non-interactive validation test: `candidate -c "import sys"` to safely bypass Windows Store 0-byte execution stubs.
+* **REQ-HOOK-02 (Graceful Degradation):** If no functional Python interpreter is available on the host PATH, the hook MUST issue a descriptive warning rather than hanging or blocking legitimate manual human operations.
+
+### 7.8 Automated Cartography Drift Detection (`sdcs map`)
+
+As an autonomous agent creates new files or refactors modules, `app_map.md` can drift out of synchronization, inducing cartographic amnesia on subsequent turns.
+
+* **REQ-MAP-01 (Static Drift Audit):** Tooling MUST provide `sdcs map --check` to compare disk files against `app_map.md` entries without executing runtime code.
+* **REQ-MAP-02 (Automatic Cartographic Sync):** `sdcs map --sync` MUST reconcile disk state with `app_map.md`:
+  - Preserve developer annotations on existing entries.
+  - Append unmapped files under their corresponding directory headers.
+  - Prune orphaned records for deleted files.
+
+```bash
+# Check for cartographic drift (returns exit code 1 if drift detected)
+sdcs map --check
+
+# Synchronize app_map.md with current disk state
+sdcs map --sync
+```
+
+### 7.9 Deterministic Working Memory Token Budget Linter (`sdcs verify --state`)
+
+To prevent working memory bloat and context exhaustion prior to session compaction, `state.md` is strictly constrained to a finite token budget.
+
+* **REQ-STATE-01 (Token Ceiling Enforcement):** `state.md` MUST NOT exceed 350 tokens (default threshold) during engineering turn checkpoints.
+* **REQ-STATE-02 (Canonical Section Schema):** `state.md` MUST conform to the three canonical sections:
+  1. `## Current Objective`
+  2. `## Status & Gate Verification`
+  3. `## Immediate Next Action (Post-Compact)`
+* **REQ-STATE-03 (Linter Tooling):** `sdcs verify --state [--max-tokens 350]` deterministically audits token consumption and section structure, failing with exit code `1` if budget is breached.
+
+```bash
+# Audit working memory token budget (default: 350 tokens)
+sdcs verify --state
+
+# Enforce custom token budget ceiling
+sdcs verify --state --max-tokens 300
+```
+
+### 7.10 Structured Flight Recorder Indexing (`sessions/manifest.jsonl`)
+
+The Flight Recorder Invariant strictly forbids ingesting historical session prose (`sessions/*.md`) on boot. However, forensic analysis across multiple engineering shifts requires structured queryability.
+
+* **REQ-SESSION-01 (Single-Line Metadata Manifest):** Tooling MUST maintain `sessions/manifest.jsonl` where each entry is a compact JSON object:
+  `{"file": "sessions/...", "timestamp": "...", "topic": "...", "verdict": "...", "summary": "..."}`
+* **REQ-SESSION-02 (Subcommand Interface):**
+  - `sdcs session index`: Scans `sessions/*.md` and generates or updates `manifest.jsonl`.
+  - `sdcs session list [--query <text>] [--json]`: Filters and displays session logs in a clean tabular view or machine-readable JSON without reading the full markdown documents into memory.
+
+```bash
+# Index all historical flight recorder logs
+sdcs session index
+
+# Query sessions by topic or keyword
+sdcs session list --query "GPU"
+```
+
+### 7.11 Declarative Topology Graph Visualizer (`sdcs graph`)
+
+To grant autonomous agents and human architects instant cognitive clarity of architectural boundaries, `wiring.yaml` contracts must be visualizable as topological graphs.
+
+* **REQ-GRAPH-01 (Format Support):** Tooling MUST support rendering `wiring.yaml` into:
+  - `mermaid`: Flowchart TD syntax for GitHub markdown rendering and documentation.
+  - `ascii`: Compact terminal directed acyclic graph (DAG) sorted in topological consumer-to-primitive order.
+* **REQ-GRAPH-02 (Output Routing):** Supports direct stdout output or saving to target files via `--output <path>`.
+
+```bash
+# Render ASCII topology DAG in terminal
+sdcs graph --format ascii
+
+# Export Mermaid diagram to file
+sdcs graph --format mermaid --output docs/topology.mmd
+```
+
 ---
 
 ## 8. Verification and Compliance Tooling
 
-Conformity with SPEC-001 is validated via reference CLI tools:
+Conformity with SPEC-001 v1.4.0 is validated via reference CLI tools:
 
-* `sdcs_init.py` (`sdcs init`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
+* `sdcs init` (`python sdcs_init.py`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
 * `sdcs grill` (`python sdcs_init.py --grill`): Runs the `/grillme` Adversarial Spec Elicitation Protocol to harden requirements into quantifiable `[INTENT]` contracts.
-* `sdcs verify --topology` (`src/sdcs/verifier/topology.py`): Audits codebase AST against `wiring.yaml` subsystem boundaries and automatically writes violations to `decisions.md` (Gate T).
-* `audit_evals_corpus.py` (`sdcs audit`): Traverses `evals.md`, cryptographically hashes test fixtures on disk (both raw and normalized), and enforces corpus diversity.
+* `sdcs verify` (`sdcs verify [--topology] [--state] [--all]`): Audits codebase AST against `wiring.yaml` (Gate T), lints `state.md` token budgets (Gate A), and runs evals (Gate E).
+* `sdcs audit` (`sdcs audit [--update-pending] [--recalibrate <ID>]`): Cryptographically verifies fixture integrity, normalizes anti-evasion variance, enforces corpus diversity, and recalibrates golden digests.
+* `sdcs map` (`sdcs map [--check] [--sync]`): Audits and synchronizes `app_map.md` against disk state to eliminate cartographic drift.
+* `sdcs session` (`sdcs session [index|list]`): Indexes and forensically queries flight recorder shift handoffs via `sessions/manifest.jsonl`.
+* `sdcs graph` (`sdcs graph [--format mermaid|ascii]`): Visualizes subsystem architecture and dependency flow as Mermaid diagrams or ASCII terminal DAGs.
+

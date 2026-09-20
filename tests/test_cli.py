@@ -11,8 +11,8 @@ def test_cli_version():
     cmd = [sys.executable, "-m", "sdcs.cli", "--version"]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     output = result.stdout + result.stderr
-    assert "sdcs 1.3.0" in output
-    assert "SPEC-001 v1.3.0" in output
+    assert "sdcs 1.4.0" in output
+    assert "SPEC-001 v1.4.0" in output
 
 
 def test_cli_help():
@@ -43,6 +43,7 @@ def test_cli_audit_help():
     assert "--evals-path" in result.stdout
     assert "--repo-root" in result.stdout
     assert "--update-pending" in result.stdout
+    assert "--recalibrate" in result.stdout
 
 
 def test_cli_verify_help():

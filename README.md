@@ -1,8 +1,8 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.3-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.3.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.3.0)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.4-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.4.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.4.0)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
 [![Architecture: SDCS](https://img.shields.io/badge/architecture-7--Pillar%20SDCS-6366f1.svg?style=flat-square)](SPEC-001.md)
@@ -15,7 +15,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications
 
-- **[SPEC-001 (v1.3.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.4.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 
 ---
 
@@ -249,19 +249,28 @@ During extended engineering sessions, agents often add new packages or refactor 
 
 SDCS provides deterministic Python tooling to bootstrap repositories and enforce verification gates:
 
-* **`sdcs_init.py` (`sdcs init`):**
+* **`sdcs init` (`python sdcs_init.py`):**
   - Scaffolds the complete 7-pillar framework into any existing repository.
   - Automatically indexes existing files and directory structure into `app_map.md`.
   - Generates compliant `AGENTS.md` behavioral guidance, `sessions/template.md`, and `prompts/grillme.md`.
+* **`sdcs audit` (`audit_evals_corpus.py`):**
+  - Validates that all benchmark fixtures listed in `evals.md` physically exist on disk.
+  - Computes normalized SHA-256 digests (anti-evasion whitespace/comment invariant).
+  - **Diversity Enforcement:** Halts execution if duplicate files masquerade as independent test cases.
+  - **Atomic Recalibration:** `--recalibrate <ID>|all` computes new digests and updates `evals.md` rows directly.
+* **`sdcs map` (`src/sdcs/map.py`):**
+  - Audits tracked codebase files against `app_map.md` cartography (`--check`).
+  - Synchronizes `app_map.md` in-stride with disk additions and deletions (`--sync`), preserving developer annotations.
+* **`sdcs verify` (`src/sdcs/verifier/`):**
+  - **Gate T (Topology):** Statically audits AST imports against `wiring.yaml` boundaries without runtime execution (`--topology`, `--append-rejections`).
+  - **Gate A (Working Memory):** Lints `state.md` token budget ($\le 350$ tokens) and verifies canonical 3-section schema (`--state`, `--max-tokens`).
+* **`sdcs session` (`src/sdcs/session.py`):**
+  - Indexes historical shift handoffs into single-line metadata (`sessions/manifest.jsonl`).
+  - Queries session history without violating the Flight Recorder Invariant (never loading raw session prose on boot).
+* **`sdcs graph` (`src/sdcs/graph.py`):**
+  - Renders `wiring.yaml` subsystem contracts into visual Mermaid diagrams or ASCII terminal DAGs.
 * **`sdcs grill` (`python sdcs_init.py --grill`):**
   - Emits the `/grillme` adversarial spec elicitation prompt to interview human stakeholders and harden requirements into quantifiable `[INTENT]` contracts before code is generated.
-* **`sdcs verify --topology` (`sdcs verify`):**
-  - Statically audits codebase Abstract Syntax Trees (AST) against `wiring.yaml` subsystem boundaries without importing code (Gate T).
-  - Automatically formats prohibited import edges into Inverted Architecture Decision Records (`## REJ-XXX`) and appends them to `decisions.md` (`--append-rejections`).
-* **`audit_evals_corpus.py` (`sdcs audit`):**
-  - Validates that all benchmark fixtures listed in `evals.md` physically exist on disk.
-  - Recalculates SHA-256 hashes to catch unversioned drift or corrupted test assets.
-  - **Diversity Enforcement:** Automatically halts execution if duplicate byte-identical files masquerade as independent test cases.
 
 ---
 
@@ -303,46 +312,104 @@ sdcs init --use-agent-dir
 #### CLI Options
 * `--target-dir <path>`: Target repository root path (default: `.`).
 * `--use-agent-dir`: Store the 7 pillars and `sessions/` inside `.agent/` instead of the root.
+* `--hierarchical`: Generate hierarchical multi-tiered cartography maps for large monorepos.
 * `--skip-agents-md`: Skip generating the `AGENTS.md` behavioral prompting file.
 * `--force`: Overwrite existing files.
 
 ---
 
-### 2. Audit Ground Truth Integrity
+### 2. Audit Ground Truth & Recalibrate Fixtures
 
 ```bash
 # Audit evals.md test fixtures and SHA-256 hashes
 sdcs audit
 
-# Or invoke the script directly
-python audit_evals_corpus.py
+# Automatically replace 'pending' entries with computed hashes
+sdcs audit --update-pending
+
+# Recalibrate a specific fixture with newly computed SHA-256 digest
+sdcs audit --recalibrate TC-001
+
+# Recalibrate all registered fixtures simultaneously
+sdcs audit --recalibrate all
 ```
 
 * **Asset Reachability:** Verifies referenced fixture paths exist on disk.
 * **Cryptographic Accuracy:** Asserts recorded SHA-256 digests match file contents.
 * **Corpus Diversity & Anti-Evasion:** Detects both byte-identical files and **near-duplicates** (fixtures differing only by trivial whitespace, empty lines, or dummy formatting padding).
-* **Hash Populator:** Automatically computes and displays hashes for rows marked `pending`.
+* **One-Step Recalibration:** Eliminates the manual edit-to-`pending` dance when updating test fixtures.
 
 ---
 
-### 3. Verify AST Topology Boundaries (Gate T)
+### 3. Verify Codebase Invariants (Topology & Working Memory)
 
 ```bash
-# Statically audit codebase imports against wiring.yaml subsystem boundaries
+# Statically audit codebase imports against wiring.yaml subsystem boundaries (Gate T)
 sdcs verify --topology
 
 # Automatically format boundary violations into inverted ADRs (## REJ-XXX)
 # and append them directly to decisions.md
 sdcs verify --topology --append-rejections
+
+# Audit working memory state.md token budget (Gate A, default <= 350 tokens)
+sdcs verify --state
+
+# Enforce custom token ceiling
+sdcs verify --state --max-tokens 300
+
+# Run all verification checks (topology, working memory, and evals)
+sdcs verify --all
 ```
 
 * **Zero Execution Risk:** Audits Abstract Syntax Trees (AST) using Python's standard `ast` module without importing or executing runtime code.
 * **Negative Memory Serialization:** Programmatically binds architectural failures to Pillar 6 (`decisions.md`) using the strict **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema.
-* **Pre-Commit Hook Integration:** Enforced automatically during `git commit` to block structural boundary violations before code enters the repository.
+* **Working Memory Discipline:** Prevents context exhaustion by halting when `state.md` exceeds 350 tokens prior to compaction.
 
 ---
 
-### 4. Adversarial Spec Elicitation (`/grillme`)
+### 4. Cartography Drift Detection & Synchronization
+
+```bash
+# Check if new or deleted files caused app_map.md to drift (exit code 1 if drift found)
+sdcs map --check
+
+# Synchronize app_map.md with disk, preserving existing annotations
+sdcs map --sync
+```
+
+---
+
+### 5. Structured Flight Recorder Querying
+
+```bash
+# Index historical sessions into sessions/manifest.jsonl
+sdcs session index
+
+# List recent sessions in an aligned terminal table
+sdcs session list
+
+# Forensically query sessions by keyword or milestone
+sdcs session list --query "GPU"
+
+# Output structured records as JSON
+sdcs session list --json
+```
+
+---
+
+### 6. Declarative Topology Graph Visualizer
+
+```bash
+# Render ASCII directed acyclic graph in terminal
+sdcs graph --format ascii
+
+# Export Mermaid diagram for documentation or GitHub markdown
+sdcs graph --format mermaid --output docs/topology.mmd
+```
+
+---
+
+### 7. Adversarial Spec Elicitation (`/grillme`)
 
 Deterministic runtime execution requires unambiguous specifications. SDCS includes the **`/grillme` Adversarial Spec Elicitation Protocol** as an authoring tool to eliminate fuzzy requirements:
 
@@ -361,8 +428,6 @@ python sdcs_init.py --grill
 * **Extracts Hard Ceilings & Floors:** Demands quantitative latency, throughput, memory, and coverage targets.
 * **Auto-Populates `roadmap.md`:** Generates structured `[INTENT]` and `[MEASURED]` acceptance criteria.
 * **Scaffolded File:** Generated at `prompts/grillme.md` (or `.agent/prompts/grillme.md`).
-
----
 
 ## Operational Scale Profiles
 
@@ -416,7 +481,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.3.0},
+  version = {v1.4.0},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

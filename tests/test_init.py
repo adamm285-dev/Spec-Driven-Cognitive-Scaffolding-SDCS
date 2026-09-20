@@ -116,3 +116,20 @@ def test_template_agents_sync():
     from sdcs.init import TEMPLATE_AGENTS as PACKAGE_TEMPLATE_AGENTS
 
     assert standalone.TEMPLATE_AGENTS == PACKAGE_TEMPLATE_AGENTS
+
+
+def test_template_hook_sync():
+    """Ensure sdcs_init.py and src/sdcs/init.py have 100% identical TEMPLATE_PRE_COMMIT_HOOK."""
+    import importlib.util
+
+    standalone_path = Path(__file__).parent.parent / "sdcs_init.py"
+    spec = importlib.util.spec_from_file_location("sdcs_init_standalone", standalone_path)
+    standalone = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(standalone)
+
+    from sdcs.init import TEMPLATE_PRE_COMMIT_HOOK as PACKAGE_HOOK
+
+    assert standalone.TEMPLATE_PRE_COMMIT_HOOK == PACKAGE_HOOK
+    assert "VIRTUAL_ENV" in PACKAGE_HOOK
+    assert "Scripts/python.exe" in PACKAGE_HOOK
+    assert '-c "import sys"' in PACKAGE_HOOK

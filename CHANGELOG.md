@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-09-20: Field Hardening & Tactical Tooling Suite
+
+### Added
+- **Fixture Recalibration Protocol (`sdcs audit --recalibrate <Asset-ID>|all`):** Added atomic hash recalibration for `evals.md`. Replaces the manual edit-to-`pending` workflow with a single CLI command that computes normalized SHA-256 digests on disk and updates markdown table records atomically.
+- **Cross-Platform Git Hook Portability:** Hardened `.githooks/pre-commit` and initializer templates with multi-tier Python discovery. Checks `$VIRTUAL_ENV/Scripts/python.exe` (Windows) and `$VIRTUAL_ENV/bin/python` (Unix), validates interpreters via `-c "import sys"` to safely bypass Windows Store 0-byte execution stubs, and issues non-blocking warnings if Python is absent.
+- **Automated Cartography Drift Detection & Sync (`sdcs map --check` & `--sync`):** Static verification and reconciliation tool comparing tracked repository files against `app_map.md`. `--check` detects unmapped new files and orphaned entries with non-zero exit codes; `--sync` reconciles cartography while preserving human code annotations.
+- **Deterministic Working Memory Token Budget Linter (`sdcs verify --state [--max-tokens 350]`):** Enforces working memory discipline by auditing `state.md` token count and canonical 3-section schema (`## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`). Integrated into `sdcs verify --state` and `sdcs verify --all`.
+- **Structured Flight Recorder Indexing (`sessions/manifest.jsonl` & `sdcs session`):** Preserves the Flight Recorder Invariant (never ingesting `sessions/*.md` on boot) while enabling rapid multi-shift forensic querying. Scans session handoffs into single-line JSON metadata records and provides `sdcs session index` and `sdcs session list [--query] [--json]`.
+- **Declarative Topology Graph Visualizer (`sdcs graph --format mermaid|ascii`):** Transforms `wiring.yaml` subsystem contracts into visual Mermaid diagrams (for markdown rendering) or ASCII directed acyclic graphs (for terminal inspection) sorted in topological consumer-to-primitive order.
+
+---
+
 ## [1.3.0] - 2026-09-19: Automated Topological Invariant Gating (Gate T)
 
 ### Added

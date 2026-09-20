@@ -190,3 +190,50 @@ def test_update_pending_replaces_hash_and_preserves_table(tmp_path):
     assert parsed[0].path_str == "test_artifact.py"
     assert parsed[0].recorded_hash == expected_hash
     assert parsed[0].status == "active"
+
+
+def test_recalibrate_fixture_single_and_all(tmp_path):
+    """SPEC-001 v1.4.0 §7.6: Verifies recalibrate_fixture updates stale hashes
+    for a specific fixture ID or all fixtures atomically.
+    """
+    f1 = tmp_path / "fix1.py"
+    f2 = tmp_path / "fix2.py"
+    f1.write_text("print('version 1')", encoding="utf-8")
+    f2.write_text("print('version 2')", encoding="utf-8")
+
+    stale_hash1 = "0000000000000000000000000000000000000000000000000000000000000000"
+    stale_hash2 = "1111111111111111111111111111111111111111111111111111111111111111"
+
+    evals_initial = f"""# Positive Ground Truth
+
+## Golden Test Corpus
+| Fixture ID | Path | SHA-256 Digest | Status |
+| :--- | :--- | :--- | :--- |
+| `TC-01` | `fix1.py` | `{stale_hash1}` | active |
+| `TC-02` | `fix2.py` | `{stale_hash2}` | active |
+"""
+    evals_file = tmp_path / "evals.md"
+    evals_file.write_text(evals_initial, encoding="utf-8")
+
+    # 1. Recalibrate only TC-01
+    passed = run_audit(evals_file=evals_file, repo_root=tmp_path, recalibrate="TC-01")
+    assert passed is True
+
+    updated_1 = evals_file.read_text(encoding="utf-8")
+    expected_hash1 = calculate_normalized_sha256(f1)
+    assert expected_hash1 in updated_1
+    assert stale_hash2 in updated_1  # TC-02 still has stale hash
+
+    # 2. Recalibrate all
+    passed_all = run_audit(evals_file=evals_file, repo_root=tmp_path, recalibrate="all")
+    assert passed_all is True
+
+    updated_2 = evals_file.read_text(encoding="utf-8")
+    expected_hash2 = calculate_normalized_sha256(f2)
+    assert expected_hash1 in updated_2
+    assert expected_hash2 in updated_2
+    assert stale_hash2 not in updated_2
+
+    # Verify audit passes cleanly now
+    audit_clean = run_audit(evals_file=evals_file, repo_root=tmp_path)
+    assert audit_clean is True
