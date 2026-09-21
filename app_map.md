@@ -100,6 +100,7 @@
 - `audit_evals_corpus.py`
 - `pyproject.toml`
 - `sdcs_init.py`
+- `state.md`
 
 ### `scripts/`
 - `publish_wiki.py`

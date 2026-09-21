@@ -28,7 +28,7 @@ Prefer listening or watching? Explore the architectural foundations, cybernetic 
 | :--- | :--- | :--- |
 | 🎬 **Executive Video** | **Spec-Driven Cognitive Scaffolding: The Architecture of Deterministic AI**<br>Comprehensive video presentation detailing the 4 physical layers, kinetic enforcement gates, and lossless compaction. | [▶️ **Watch on YouTube (1080p)**](https://youtu.be/Ap0bXGM0MbU) |
 | 🎧 **Audio Deep-Dive** | **Breaking the Turn 15 Wall with SDCS**<br>Deep-dive podcast discussion examining context conflation, why monolithic prompts fail after turn 15, and how SDCS achieves 50+ turn deterministic stability. | [🎧 **Listen to Podcast (39 MB M4A)**](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a) |
-| 📊 **Slide Deck** | **Deterministic Agent Architecture (13-Slide High-Resolution HUD Deck)**<br>Visual cybernetic reference covering the 7 pillars, 6 kinetic gates, and closed-loop control theory. | [📄 **Download Deck (PDF)**](media/Deterministic_Agent_Architecture_(3)%20(1).pdf) |
+| 📊 **Slide Deck** | **Deterministic AI Engineering (12-Slide High-Resolution Cybernetic Deck)**<br>Visual cybernetic reference covering the 7 pillars, 6 kinetic gates, and closed-loop control theory. | [📄 **Download Deck (PDF)**](media/v141slides/Deterministic_AI_Engineering.pdf) |
 | 📚 **Knowledge Base** | **Official GitHub Wiki**<br>10-page modular reference suite with SOPs, runbooks, CLI reference, and formal ontology lexicon. | [🌐 **Explore the Wiki**](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/wiki) |
 
 ---

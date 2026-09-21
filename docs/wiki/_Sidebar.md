@@ -22,4 +22,4 @@ pip install sdcs
 * [PyPI Package (`pip install sdcs`)](https://pypi.org/project/sdcs/)
 * [Executive Video (YouTube)](https://youtu.be/Ap0bXGM0MbU)
 * [Audio Podcast (M4A)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a)
-* [Slide Deck (13 Slides)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/media/Deterministic_Agent_Architecture_(3)%20(1).pdf)
+* [Slide Deck (v1.4.1 PDF)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/media/v141slides/Deterministic_AI_Engineering.pdf)
