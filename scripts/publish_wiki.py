@@ -85,7 +85,7 @@ def main() -> None:
                 str(tmp_path),
                 "commit",
                 "-m",
-                "docs: deploy SDCS v1.4.1 wiki knowledge base",
+                "docs: deploy SDCS v1.8.0 wiki knowledge base",
             ],
             check=True,
         )
