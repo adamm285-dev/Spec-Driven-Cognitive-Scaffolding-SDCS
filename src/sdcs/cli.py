@@ -803,6 +803,7 @@ def main():
             or getattr(args, "cycles", False)
             or getattr(args, "quality", False)
             or getattr(args, "env", False)
+            or getattr(args, "cache_invariance", False)
             or args.all
         )
         run_topology = args.topology or args.all or (not any_specific_check)
