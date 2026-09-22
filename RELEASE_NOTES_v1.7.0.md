@@ -23,30 +23,7 @@ Without the furnished office, an autonomous agent worker is dropped into an empt
 
 ## 🚀 Key Highlights in v1.7.0
 
-### 1. 🎮 The Living Pixel Office HUD (`sdcs watch`)
-A zero-dependency local HTTP and Server-Sent Events (SSE) server bridging real-time repository telemetry to an animated **16-bit isometric pixel-art HUD** (conforming to the Grok Bot / Clanker Town indie game aesthetic):
-- **Interactive Room Hotspots**:
-  - **Dev Desk**: Live worker speech bubble showing active objective, immediate next action, and token budget.
-  - **Server Room / Kinetic Bouncer**: Real-time status for all 8 kinetic enforcement gates.
-  - **Central Whiteboard**: Live `state.md` token density gauge ($\le 350$ tokens) and raw blackboard view.
-  - **Negative Memory Graveyard**: Active dead-end counter and rejection summaries from `decisions.md`.
-  - **Central Warehouse**: Federated cognitive trap count and Gate W secret sanitization status.
-  - **Empirical Evals**: Test fixture pass ratio and SHA-256 fixture locks.
-- **60 FPS Animated Sprite Engine**: Bot characters physically walk, bob, and pathfind across the office floor using click-to-move, toolbar dispatch, or autonomous wander routines.
-- **Reactive Event Streaming**: Streams live telemetry over Server-Sent Events (`GET /api/events`) whenever `state.md`, `evals.md`, `decisions.md`, or `sessions/manifest.jsonl` are touched during autonomous coding turns.
-- **Zero External Dependencies**: Built entirely on Python's standard library `http.server.ThreadingHTTPServer`.
-
-```bash
-# Launch the living office HUD (opens http://127.0.0.1:8765)
-sdcs watch
-
-# Run in headless or CI environments on a custom port
-sdcs watch --no-browser --port 8765
-```
-
----
-
-### 2. ⚡ The Autonomous Safety Triad
+### 1. ⚡ The Autonomous Safety Triad
 Closes the critical behavioral and operational blind spots of frontier autonomous coding agents:
 1. **The Circuit Breaker (`sdcs verify --cycles` / `src/sdcs/verifier/cycles.py`)**:
    - Static transition-graph analyzer tracking touched file sets across consecutive commits and turns.
@@ -64,7 +41,7 @@ Closes the critical behavioral and operational blind spots of frontier autonomou
 
 ---
 
-### 3. 🛡️ The Full 8-Gate Kinetic Enforcement Suite
+### 2. 🛡️ The Full 8-Gate Kinetic Enforcement Suite
 In SDCS v1.7.0, all 8 kinetic gates and the Circuit Breaker are wired into `.githooks/pre-commit` and `sdcs verify --all`:
 
 | Tier | Gate | Name | Command | Physical Failure Prevented |
@@ -81,11 +58,23 @@ In SDCS v1.7.0, all 8 kinetic gates and the Circuit Breaker are wired into `.git
 
 ---
 
-### 4. 🧠 Organizational Memory & Context Compilation
+### 3. 🧠 Organizational Memory & Context Compilation
 - **Single-Pass Deterministic Context Compiler (`sdcs hydrate`)**: Compiles pre-budgeted context payloads (Lite ~400t, Standard ~1500t, Full ~3500t) eliminating the "Grep Reflex" on boot.
 - **Central Cognitive Warehouse (`sdcs warehouse`)**: Cross-project organizational memory engine federating rejections, traps, and failure modes across agent fleets with automated Gate W secret sanitization.
 - **Parallel Worker Ephemeral Blackboards (`sdcs state fork/rollup`)**: Scoped subagent blackboards (`state.<worker_id>.md`) with deterministic parent rollup.
 - **Automated Staleness Decay (`sdcs decay`)**: Scans commit distance in `roadmap.md` and tags stale telemetry; automatically archives dead-end rejections exceeding active limits.
+
+---
+
+### 4. 📡 Live Telemetry & Event Streaming (`sdcs watch`) *(Experimental)*
+A zero-dependency local HTTP and Server-Sent Events (SSE) server bridging real-time repository telemetry to a local interface:
+- **Reactive Event Streaming**: Streams live telemetry over Server-Sent Events (`GET /api/events`) whenever `state.md`, `evals.md`, `decisions.md`, or `sessions/manifest.jsonl` are touched during autonomous coding turns.
+- **Zero External Dependencies**: Built entirely on Python's standard library `http.server.ThreadingHTTPServer`.
+
+```bash
+# Launch the telemetry server (opens http://127.0.0.1:8765)
+sdcs watch --no-browser --port 8765
+```
 
 ---
 
