@@ -6,6 +6,7 @@
 
 ## Status & Gate Verification
 - Release v1.8.0: Live on PyPI (`sdcs 1.8.0`) and GitHub Releases (`v1.8.0`).
+- GitHub Actions CI/CD: `Publish to PyPI` workflow verified 100% green.
 - Official Wiki: Deployed live with Sub-Dime Suite and Kinetic Gates.
 - Tests: 119/119 PASSED (100% green in pytest across 24 suites).
 - Kinetic Gates: Gate S, Gate M, Gate C-Cache, Circuit Breaker, Gate Q, Gate E all clean.
