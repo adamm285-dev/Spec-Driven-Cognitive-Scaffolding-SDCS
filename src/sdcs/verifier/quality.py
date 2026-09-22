@@ -18,8 +18,13 @@ class QualityViolation:
 
 
 class TestASTVisitor(ast.NodeVisitor):
-    def __init__(self, file_path: str):
+    def __init__(
+        self, file_path: str, file_content: str = "", asserting_functions: set[str] | None = None
+    ):
         self.file_path = file_path
+        self.file_content = file_content
+        self.file_lines = file_content.splitlines() if file_content else []
+        self.asserting_functions: set[str] = asserting_functions or set()
         self.violations: list[QualityViolation] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -73,6 +78,7 @@ class TestASTVisitor(ast.NodeVisitor):
 
         # 2. Extract assertions and assert-like context managers
         assert_nodes: list[ast.Assert] = []
+        assert_calls: list[ast.Call] = []
         raises_contexts: list[ast.With] = []
         mock_calls: int = 0
 
@@ -81,7 +87,7 @@ class TestASTVisitor(ast.NodeVisitor):
                 assert_nodes.append(child)
             elif isinstance(child, ast.With):
                 for item in child.items:
-                    # check for pytest.raises or self.assertRaises
+                    # check for pytest.raises or self.assertRaises / assertWarns / assertLogs
                     ctx_name = ""
                     if isinstance(item.context_expr, ast.Call):
                         func = item.context_expr.func
@@ -89,7 +95,20 @@ class TestASTVisitor(ast.NodeVisitor):
                             ctx_name = func.attr
                         elif isinstance(func, ast.Name):
                             ctx_name = func.id
-                    if ctx_name in ("raises", "assertRaises"):
+                    elif isinstance(item.context_expr, ast.Attribute):
+                        ctx_name = item.context_expr.attr
+                    elif isinstance(item.context_expr, ast.Name):
+                        ctx_name = item.context_expr.id
+                    if ctx_name in (
+                        "raises",
+                        "assertRaises",
+                        "assertRaisesRegex",
+                        "assertWarns",
+                        "assertWarnsRegex",
+                        "assertLogs",
+                        "warns",
+                        "does_not_raise",
+                    ):
                         raises_contexts.append(child)
             elif isinstance(child, ast.Call):
                 call_name = ""
@@ -99,6 +118,9 @@ class TestASTVisitor(ast.NodeVisitor):
                     call_name = child.func.attr
                 if "mock" in call_name.lower() or "patch" in call_name.lower():
                     mock_calls += 1
+
+                if self._is_assertion_call(child):
+                    assert_calls.append(child)
 
         # Check for decorators with patch
         for dec in node.decorator_list:
@@ -115,6 +137,9 @@ class TestASTVisitor(ast.NodeVisitor):
             if "patch" in dec_name.lower():
                 mock_calls += 1
 
+        # Check for pragma: # sdcs: no-raise or # pragma: no-raise or docstring intent
+        has_no_raise_pragma = self._has_no_raise_pragma(node)
+
         # 3. Check for assertless tests (Rule Q2)
         # Filter out docstrings or single pass
         non_doc_statements = [
@@ -127,7 +152,9 @@ class TestASTVisitor(ast.NodeVisitor):
             )
         ]
 
-        if not assert_nodes and not raises_contexts:
+        total_assertions = len(assert_nodes) + len(assert_calls)
+
+        if not total_assertions and not raises_contexts and not has_no_raise_pragma:
             # If function has active logic but no assertions or raises
             if len(non_doc_statements) > 0 and not (
                 len(non_doc_statements) == 1 and isinstance(non_doc_statements[0], ast.Pass)
@@ -138,32 +165,39 @@ class TestASTVisitor(ast.NodeVisitor):
                         function_name=node.name,
                         line_number=node.lineno,
                         rule="Q2_ASSERTLESS_TEST",
-                        message=f"Test function '{node.name}' contains execution logic but zero assert statements or expected exceptions (pytest.raises).",
+                        message=f"Test function '{node.name}' contains execution logic but zero assert statements, unittest assertions, or expected exceptions.",
                     )
                 )
             return
 
         # 4. Check for Trivial Assertions (Rule Q1)
-        # If all assert nodes in the function are trivial
+        # A test is trivial ONLY if every one of its checks, of any kind, is trivial
         trivial_count = 0
         for a in assert_nodes:
             if self._is_trivial_assertion(a.test):
                 trivial_count += 1
+        for c in assert_calls:
+            if self._is_trivial_call_assertion(c):
+                trivial_count += 1
 
-        if assert_nodes and trivial_count == len(assert_nodes) and not raises_contexts:
+        if (
+            total_assertions > 0
+            and trivial_count == total_assertions
+            and not raises_contexts
+            and not has_no_raise_pragma
+        ):
             self.violations.append(
                 QualityViolation(
                     file_path=self.file_path,
                     function_name=node.name,
                     line_number=node.lineno,
                     rule="Q1_TRIVIAL_ASSERTION",
-                    message=f"Test function '{node.name}' relies entirely on trivial assertions (e.g. 'assert True' or 'assert x is not None' without value verification).",
+                    message=f"Test function '{node.name}' relies entirely on trivial assertions (e.g. 'assert True' or 'self.assertTrue(True)' without value verification).",
                 )
             )
 
         # 5. Check for Mock Abuse / Hollow Mocks (Rule Q4)
-        # If test has 3+ mocks and only 1 assertion and 0 real execution calls
-        if mock_calls >= 3 and len(assert_nodes) == 1 and len(non_doc_statements) <= mock_calls + 2:
+        if mock_calls >= 3 and total_assertions == 1 and len(non_doc_statements) <= mock_calls + 2:
             self.violations.append(
                 QualityViolation(
                     file_path=self.file_path,
@@ -173,6 +207,136 @@ class TestASTVisitor(ast.NodeVisitor):
                     message=f"Test function '{node.name}' has excessive mocking ({mock_calls} mocks) relative to substantive execution logic.",
                 )
             )
+
+    def _has_no_raise_pragma(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+        """Check if test function has an explicit no-raise pragma or does-not-raise intent."""
+        # Check function name
+        name_lower = node.name.lower()
+        if "does_not_raise" in name_lower or "no_raise" in name_lower or "not_raise" in name_lower:
+            return True
+
+        # Check docstring
+        docstring = ast.get_docstring(node) or ""
+        doc_lower = docstring.lower()
+        if (
+            "sdcs: no-raise" in doc_lower
+            or "pragma: no-raise" in doc_lower
+            or "does not raise" in doc_lower
+            or "must not raise" in doc_lower
+        ):
+            return True
+
+        # Check decorators
+        for dec in node.decorator_list:
+            dec_id = ""
+            if isinstance(dec, ast.Name):
+                dec_id = dec.id
+            elif isinstance(dec, ast.Attribute):
+                dec_id = dec.attr
+            elif isinstance(dec, ast.Call):
+                if isinstance(dec.func, ast.Name):
+                    dec_id = dec.func.id
+                elif isinstance(dec.func, ast.Attribute):
+                    dec_id = dec.func.attr
+            if "no_raise" in dec_id.lower() or "does_not_raise" in dec_id.lower():
+                return True
+
+        # Check line comments within function definition
+        if self.file_lines and hasattr(node, "lineno"):
+            start = max(0, node.lineno - 1)
+            end = min(len(self.file_lines), getattr(node, "end_lineno", node.lineno + 15))
+            for i in range(start, end):
+                line = self.file_lines[i]
+                if "#" in line:
+                    comment = line.split("#", 1)[1].lower()
+                    if (
+                        "sdcs: no-raise" in comment
+                        or "pragma: no-raise" in comment
+                        or "no-raise" in comment
+                    ):
+                        return True
+
+        return False
+
+    def _is_assertion_call(self, call: ast.Call) -> bool:
+        """Check if call is a unittest assertion, custom assertion helper, or intra-file helper."""
+        name = ""
+        attr = ""
+        if isinstance(call.func, ast.Attribute):
+            attr = call.func.attr
+            name = call.func.attr
+        elif isinstance(call.func, ast.Name):
+            name = call.func.id
+
+        name_lower = name.lower()
+        attr_lower = attr.lower()
+
+        # Check any call starting with assert or _assert
+        if name_lower.startswith("assert") or name_lower.startswith("_assert"):
+            return True
+        if attr_lower.startswith("assert") or attr_lower.startswith("_assert"):
+            return True
+
+        # Check assertion helpers (check, verify, expect, ensure, validate)
+        if attr_lower.startswith(
+            (
+                "_check",
+                "check_",
+                "_verify",
+                "verify_",
+                "_expect",
+                "expect_",
+                "_ensure",
+                "ensure_",
+                "_validate",
+                "validate_",
+            )
+        ):
+            return True
+        if name_lower.startswith(
+            (
+                "_check",
+                "check_",
+                "_verify",
+                "verify_",
+                "_expect",
+                "expect_",
+                "_ensure",
+                "ensure_",
+                "_validate",
+                "validate_",
+            )
+        ):
+            return True
+
+        # Check fail calls (e.g. self.fail("expected error"), pytest.fail(...))
+        if attr_lower in ("fail", "_fail") or name_lower == "fail":
+            return True
+
+        # Check if calling an intra-file helper known to contain assertions
+        if name in self.asserting_functions or attr in self.asserting_functions:
+            return True
+
+        return False
+
+    def _is_trivial_call_assertion(self, call: ast.Call) -> bool:
+        """Detect trivial unittest assertion calls like self.assertTrue(True)."""
+        if isinstance(call.func, ast.Attribute):
+            attr = call.func.attr
+            if attr == "assertTrue" and call.args:
+                if isinstance(call.args[0], ast.Constant) and call.args[0].value is True:
+                    return True
+            elif attr == "assertFalse" and call.args:
+                if isinstance(call.args[0], ast.Constant) and call.args[0].value is False:
+                    return True
+            elif attr == "assertEqual" and len(call.args) >= 2:
+                if (
+                    isinstance(call.args[0], ast.Constant)
+                    and isinstance(call.args[1], ast.Constant)
+                    and call.args[0].value == call.args[1].value
+                ):
+                    return True
+        return False
 
     def _is_trivial_assertion(self, expr: ast.AST) -> bool:
         # assert True
@@ -202,13 +366,79 @@ class TestASTVisitor(ast.NodeVisitor):
         return False
 
 
+def _collect_module_asserting_functions(tree: ast.AST) -> set[str]:
+    """Analyze module AST to discover all helper functions/methods that contain assertions."""
+    asserting_funcs: set[str] = set()
+    call_graph: dict[str, set[str]] = {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            func_name = node.name
+            has_assert = False
+            callees: set[str] = set()
+
+            for child in ast.walk(node):
+                if isinstance(child, ast.Assert):
+                    has_assert = True
+                elif isinstance(child, ast.With):
+                    for item in child.items:
+                        ctx = ""
+                        if isinstance(item.context_expr, ast.Call):
+                            f = item.context_expr.func
+                            ctx = (
+                                f.attr
+                                if isinstance(f, ast.Attribute)
+                                else (f.id if isinstance(f, ast.Name) else "")
+                            )
+                        elif isinstance(item.context_expr, ast.Attribute):
+                            ctx = item.context_expr.attr
+                        elif isinstance(item.context_expr, ast.Name):
+                            ctx = item.context_expr.id
+                        if "raise" in ctx.lower() or "warn" in ctx.lower() or "log" in ctx.lower():
+                            has_assert = True
+                elif isinstance(child, ast.Call):
+                    cname = ""
+                    if isinstance(child.func, ast.Name):
+                        cname = child.func.id
+                    elif isinstance(child.func, ast.Attribute):
+                        cname = child.func.attr
+                    c_lower = cname.lower()
+                    if (
+                        c_lower.startswith("assert")
+                        or c_lower.startswith("_assert")
+                        or c_lower in ("fail", "_fail")
+                    ):
+                        has_assert = True
+                    if cname:
+                        callees.add(cname)
+
+            if has_assert:
+                asserting_funcs.add(func_name)
+            call_graph[func_name] = callees
+
+    # Transitive closure: propagate assertions along the intra-module call graph
+    changed = True
+    while changed:
+        changed = False
+        for caller, callees in call_graph.items():
+            if caller not in asserting_funcs:
+                if any(c in asserting_funcs for c in callees):
+                    asserting_funcs.add(caller)
+                    changed = True
+
+    return asserting_funcs
+
+
 def audit_test_quality_file(file_path: Path) -> list[QualityViolation]:
     """Audit a single test file for quality violations."""
     if file_path.suffix == ".py":
         try:
             content = file_path.read_text(encoding="utf-8", errors="ignore")
             tree = ast.parse(content, filename=str(file_path))
-            visitor = TestASTVisitor(str(file_path))
+            asserting_funcs = _collect_module_asserting_functions(tree)
+            visitor = TestASTVisitor(
+                str(file_path), file_content=content, asserting_functions=asserting_funcs
+            )
             visitor.visit(tree)
             return visitor.violations
         except Exception:
@@ -273,9 +503,27 @@ def audit_test_quality(
         test_files = sorted(set(test_files))
 
     for tf in test_files:
-        # Skip node_modules and venv
+        # Skip node_modules, venv, scratch, and hidden directories
+        try:
+            rel_parts = tf.relative_to(repo_root).parts[:-1]
+        except ValueError:
+            rel_parts = tf.parts[:-1]
+
         if any(
-            part in tf.parts for part in ("node_modules", ".venv", "venv", "__pycache__", ".git")
+            p.startswith(".")
+            or p
+            in (
+                "node_modules",
+                ".venv",
+                "venv",
+                "__pycache__",
+                ".git",
+                "scratch",
+                ".scratch",
+                "build",
+                "dist",
+            )
+            for p in rel_parts
         ):
             continue
         violations.extend(audit_test_quality_file(tf))

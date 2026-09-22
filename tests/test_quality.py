@@ -131,3 +131,124 @@ def test_run_quality_audit_exit_code(tmp_path: Path):
     good_file = tmp_path / "test_good.py"
     good_file.write_text("def test_bar():\n    assert 2 + 2 == 4\n", encoding="utf-8")
     assert run_quality_audit(repo_root=tmp_path, target_paths=[good_file]) == 0
+
+
+def test_unittest_testcase_assertions_pass(tmp_path: Path):
+    """Verify standard unittest.TestCase assertions and helpers pass Gate Q without false positives."""
+    test_code = """
+import unittest
+
+class MyTestCase(unittest.TestCase):
+    def test_equality(self):
+        result = 20 * 2
+        self.assertEqual(result, 40)
+        self.assertTrue(result > 30)
+        self.assertIn("key", {"key": "value"})
+        self.assertIsNotNone(result)
+
+    def test_with_helper(self):
+        data = [1, 2, 3]
+        check_all_positive(data)
+
+    def test_raises_context(self):
+        with self.assertRaises(ZeroDivisionError):
+            _ = 1 / 0
+"""
+    test_file = tmp_path / "test_unittest_suite.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0
+
+
+def test_unittest_trivial_assertion_rejected(tmp_path: Path):
+    """Verify trivial unittest calls like self.assertTrue(True) are rejected."""
+    test_code = """
+import unittest
+
+class MyTestCase(unittest.TestCase):
+    def test_trivial(self):
+        self.assertTrue(True)
+
+    def test_trivial_eq(self):
+        self.assertEqual(1, 1)
+"""
+    test_file = tmp_path / "test_unittest_trivial.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 2
+    assert all(v.rule == "Q1_TRIVIAL_ASSERTION" for v in violations)
+
+
+def test_helper_in_same_file_with_assertions_passes(tmp_path: Path):
+    """Verify that a test calling a helper function in the same file that asserts passes."""
+    test_code = """
+def _custom_check(val):
+    assert val > 0
+
+def test_via_helper():
+    x = 42
+    _custom_check(x)
+"""
+    test_file = tmp_path / "test_helper.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0
+
+
+def test_no_raise_pragma_passes(tmp_path: Path):
+    """Verify that tests explicitly declaring no-raise intent pass Gate Q."""
+    test_code = """
+def test_operation_runs_cleanly():
+    # sdcs: no-raise
+    result = sum(range(100))
+
+def test_handler_does_not_raise():
+    x = 10 * 5
+"""
+    test_file = tmp_path / "test_norise.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0
+
+
+def test_self_fail_counts_as_assertion(tmp_path: Path):
+    """Verify that self.fail or pytest.fail is treated as an active test assertion."""
+    test_code = """
+import unittest
+
+class FailureTest(unittest.TestCase):
+    def test_unreachable_branch(self):
+        try:
+            do_something_bad()
+            self.fail("Should have raised exception")
+        except ExpectedError:
+            pass
+"""
+    test_file = tmp_path / "test_fail.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0
+
+
+def test_trivial_only_if_all_checks_are_trivial(tmp_path: Path):
+    """A test with assert x is not None alongside real assertions must NOT be flagged as trivial."""
+    test_code = """
+import unittest
+
+class MixedTest(unittest.TestCase):
+    def test_mixed_assertions(self):
+        data = {"count": 10}
+        assert data is not None
+        self.assertEqual(data["count"], 10)
+        self.assertTrue(data["count"] > 5)
+"""
+    test_file = tmp_path / "test_mixed.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0

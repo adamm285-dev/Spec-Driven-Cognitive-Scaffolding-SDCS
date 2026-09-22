@@ -92,7 +92,7 @@ def audit_roadmap_staleness(
 
 
 def parse_rejection_entries(content: str) -> list[dict]:
-    """Parses decisions.md into discrete REJ- / ADR- blocks."""
+    """Parses decisions.md into discrete REJ- / ADR- blocks with status metadata."""
     entries = []
     current_entry = None
 
@@ -105,10 +105,23 @@ def parse_rejection_entries(content: str) -> list[dict]:
                 "id": header_match.group(1),
                 "title": (header_match.group(2) or "").strip(),
                 "header": line.strip(),
+                "status": "ACTIVE",
+                "permanent": False,
                 "lines": [line],
             }
         elif current_entry:
             current_entry["lines"].append(line)
+            lower_line = line.lower()
+            if "status:" in lower_line:
+                if any(k in lower_line for k in ("superseded", "resolved", "archived")):
+                    current_entry["status"] = "SUPERSEDED"
+                elif any(k in lower_line for k in ("foundational", "permanent", "axiom")):
+                    current_entry["status"] = "FOUNDATIONAL"
+                    current_entry["permanent"] = True
+            if "permanent:" in lower_line and "true" in lower_line:
+                current_entry["permanent"] = True
+            if "foundational:" in lower_line and "true" in lower_line:
+                current_entry["permanent"] = True
 
     if current_entry:
         entries.append(current_entry)
@@ -123,6 +136,7 @@ def prune_decisions_archive(
 ) -> tuple[int, Path | None]:
     """
     Archives older rejections when active entries exceed max_entries.
+    Prioritizes superseded/resolved entries and strictly protects foundational/permanent entries.
     Moves superseded entries to decisions/archive/YYYY-QX.md and inserts an index table.
     Returns: (pruned_count, archive_path)
     """
@@ -132,10 +146,32 @@ def prune_decisions_archive(
     if len(entries) <= max_entries:
         return 0, None
 
-    # Keep latest max_entries, archive the rest
     excess_count = len(entries) - max_entries
-    to_archive = entries[:excess_count]
-    to_keep = entries[excess_count:]
+
+    # Classify entries:
+    # 1. Superseded / Resolved / Archived entries are pruned first
+    superseded = [e for e in entries if e.get("status") in ("SUPERSEDED", "RESOLVED", "ARCHIVED")]
+    # 2. Permanent / Foundational entries are immune to automated pruning
+    permanent = [e for e in entries if e.get("permanent") or e.get("status") == "FOUNDATIONAL"]
+    # 3. Regular active non-permanent entries
+    regular_active = [e for e in entries if e not in superseded and e not in permanent]
+
+    to_archive: list[dict] = []
+
+    # First prune explicitly superseded/resolved entries
+    if superseded:
+        to_archive.extend(superseded[:excess_count])
+
+    # If still exceeding ceiling, take oldest regular active entries
+    remaining_needed = excess_count - len(to_archive)
+    if remaining_needed > 0 and regular_active:
+        to_archive.extend(regular_active[:remaining_needed])
+
+    if not to_archive:
+        # All excess entries are foundational/permanent. Do not prune them blindly.
+        return 0, None
+
+    to_keep = [e for e in entries if e not in to_archive]
 
     # Determine quarter for archive filename
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -176,7 +212,7 @@ def prune_decisions_archive(
         new_decisions_lines.append("")
 
     decisions_file.write_text("\n".join(new_decisions_lines).strip() + "\n", encoding="utf-8")
-    return excess_count, archive_file
+    return len(to_archive), archive_file
 
 
 def run_decay_command(

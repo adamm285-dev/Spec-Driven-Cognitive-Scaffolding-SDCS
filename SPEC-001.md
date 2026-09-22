@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.8.0
+Version: 1.8.1
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.7.0
+Replaces: SPEC-001 v1.8.0
 License: MIT
 
 ```
@@ -132,7 +132,7 @@ Autonomous coding agents cannot operate reliably within an unstructured software
 ### 3.5 Pillar 5: Repository Cartography (`app_map.md`)
 
 * **Role:** External structural page table defining module responsibilities and exports.
-* **Access Rule:** Agents MUST resolve file paths in `app_map.md` prior to filesystem mutations and page only strictly relevant source files into context. Brute-force directory traversals (`find`, recursive `grep`) are forbidden.
+* **Access Rule:** Agents MUST consult `app_map.md` to identify module boundaries and paths prior to filesystem mutations, paging only strictly relevant source files into context. Unfocused exploratory whole-tree searches (`find /`) should be avoided; targeted grep or symbol lookups should be used specifically to verify code call sites and disk reality against the map.
 * **Hierarchical Scaling (Multi-Level App Maps):** In enterprise monorepos or codebases exceeding 50 modules (>1,000 files), cartography MUST be organized hierarchically:
   1. *Root `app_map.md`:* High-level directory and package index mapping major subsystem interfaces (enforcing a strict <1,000 token ceiling).
   2. *Subsystem `app_map.md`:* Granular file-level responsibility maps maintained within specific module directories (e.g., `services/auth/app_map.md`), paged in *only* when an agent enters that execution domain. Adopts Peter Denning's Two-Level Paging model.
@@ -558,7 +558,7 @@ Defaulting all execution turns to high-reasoning Frontier models burns excessive
 
 ## 8. Verification and Compliance Tooling
 
-Conformity with SPEC-001 v1.8.0 is validated via reference CLI tools:
+Conformity with SPEC-001 v1.8.1 is validated via reference CLI tools:
 
 * `sdcs init` (`python sdcs_init.py`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
 * `sdcs doctor` (`sdcs doctor`): Executes complete system diagnostics across toolchains, environment invariants, cognitive pillars, and VCS hooks.

@@ -1,7 +1,7 @@
-# Agent Instructions (SDCS Framework v1.8.0)
-<!-- Conforming to SPEC-001 v1.8.0 -->
+# Agent Instructions (SDCS Framework v1.8.1)
+<!-- Conforming to SPEC-001 v1.8.1 -->
 
-This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.8.0)**.
+This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.8.1)**.
 
 ## 1. The Operational Ontology
 You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three physical layers governed by a teleological anchor:
@@ -13,7 +13,7 @@ You are operating inside a deterministic cybernetic control system, not an uncon
 
 
 ## 2. Turn 1 Boot Hydration Order (7 Pillars)
-On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in this exact sequence:
+On Turn 1 of any task, hydrate state across the 7 cognitive pillars in this sequence:
 1. `spine.md`        -> Constitutional invariants & forbidden actions (Pillar 1: The Law)
 2. `roadmap.md`      -> Active milestone [INTENT] vs [MEASURED] (Pillar 3: The North Star)
 3. `app_map.md`      -> Repository cartography (resolve target paths first) (Pillar 5: The Compass)
@@ -25,13 +25,11 @@ On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in 
 *Single-Pass Hydration:* Alternatively, run `sdcs hydrate --profile standard [-s <subsystem>]` (or `--profile lite` / `--profile full`) to stream a pre-budgeted, single-pass context payload in 1 atomic tool call.
 
 ## +0 Fast-Resume Protocol (Cold-Start Eliminator)
-IRON LAW: When booting or waking up after context compaction (/compact), immediately inspect `state.md`.
-If `## Immediate Next Action (Post-Compact)` contains an active, uncompleted action, you MUST bypass full exploratory re-hydration and execute that exact action immediately.
-Do not hesitate, re-read historical archives, or re-run exploratory surveys when an unblocked next action is pending.
+When booting or waking up after context compaction (`/compact`), inspect `state.md` first.
+If `## Immediate Next Action (Post-Compact)` contains an active, uncompleted action, verify essential prerequisites (check that target files exist and recent tests still pass), then proceed directly to executing that action. Avoid redundant whole-repository surveys or historical archive exploration when an active, unblocked next step is pending.
 
 ## +1 Flight Recorder Invariant
-CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
-`sessions/*.md` serves as an immutable post-hoc flight recorder, NOT boot context. Auto-loading historical sessions recreates context drift and episodic amnesia. Query individual sessions or `sessions/manifest.jsonl` on demand for forensic debugging (`sdcs session`).
+Do not hydrate historical files in `sessions/*.md` during standard boot. `sessions/*.md` serves as an immutable post-hoc flight recorder, not operational working memory. Auto-loading historical sessions causes context drift and token waste. Query individual sessions or `sessions/manifest.jsonl` on demand for forensic debugging (`sdcs session`).
 
 ## 3. The 4-Phase Autonomous Execution Cycle
 Execute every turn through the 4-phase engine:
@@ -41,9 +39,9 @@ Execute every turn through the 4-phase engine:
 4. **Close-Out:** Prune `state.md` ($\le 300$ tokens), log rejections in `decisions.md`, and record shift progress in `sessions/`.
 
 ## 4. Invariant Rules
-- **Context Isolation:** Consult `app_map.md` and load only what is strictly relevant to the task (use `sdcs map -s <subsystem>` for focused slicing).
+- **Context Isolation & Reality Verification:** Consult `app_map.md` first to locate relevant modules and avoid aimless whole-repo scans. Use targeted search or grep to verify actual symbols, function signatures, and disk reality against the map before making modifications.
 - **No Task Queue in Roadmap:** Active tasks live strictly in `state.md`.
-- **Non-Regression:** Never undo a decision or retry a measured rejection documented in `decisions.md` without explicit human sign-off.
+- **Non-Regression & Reopen Conditions:** Do not retry a rejected hypothesis or revert an architectural decision documented in `decisions.md` unless its documented "WHAT WOULD REOPEN IT" condition has been satisfied (e.g. upgraded dependencies, altered interfaces) or explicit human sign-off is given.
 - **Topological Invariant (Gate T):** Code must respect subsystem boundary contracts declared in `wiring.yaml`. Prohibited imports will be rejected and serialized to `decisions.md`.
 - **Wiring Mutation Invariant (Pillar 2):** When introducing new subsystems, modules, or packages, update `wiring.yaml` in-stride with code modifications. Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T rejections without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly forbidden.
 - **Empirical Standing:** Verify changes against the baseline scorecard in `evals.md`. Run `sdcs eval record <Asset-ID>|all` (or `sdcs audit`) when adding, recalibrating, or modifying test fixtures.

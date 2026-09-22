@@ -94,16 +94,23 @@
 - `CHANGELOG.md`
 - `CITATION.cff`
 - `CONTRIBUTING.md`
+- `EVIDENCE.md`
 - `LICENSE`
 - `README.md`
 - `RELEASE_NOTES_v1.7.0.md`
 - `RELEASE_NOTES_v1.8.0.md`
+- `RELEASE_NOTES_v1.8.1.md`
 - `SECURITY.md`
 - `SPEC-001.md`
 - `audit_evals_corpus.py`
+- `decisions.md`
+- `evals.md`
 - `pyproject.toml`
+- `roadmap.md`
 - `sdcs_init.py`
+- `spine.md`
 - `state.md`
+- `wiring.yaml`
 
 ### `scripts/`
 - `publish_wiki.py`

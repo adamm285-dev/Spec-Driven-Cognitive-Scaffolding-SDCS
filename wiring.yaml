@@ -1,0 +1,65 @@
+# Declarative Topology & Subsystem Mesh (The Wiring)
+# SPEC-001 Pillar 2 | Mutability: READ-ONLY (Requires SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1)
+
+version: "1.8.1"
+
+subsystems:
+  cli:
+    path: "src/sdcs/cli.py"
+    description: "Main CLI entrypoint orchestrating subcommands and kinetic verifiers."
+    allowed_imports:
+      - "sdcs.core"
+      - "sdcs.verifier"
+      - "sdcs.decay"
+      - "sdcs.session"
+      - "sdcs.skeleton"
+      - "sdcs.repair"
+      - "sdcs.router"
+      - "sdcs.warehouse"
+      - "sdcs.audit"
+      - "sdcs.init"
+      - "sdcs.watch"
+      - "sdcs.graph"
+
+  verifier:
+    path: "src/sdcs/verifier"
+    description: "Kinetic enforcement gates: topology, quality, cycles, cache, environment, sandbox."
+    allowed_imports:
+      - "sdcs.core"
+
+  decay:
+    path: "src/sdcs/decay.py"
+    description: "Staleness decay and decisions graveyard lifecycle engine."
+    allowed_imports: []
+
+  skeleton:
+    path: "src/sdcs/skeleton.py"
+    description: "Polyglot AST skeleton compactor for token-efficient file viewing."
+    allowed_imports: []
+
+  repair:
+    path: "src/sdcs/repair.py"
+    description: "Deterministic pre-flight auto-repair engine executing local formatters."
+    allowed_imports: []
+
+  router:
+    path: "src/sdcs/router.py"
+    description: "Governed model tier escalation router."
+    allowed_imports: []
+
+  session:
+    path: "src/sdcs/session.py"
+    description: "Post-hoc flight recorder and causal lineage logger."
+    allowed_imports: []
+
+sandbox:
+  protected_paths:
+    - ".env*"
+    - "*.pem"
+    - "*.key"
+    - "dist/**"
+  allowed_commands:
+    - "pytest"
+    - "git"
+    - "python"
+    - "sdcs"
