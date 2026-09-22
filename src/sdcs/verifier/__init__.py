@@ -45,4 +45,3 @@ __all__ = [
     "sync_violations_to_decisions",
     "verify_environment",
 ]
-

@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+
 from sdcs.verifier.environment import (
     _check_python_version,
     get_environment_config,

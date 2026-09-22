@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from sdcs.verifier.topology import TopologyValidator, extract_polyglot_imports
 
 

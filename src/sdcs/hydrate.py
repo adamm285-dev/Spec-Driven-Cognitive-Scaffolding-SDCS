@@ -61,7 +61,9 @@ def extract_active_milestone(roadmap_content: str, subsystem: str | None = None)
     return "\n".join(milestones[0]).strip()
 
 
-def extract_active_rejections(decisions_content: str, max_entries: int = 10, subsystem: str | None = None) -> str:
+def extract_active_rejections(
+    decisions_content: str, max_entries: int = 10, subsystem: str | None = None
+) -> str:
     """
     Extracts up to max_entries active REJ- records from decisions.md,
     optionally prioritizing those referencing a subsystem.
@@ -71,7 +73,7 @@ def extract_active_rejections(decisions_content: str, max_entries: int = 10, sub
     current_entry: list[str] = []
 
     for line in lines:
-        if line.startswith("## REJ-") or line.startswith("## ADR-"):
+        if line.startswith(("## REJ-", "## ADR-")):
             if current_entry:
                 entries.append(current_entry)
             current_entry = [line]
@@ -118,7 +120,7 @@ def compile_hydration_payload(
 
     header_banner = f"""<!-- ===================================================================== -->
 <!-- SDCS DETERMINISTIC CONTEXT COMPILER (SPEC-001 v1.5.0)                  -->
-<!-- Scale Profile: {profile.upper():<10} | Subsystem Focus: {str(subsystem or 'ALL'):<20} -->
+<!-- Scale Profile: {profile.upper():<10} | Subsystem Focus: {subsystem or 'ALL'!s:<20} -->
 <!-- Single-pass Turn 1 boot hydration payload. Do not re-request pillars. -->
 <!-- ===================================================================== -->
 """
@@ -127,18 +129,28 @@ def compile_hydration_payload(
     if profile == "lite":
         # Profile Lite: spine.md + state.md (~400 tokens)
         if spine_file and spine_file.is_file():
-            sections.append(f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if state_file and state_file.is_file():
-            sections.append(f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
 
     elif profile == "standard":
         # Profile Standard: spine + roadmap (active) + cartography (sliced) + decisions (rejections) + state (~1,500 tokens)
         if spine_file and spine_file.is_file():
-            sections.append(f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
 
         if roadmap_file and roadmap_file.is_file():
-            active_ms = extract_active_milestone(roadmap_file.read_text(encoding="utf-8", errors="ignore"), subsystem)
-            sections.append(f"# [PILLAR 3: THE NORTH STAR] Active Macro Acceptance Contract\n\n{active_ms}")
+            active_ms = extract_active_milestone(
+                roadmap_file.read_text(encoding="utf-8", errors="ignore"), subsystem
+            )
+            sections.append(
+                f"# [PILLAR 3: THE NORTH STAR] Active Macro Acceptance Contract\n\n{active_ms}"
+            )
 
         if map_file and map_file.is_file():
             if subsystem:
@@ -148,29 +160,51 @@ def compile_hydration_payload(
             sections.append(f"# [PILLAR 5: THE COMPASS] Repository Cartography\n\n{cartography}")
 
         if decisions_file and decisions_file.is_file():
-            rejections = extract_active_rejections(decisions_file.read_text(encoding="utf-8", errors="ignore"), max_entries=8, subsystem=subsystem)
+            rejections = extract_active_rejections(
+                decisions_file.read_text(encoding="utf-8", errors="ignore"),
+                max_entries=8,
+                subsystem=subsystem,
+            )
             sections.append(f"# [PILLAR 6: THE GRAVEYARD] Active Rejections\n\n{rejections}")
 
         if state_file and state_file.is_file():
-            sections.append(f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
 
     else:
         # Profile Full: All 7 Pillars in strict boot sequence (~2,500-3,500 tokens)
         if spine_file and spine_file.is_file():
-            sections.append(f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 1: THE LAW] Constitutional Invariants\n\n{spine_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if roadmap_file and roadmap_file.is_file():
-            sections.append(f"# [PILLAR 3: THE NORTH STAR] Macro Acceptance Contract\n\n{roadmap_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 3: THE NORTH STAR] Macro Acceptance Contract\n\n{roadmap_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if map_file and map_file.is_file():
-            cartography = slice_cartography(repo_root, subsystem, map_file) if subsystem else map_file.read_text(encoding='utf-8', errors='ignore').strip()
+            cartography = (
+                slice_cartography(repo_root, subsystem, map_file)
+                if subsystem
+                else map_file.read_text(encoding="utf-8", errors="ignore").strip()
+            )
             sections.append(f"# [PILLAR 5: THE COMPASS] Repository Cartography\n\n{cartography}")
         if decisions_file and decisions_file.is_file():
-            sections.append(f"# [PILLAR 6: THE GRAVEYARD] Negative Episodic Memory\n\n{decisions_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 6: THE GRAVEYARD] Negative Episodic Memory\n\n{decisions_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if evals_file and evals_file.is_file():
-            sections.append(f"# [PILLAR 7: GROUND TRUTH] Positive Episodic Memory\n\n{evals_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 7: GROUND TRUTH] Positive Episodic Memory\n\n{evals_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if state_file and state_file.is_file():
-            sections.append(f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}")
+            sections.append(
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+            )
         if wiring_file and wiring_file.is_file():
-            sections.append(f"# [PILLAR 2: THE MESH] Declarative Topology\n\n```yaml\n{wiring_file.read_text(encoding='utf-8', errors='ignore').strip()}\n```")
+            sections.append(
+                f"# [PILLAR 2: THE MESH] Declarative Topology\n\n```yaml\n{wiring_file.read_text(encoding='utf-8', errors='ignore').strip()}\n```"
+            )
 
     # Central Cognitive Warehouse Integration (SPEC-001 v1.6.0)
     # Appends Tier-1 index table if warehouse subscriptions are active and cached records exist

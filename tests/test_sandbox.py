@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from unittest.mock import patch
 
 from sdcs.verifier.sandbox import audit_sandbox_staged_files, run_sandbox_audit
@@ -8,10 +7,7 @@ from sdcs.verifier.sandbox import audit_sandbox_staged_files, run_sandbox_audit
 def test_sandbox_clean_commit(tmp_path):
     wiring_file = tmp_path / "wiring.yaml"
     wiring_file.write_text(
-        "sandbox:\n"
-        "  protected_paths:\n"
-        "    - '.env*'\n"
-        "    - 'secrets/**'\n",
+        "sandbox:\n" "  protected_paths:\n" "    - '.env*'\n" "    - 'secrets/**'\n",
         encoding="utf-8",
     )
 
@@ -24,10 +20,7 @@ def test_sandbox_clean_commit(tmp_path):
 def test_sandbox_protected_path_violation(tmp_path):
     wiring_file = tmp_path / "wiring.yaml"
     wiring_file.write_text(
-        "sandbox:\n"
-        "  protected_paths:\n"
-        "    - '.env*'\n"
-        "    - 'credentials/**'\n",
+        "sandbox:\n" "  protected_paths:\n" "    - '.env*'\n" "    - 'credentials/**'\n",
         encoding="utf-8",
     )
 
@@ -41,9 +34,7 @@ def test_sandbox_protected_path_violation(tmp_path):
 def test_sandbox_override_env(tmp_path):
     wiring_file = tmp_path / "wiring.yaml"
     wiring_file.write_text(
-        "sandbox:\n"
-        "  protected_paths:\n"
-        "    - '.env*'\n",
+        "sandbox:\n" "  protected_paths:\n" "    - '.env*'\n",
         encoding="utf-8",
     )
 

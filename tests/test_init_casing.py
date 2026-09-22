@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 from sdcs.init import init_scaffold, normalize_legacy_casing
 
 

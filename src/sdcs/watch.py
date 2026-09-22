@@ -7,11 +7,9 @@ cognitive scaffolding state to a 16-bit isometric pixel-art HUD.
 
 import http.server
 import json
-import os
 import queue
 import re
 import socket
-import sys
 import threading
 import time
 import webbrowser
@@ -21,10 +19,10 @@ from typing import Any
 
 from sdcs import __version__
 from sdcs.audit import locate_evals_file, parse_evals_table
-from sdcs.decay import locate_decisions_file, locate_roadmap_file
+from sdcs.decay import locate_decisions_file
 from sdcs.session import locate_sessions_dir
 from sdcs.verifier.state import count_tokens, locate_state_file, parse_state_sections
-from sdcs.warehouse import locate_warehouse_cache, locate_warehouse_config, load_cached_records
+from sdcs.warehouse import load_cached_records, locate_warehouse_cache, locate_warehouse_config
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -49,7 +47,7 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
             content = state_file.read_text(encoding="utf-8", errors="ignore")
             tokens = count_tokens(content)
             sections = parse_state_sections(content)
-            
+
             # Extract objective
             obj_text = sections.get("current objective", "").strip()
             if not obj_text:
@@ -104,7 +102,9 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
         evals_file = locate_evals_file(repo_root)
         if evals_file and evals_file.is_file():
             entries = parse_evals_table(evals_file)
-            passing = sum(1 for e in entries if e.status.lower() in ("pass", "verified", "passed", "ok"))
+            passing = sum(
+                1 for e in entries if e.status.lower() in ("pass", "verified", "passed", "ok")
+            )
             pending = sum(1 for e in entries if e.status.lower() == "pending")
             total = len(entries)
             failing = max(0, total - passing - pending)
@@ -116,7 +116,13 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
                 "file": str(evals_file.relative_to(repo_root)),
             }
         else:
-            telemetry["evals"] = {"total": 0, "passing": 0, "pending": 0, "failing": 0, "file": None}
+            telemetry["evals"] = {
+                "total": 0,
+                "passing": 0,
+                "pending": 0,
+                "failing": 0,
+                "file": None,
+            }
     except Exception:
         telemetry["evals"] = {"total": 0, "passing": 0, "pending": 0, "failing": 0, "file": None}
 
@@ -152,7 +158,11 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
     # 5. Parallel Worker Blackboards (Subagents)
     try:
         subagent_files = list(repo_root.glob("state.*.md"))
-        agent_subagent_files = list((repo_root / ".agent").glob("state.*.md")) if (repo_root / ".agent").is_dir() else []
+        agent_subagent_files = (
+            list((repo_root / ".agent").glob("state.*.md"))
+            if (repo_root / ".agent").is_dir()
+            else []
+        )
         all_subagents = []
         for sf in subagent_files + agent_subagent_files:
             match = re.match(r"state\.(.+)\.md", sf.name)
@@ -271,14 +281,14 @@ class SDCSWatchHandler(http.server.BaseHTTPRequestHandler):
         try:
             # Send initial greeting event
             initial_event = json.dumps({"type": "connected", "version": __version__})
-            self.wfile.write(f"data: {initial_event}\n\n".encode("utf-8"))
+            self.wfile.write(f"data: {initial_event}\n\n".encode())
             self.wfile.flush()
 
             while not self.server.stop_requested:
                 try:
                     event = client_q.get(timeout=1.5)
                     data_str = json.dumps(event)
-                    self.wfile.write(f"data: {data_str}\n\n".encode("utf-8"))
+                    self.wfile.write(f"data: {data_str}\n\n".encode())
                     self.wfile.flush()
                 except queue.Empty:
                     # Keep-alive comment heartbeat

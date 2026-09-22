@@ -1,10 +1,8 @@
 import os
-import subprocess
-import sys
 from pathlib import Path
 from unittest.mock import patch
 
-from sdcs.decay import audit_roadmap_staleness, prune_decisions_archive, run_decay_command
+from sdcs.decay import audit_roadmap_staleness, prune_decisions_archive
 
 ENV = dict(os.environ)
 ENV["PYTHONPATH"] = str(Path(__file__).parent.parent / "src")
@@ -26,7 +24,9 @@ def test_audit_roadmap_staleness_fresh_and_stale(tmp_path):
         return 10 if commit == "abc1234" else 65
 
     with patch("sdcs.decay.get_commit_distance", side_effect=mock_distance):
-        stale_count, records = audit_roadmap_staleness(roadmap_file, tmp_path, threshold=50, tag_stale=True)
+        stale_count, records = audit_roadmap_staleness(
+            roadmap_file, tmp_path, threshold=50, tag_stale=True
+        )
         assert stale_count == 1
         assert len(records) == 2
         assert records[0]["stale"] is False
@@ -41,7 +41,9 @@ def test_prune_decisions_archive(tmp_path):
     decisions_file = tmp_path / "decisions.md"
     entries = []
     for i in range(1, 20):
-        entries.append(f"## REJ-{i:03d}: Attempted Idea {i}\nTHE CLAIM: Claim {i}\nTHE MEASUREMENT: Failed\nWHAT WOULD REOPEN IT: Fix\n")
+        entries.append(
+            f"## REJ-{i:03d}: Attempted Idea {i}\nTHE CLAIM: Claim {i}\nTHE MEASUREMENT: Failed\nWHAT WOULD REOPEN IT: Fix\n"
+        )
     decisions_file.write_text("\n".join(entries), encoding="utf-8")
 
     pruned_count, archive_path = prune_decisions_archive(decisions_file, tmp_path, max_entries=10)

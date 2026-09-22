@@ -183,7 +183,7 @@ def fork_subagent_state(
     Forks a lightweight scoped working memory blackboard for a parallel worker/subagent.
     Inherits context from root state.md and creates state.<worker_id>.md.
     """
-    root_state = locate_state_file(repo_root, state_path)
+    locate_state_file(repo_root, state_path)
     subagent_file = locate_subagent_state_file(repo_root, worker_id)
 
     objective = subtask_objective or f"Autonomous execution slice assigned to worker [{worker_id}]"
@@ -282,9 +282,8 @@ def rollup_subagent_state(
         except OSError:
             pass
 
-    passed, tokens, _, warnings = audit_state_tokens(root_state, max_tokens=350)
+    passed, tokens, _, _warnings = audit_state_tokens(root_state, max_tokens=350)
     msg = f"Rollup completed for worker [{worker_id}]. Root state.md: {tokens} tokens."
     if not passed:
         msg += " ⚠️ WARNING: Root state exceeds 350 tokens. Pruning recommended."
     return True, msg
-

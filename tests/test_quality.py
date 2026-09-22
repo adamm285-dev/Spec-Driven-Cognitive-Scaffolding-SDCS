@@ -1,6 +1,7 @@
 """Tests for Gate Q: Test Quality and Anti-Mock AST Auditor."""
 
 from pathlib import Path
+
 from sdcs.verifier.quality import (
     audit_test_quality_file,
     run_quality_audit,

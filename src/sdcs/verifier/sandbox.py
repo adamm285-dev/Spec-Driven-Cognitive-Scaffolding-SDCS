@@ -8,7 +8,6 @@ modifications to sensitive files (.env, credentials, keystores) and unauthorized
 import fnmatch
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 try:
@@ -110,6 +109,8 @@ def run_sandbox_audit(
         print("🛑 [GATE P: FAILED] Staged files violate declarative sandbox protected_paths:")
         for v in violations:
             print(f"   - {v}")
-        print("\nAutonomous agents are strictly prohibited from staging credentials or protected assets.")
+        print(
+            "\nAutonomous agents are strictly prohibited from staging credentials or protected assets."
+        )
         print("To override as a human operator: export SDCS_ALLOW_SANDBOX_OVERRIDE=1")
         return 1

@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 
 from sdcs.hydrate import compile_hydration_payload
-from sdcs.verifier.state import count_tokens
 from sdcs.warehouse import (
     compile_tier1_index,
     filter_records,
@@ -25,6 +24,7 @@ ENV["PYTHONPATH"] = str(Path(__file__).parent.parent / "src")
 # -----------------------------------------------------------------------------
 # 1. Gate W: Secret & PII Screening Tests
 # -----------------------------------------------------------------------------
+
 
 def test_gate_w_screening():
     dirty_text = """
@@ -67,6 +67,7 @@ def test_gate_w_screening():
 # 2. Record Parsing & Formatting Tests
 # -----------------------------------------------------------------------------
 
+
 def test_parse_and_format_record():
     raw_record = """---
 id: "W-TEL-001"
@@ -105,13 +106,14 @@ If Telnyx introduces sub-50ms webhooks in US-East.
     assert "sub-50ms webhooks" in rec["what_would_reopen_it"]
 
     reformatted = format_warehouse_record(rec)
-    assert "id: \"W-TEL-001\"" in reformatted
+    assert 'id: "W-TEL-001"' in reformatted
     assert "### THE MITIGATION (THE INVARIANT)" in reformatted
 
 
 # -----------------------------------------------------------------------------
 # 3. Context Envelope & Blindspot 1 Mitigation Tests
 # -----------------------------------------------------------------------------
+
 
 def test_context_envelope_filtering():
     records = [
@@ -147,7 +149,10 @@ def test_context_envelope_filtering():
     # In a Python project, Rust-specific traps MUST be excluded
     filtered_py = filter_records(
         records,
-        subscriptions={"tags": ["concurrency", "performance", "database"], "severity_floor": "advisory"},
+        subscriptions={
+            "tags": ["concurrency", "performance", "database"],
+            "severity_floor": "advisory",
+        },
         project_context={"language": "python"},
     )
     ids_py = [r["id"] for r in filtered_py]
@@ -170,15 +175,18 @@ def test_context_envelope_filtering():
 # 4. Two-Tier Hierarchical Paging & Token Budget Tests (Blindspot 2)
 # -----------------------------------------------------------------------------
 
+
 def test_tier1_index_token_budget():
     records = []
     for i in range(25):
-        records.append({
-            "id": f"W-VEND-{i:03d}",
-            "title": f"Vendor API Rate Limit Trap {i}",
-            "tags": ["telecom", "api"],
-            "mitigation": f"Rate limit outbound requests to <= {10 + i} RPS.",
-        })
+        records.append(
+            {
+                "id": f"W-VEND-{i:03d}",
+                "title": f"Vendor API Rate Limit Trap {i}",
+                "tags": ["telecom", "api"],
+                "mitigation": f"Rate limit outbound requests to <= {10 + i} RPS.",
+            }
+        )
 
     table, tokens = compile_tier1_index(records, max_tokens=250)
     assert "| ID | Tag | Trap Summary | What to Avoid |" in table
@@ -191,6 +199,7 @@ def test_tier1_index_token_budget():
 # -----------------------------------------------------------------------------
 # 5. Version-Bounded TTL & Expiration Tests (Blindspot 4)
 # -----------------------------------------------------------------------------
+
 
 def test_ttl_expiration():
     expired_record = """---
@@ -219,16 +228,20 @@ Enable WAL mode.
 # 6. Publishing Flow & Gate W Pre-Publish Scrubber (Blindspot 3)
 # -----------------------------------------------------------------------------
 
+
 def test_publish_with_gate_w_sanitization(tmp_path):
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     decisions_file = repo_root / "decisions.md"
-    decisions_file.write_text("""# Decisions
+    decisions_file.write_text(
+        """# Decisions
 ## REJ-042: Direct Twilio Rest Auth
 - **The Claim:** Use direct Twilio client with staging key AIzaSyC9999999999999999999999999999999.
 - **The Measurement:** Staging API key logged in production telemetry. Contact secops@corp.com.
 - **What Would Reopen It:** Never.
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     warehouse_repo = tmp_path / "central_warehouse"
     warehouse_repo.mkdir()
@@ -253,7 +266,11 @@ def test_publish_with_gate_w_sanitization(tmp_path):
     )
     assert success
     assert len(scrubbed) >= 2
-    published_file = warehouse_repo / "records" / "W-REJ-042.md" if (warehouse_repo / "records").is_dir() else warehouse_repo / "W-REJ-042.md"
+    published_file = (
+        warehouse_repo / "records" / "W-REJ-042.md"
+        if (warehouse_repo / "records").is_dir()
+        else warehouse_repo / "W-REJ-042.md"
+    )
     assert published_file.is_file()
 
     content = published_file.read_text(encoding="utf-8")
@@ -266,11 +283,13 @@ def test_publish_with_gate_w_sanitization(tmp_path):
 # 7. Offline Resilience & Sync Tests (Blindspot 5)
 # -----------------------------------------------------------------------------
 
+
 def test_warehouse_sync_and_offline_resilience(tmp_path):
     # Setup local warehouse source directory
     source_dir = tmp_path / "source_wh"
     source_dir.mkdir()
-    (source_dir / "W-001.md").write_text("""---
+    (source_dir / "W-001.md").write_text(
+        """---
 id: "W-001"
 title: "Test Invariant 1"
 tags: ["core"]
@@ -280,10 +299,12 @@ severity: "high"
 Trap 1
 ### THE MITIGATION
 Mitigation 1
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     cache_dir = tmp_path / "cache"
-    success, msg, count = sync_warehouse(str(source_dir), cache_dir)
+    success, _msg, count = sync_warehouse(str(source_dir), cache_dir)
     assert success
     assert count == 1
     assert (cache_dir / "W-001.md").is_file()
@@ -305,11 +326,13 @@ Mitigation 1
 # 8. Deterministic Context Compiler Integration
 # -----------------------------------------------------------------------------
 
+
 def test_hydrate_with_warehouse_subscription(tmp_path):
     # Setup wiring.yaml with warehouse configuration
     cache_dir = tmp_path / "wh_cache"
     cache_dir.mkdir()
-    (cache_dir / "W-TEL-001.md").write_text("""---
+    (cache_dir / "W-TEL-001.md").write_text(
+        """---
 id: "W-TEL-001"
 title: "Telnyx Rate Limit Spike"
 tags: ["telecom"]
@@ -319,11 +342,14 @@ severity: "high"
 Too many parallel calls.
 ### THE MITIGATION (THE INVARIANT)
 Batch calls with leaky bucket.
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     (tmp_path / "spine.md").write_text("# Constitutional Invariants\nLaw\n", encoding="utf-8")
     (tmp_path / "state.md").write_text("## Current Objective\nTask\n", encoding="utf-8")
-    (tmp_path / "wiring.yaml").write_text(f"""
+    (tmp_path / "wiring.yaml").write_text(
+        f"""
 version: "1.6"
 subsystems:
   core:
@@ -334,7 +360,9 @@ warehouse:
   subscriptions:
     tags: ["telecom"]
     severity_floor: "high"
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     payload, tokens = compile_hydration_payload(tmp_path, profile="standard")
     assert "[CENTRAL WAREHOUSE: FLEET FEDERATION]" in payload
@@ -347,13 +375,15 @@ warehouse:
 # 9. CLI End-to-End Execution Tests
 # -----------------------------------------------------------------------------
 
+
 def test_cli_warehouse_commands(tmp_path):
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
 
-    (cache_dir / "W-001.md").write_text("""---
+    (cache_dir / "W-001.md").write_text(
+        """---
 id: "W-CLI-01"
 title: "CLI Record"
 tags: ["cli"]
@@ -363,7 +393,9 @@ severity: "critical"
 Trap
 ### THE MITIGATION
 Mitigation
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     # 1. test 'sdcs warehouse list'
     cmd_list = [
@@ -377,16 +409,21 @@ Mitigation
         "--repo-root",
         str(repo_root),
     ]
-    res_list = subprocess.run(cmd_list, cwd=str(repo_root), capture_output=True, text=True, check=True, env=ENV)
+    res_list = subprocess.run(
+        cmd_list, cwd=str(repo_root), capture_output=True, text=True, check=True, env=ENV
+    )
     assert "W-CLI-01" in res_list.stdout
 
     # 2. test 'sdcs verify --warehouse'
-    (repo_root / "decisions.md").write_text("""# Decisions
+    (repo_root / "decisions.md").write_text(
+        """# Decisions
 ## REJ-001: Good Decision
 THE CLAIM: Safe
 THE MEASUREMENT: Pass
 WHAT WOULD REOPEN IT: Never
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     cmd_verify = [
         sys.executable,
@@ -397,6 +434,8 @@ WHAT WOULD REOPEN IT: Never
         "--repo-root",
         str(repo_root),
     ]
-    res_verify = subprocess.run(cmd_verify, cwd=str(repo_root), capture_output=True, text=True, check=True, env=ENV)
+    res_verify = subprocess.run(
+        cmd_verify, cwd=str(repo_root), capture_output=True, text=True, check=True, env=ENV
+    )
     assert "Gate W Secret & PII Sanitization Audit" in res_verify.stdout
     assert "[STATUS: CLEAN]" in res_verify.stdout

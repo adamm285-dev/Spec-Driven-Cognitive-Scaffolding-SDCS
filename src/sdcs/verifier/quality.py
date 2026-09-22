@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import ast
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import re
 
 
 @dataclass
@@ -45,16 +45,22 @@ class TestASTVisitor(ast.NodeVisitor):
                 for handler in child.handlers:
                     # Check if handler catches Exception, BaseException, or is bare except:
                     is_broad = False
-                    if handler.type is None:
-                        is_broad = True
-                    elif isinstance(handler.type, ast.Name) and handler.type.id in ("Exception", "BaseException"):
+                    if (
+                        handler.type is None
+                        or isinstance(handler.type, ast.Name)
+                        and handler.type.id in ("Exception", "BaseException")
+                    ):
                         is_broad = True
 
                     if is_broad:
                         # Check if body is just pass or ...
                         if len(handler.body) == 1:
                             stmt = handler.body[0]
-                            if isinstance(stmt, ast.Pass) or (isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and stmt.value.value is Ellipsis):
+                            if isinstance(stmt, ast.Pass) or (
+                                isinstance(stmt, ast.Expr)
+                                and isinstance(stmt.value, ast.Constant)
+                                and stmt.value.value is Ellipsis
+                            ):
                                 self.violations.append(
                                     QualityViolation(
                                         file_path=self.file_path,
@@ -112,13 +118,20 @@ class TestASTVisitor(ast.NodeVisitor):
         # 3. Check for assertless tests (Rule Q2)
         # Filter out docstrings or single pass
         non_doc_statements = [
-            s for s in body
-            if not (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant) and isinstance(s.value.value, str))
+            s
+            for s in body
+            if not (
+                isinstance(s, ast.Expr)
+                and isinstance(s.value, ast.Constant)
+                and isinstance(s.value.value, str)
+            )
         ]
 
         if not assert_nodes and not raises_contexts:
             # If function has active logic but no assertions or raises
-            if len(non_doc_statements) > 0 and not (len(non_doc_statements) == 1 and isinstance(non_doc_statements[0], ast.Pass)):
+            if len(non_doc_statements) > 0 and not (
+                len(non_doc_statements) == 1 and isinstance(non_doc_statements[0], ast.Pass)
+            ):
                 self.violations.append(
                     QualityViolation(
                         file_path=self.file_path,
@@ -180,7 +193,11 @@ class TestASTVisitor(ast.NodeVisitor):
                 return True
             # assert x is not None
             if len(expr.ops) == 1 and isinstance(expr.ops[0], ast.IsNot):
-                if len(expr.comparators) == 1 and isinstance(expr.comparators[0], ast.Constant) and expr.comparators[0].value is None:
+                if (
+                    len(expr.comparators) == 1
+                    and isinstance(expr.comparators[0], ast.Constant)
+                    and expr.comparators[0].value is None
+                ):
                     return True
         return False
 
@@ -241,7 +258,9 @@ def audit_test_quality(
     violations: list[QualityViolation] = []
 
     if target_paths:
-        test_files = [p for p in target_paths if p.is_file() and ("test" in p.name or "test" in str(p.parent))]
+        test_files = [
+            p for p in target_paths if p.is_file() and ("test" in p.name or "test" in str(p.parent))
+        ]
     else:
         # Search tests directory and test_*.py files
         test_files = []
@@ -251,11 +270,13 @@ def audit_test_quality(
             test_files.extend(list(repo_root.glob(f"**/*_test{ext[1:]}")))
 
         # Deduplicate
-        test_files = sorted(list(set(test_files)))
+        test_files = sorted(set(test_files))
 
     for tf in test_files:
         # Skip node_modules and venv
-        if any(part in tf.parts for part in ("node_modules", ".venv", "venv", "__pycache__", ".git")):
+        if any(
+            part in tf.parts for part in ("node_modules", ".venv", "venv", "__pycache__", ".git")
+        ):
             continue
         violations.extend(audit_test_quality_file(tf))
 

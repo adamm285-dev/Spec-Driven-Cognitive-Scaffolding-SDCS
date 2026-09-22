@@ -115,7 +115,7 @@ def test_get_repo_telemetry_empty_repo(tmp_path: Path):
 def test_get_watched_files(sample_sdcs_repo: Path):
     """Verifies that watched files map detects all relevant cognitive files."""
     watched = get_watched_files(sample_sdcs_repo)
-    watched_names = [p.name for p in watched.keys()]
+    watched_names = [p.name for p in watched]
 
     assert "state.md" in watched_names
     assert "evals.md" in watched_names

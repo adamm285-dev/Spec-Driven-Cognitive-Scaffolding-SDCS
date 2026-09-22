@@ -78,9 +78,7 @@ POLYGLOT_EXTENSIONS = {
 }
 
 
-def extract_polyglot_imports(
-    file_path: Path, repo_root: Path
-) -> list[tuple[str, int, bool]]:
+def extract_polyglot_imports(file_path: Path, repo_root: Path) -> list[tuple[str, int, bool]]:
     """
     Extracts imports across Python, TypeScript/JS, Kotlin/Java, Go, and Rust.
     Returns: list of (import_specifier, line_number, is_relative_path)
@@ -109,7 +107,7 @@ def extract_polyglot_imports(
         ts_require_re = re.compile(r"""require\(\s*['"]([^'"]+)['"]\s*\)""")
         for idx, line in enumerate(lines, start=1):
             stripped = line.strip()
-            if stripped.startswith("//") or stripped.startswith("/*"):
+            if stripped.startswith(("//", "/*")):
                 continue
             for m in ts_import_re.finditer(line):
                 spec = m.group(1)
@@ -260,8 +258,15 @@ class TopologyValidator:
     def audit_tree(self) -> list[ImportViolation]:
         violations: list[ImportViolation] = []
         ignored_dirs = {
-            "venv", ".venv", "build", "dist", "node_modules",
-            ".gradle", "target", "__pycache__", ".git"
+            "venv",
+            ".venv",
+            "build",
+            "dist",
+            "node_modules",
+            ".gradle",
+            "target",
+            "__pycache__",
+            ".git",
         }
         for file_path in self.repo_root.rglob("*"):
             if not file_path.is_file():

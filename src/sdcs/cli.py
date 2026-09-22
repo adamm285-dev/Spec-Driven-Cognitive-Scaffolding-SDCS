@@ -341,7 +341,6 @@ def main():
         help="Execute all verification checks (topology, state, sandbox, warehouse, cycles, quality, env, and evals)",
     )
 
-
     # Subcommand: hydrate
     hydrate_parser = subparsers.add_parser(
         "hydrate",
@@ -601,7 +600,6 @@ def main():
 
     args = parser.parse_args()
 
-
     if args.command == "init":
         init_scaffold(
             target_dir=args.target_dir,
@@ -748,7 +746,11 @@ def main():
 
         # 4. Execute Gate W warehouse screening if requested
         if getattr(args, "warehouse", False):
-            from sdcs.warehouse import locate_warehouse_cache, locate_warehouse_config, run_gate_w_audit
+            from sdcs.warehouse import (
+                locate_warehouse_cache,
+                locate_warehouse_config,
+                run_gate_w_audit,
+            )
 
             print("====================================================================")
             print(" SDCS :: Gate W Secret & PII Sanitization Audit (SPEC-001 v1.6.0)")
@@ -776,7 +778,9 @@ def main():
                 print("\n[FAIL] Gate W detected unscrubbed credentials or PII.")
                 exit_code = 1
             else:
-                print("✓ [STATUS: CLEAN] Zero sensitive credentials or PII detected in negative memory.")
+                print(
+                    "✓ [STATUS: CLEAN] Zero sensitive credentials or PII detected in negative memory."
+                )
 
         # 5. Execute Circuit Breaker cycle detection if requested
         if getattr(args, "cycles", False) or args.all:
@@ -863,7 +867,6 @@ def main():
         repo_root = args.repo_root.resolve()
         from sdcs.warehouse import (
             compile_tier1_index,
-            filter_records,
             load_cached_records,
             locate_warehouse_cache,
             locate_warehouse_config,
@@ -877,9 +880,12 @@ def main():
         if getattr(args, "warehouse_action", None) == "sync":
             source = args.source or cfg.get("source")
             if not source:
-                print("Error: No warehouse source provided and none configured in wiring.yaml.", file=sys.stderr)
+                print(
+                    "Error: No warehouse source provided and none configured in wiring.yaml.",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
-            success, msg, count = sync_warehouse(source, cache_dir)
+            success, msg, _count = sync_warehouse(source, cache_dir)
             print(f"{'✓' if success else '⚠️'} {msg}")
             sys.exit(0 if success else 1)
 
@@ -948,7 +954,6 @@ def main():
     else:
         parser.print_help()
         sys.exit(0)
-
 
 
 if __name__ == "__main__":

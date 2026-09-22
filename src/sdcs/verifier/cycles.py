@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-import subprocess
 
 
 @dataclass
@@ -102,7 +102,7 @@ def detect_oscillations(
                 period_2_matches += 1
 
         if period_2_matches + 2 >= threshold * 2 - 1:  # e.g., A B A B (2 matches, total 4 items)
-            oscillating_files = sorted(list(common_a | common_b))
+            oscillating_files = sorted(common_a | common_b)
             violations.append(
                 CycleViolation(
                     files=oscillating_files,
@@ -133,7 +133,7 @@ def detect_oscillations(
             break
 
     if consecutive_isolated_thrash >= threshold:
-        thrash_list = sorted(list(pinned_files or set()))
+        thrash_list = sorted(pinned_files or set())
         # Only add if not already flagged in period-2
         if not any(set(v.files) == set(thrash_list) for v in violations):
             violations.append(

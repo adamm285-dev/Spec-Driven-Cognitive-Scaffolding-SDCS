@@ -478,7 +478,6 @@ exit 0
 """
 
 
-
 def generate_grillme_md(milestone: str | None = None) -> str:
     milestone_str = (
         milestone
@@ -730,14 +729,21 @@ def normalize_legacy_casing(target_dir: Path) -> list[tuple[str, str]]:
                     normalized.append((item.name, canonical_name))
                     print(f"  * Normalized casing: {item.name} -> {canonical_name}")
                 except Exception as ex:
-                    print(f"  ⚠️ Warning: Failed to normalize casing for {item.name}: {ex}", file=sys.stderr)
+                    print(
+                        f"  ⚠️ Warning: Failed to normalize casing for {item.name}: {ex}",
+                        file=sys.stderr,
+                    )
     return normalized
 
 
 def write_file(path: Path, content: str, force: bool = False):
     if path.parent.exists():
         for sibling in path.parent.iterdir():
-            if sibling.is_file() and sibling.name.lower() == path.name.lower() and sibling.name != path.name:
+            if (
+                sibling.is_file()
+                and sibling.name.lower() == path.name.lower()
+                and sibling.name != path.name
+            ):
                 temp_file = sibling.parent / f".sdcs_norm_{sibling.name}.tmp"
                 try:
                     sibling.rename(temp_file)

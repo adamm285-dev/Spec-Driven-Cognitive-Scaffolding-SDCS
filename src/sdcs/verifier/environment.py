@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
-from pathlib import Path
 import re
 import shutil
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
+
 import yaml
 
 
@@ -66,9 +67,13 @@ def get_environment_config(repo_root: Path) -> dict[str, Any]:
                     env_block = data["environment"]
                     if "python" in env_block:
                         config["python"] = str(env_block["python"])
-                    if "required_tools" in env_block and isinstance(env_block["required_tools"], list):
+                    if "required_tools" in env_block and isinstance(
+                        env_block["required_tools"], list
+                    ):
                         config["required_tools"] = env_block["required_tools"]
-                    if "required_env_vars" in env_block and isinstance(env_block["required_env_vars"], list):
+                    if "required_env_vars" in env_block and isinstance(
+                        env_block["required_env_vars"], list
+                    ):
                         config["required_env_vars"] = env_block["required_env_vars"]
         except Exception:
             pass
@@ -162,7 +167,11 @@ def run_diagnostics(repo_root: Path = Path(".")) -> list[DiagnosticItem]:
             category="Kinetic Enforcement",
             name="Git Pre-Commit Hook",
             passed=hook_present,
-            details="Hook active on disk" if hook_present else "Hook missing; run 'sdcs init' or install .githooks/pre-commit",
+            details=(
+                "Hook active on disk"
+                if hook_present
+                else "Hook missing; run 'sdcs init' or install .githooks/pre-commit"
+            ),
             is_warning=False,
         )
     )

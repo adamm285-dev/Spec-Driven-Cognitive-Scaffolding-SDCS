@@ -8,7 +8,6 @@ and prunes decisions.md to prevent graveyard bloat (>15 active entries).
 import datetime
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 
@@ -60,7 +59,9 @@ def audit_roadmap_staleness(
 
     # Pattern to match commit references in [MEASURED] lines:
     # e.g. (Commit `a9f4c21`), Commit a9f4c21, commit: 1234567
-    commit_pattern = re.compile(r"(?:commit|hash)[:\s]+[`\"']?([0-9a-f]{7,40})[`\"']?", re.IGNORECASE)
+    commit_pattern = re.compile(
+        r"(?:commit|hash)[:\s]+[`\"']?([0-9a-f]{7,40})[`\"']?", re.IGNORECASE
+    )
 
     for line in lines:
         curr_line = line
@@ -161,8 +162,8 @@ def prune_decisions_archive(
         "# Negative Episodic Memory (The Graveyard)",
         "<!-- SPEC-001 Pillar 6 | Mutability: APPEND-ONLY | Working Set: <= 15 Entries -->\n",
         "## Archived Rejections Index",
-        f"| Rejection ID | Title | Archive Target |",
-        f"| :--- | :--- | :--- |",
+        "| Rejection ID | Title | Archive Target |",
+        "| :--- | :--- | :--- |",
     ]
     for entry in to_archive:
         new_decisions_lines.append(
@@ -204,14 +205,22 @@ def run_decay_command(
             threshold=commit_threshold,
             tag_stale=tag_stale,
         )
-        print(f"[ROADMAP TELEMETRY AUDIT] Audited {len(records)} [MEASURED] entries in {roadmap_file.name}")
+        print(
+            f"[ROADMAP TELEMETRY AUDIT] Audited {len(records)} [MEASURED] entries in {roadmap_file.name}"
+        )
         for r in records:
-            status_str = f"STALE ({r['distance']} commits behind)" if r["stale"] else f"FRESH ({r['distance']} commits behind)"
+            status_str = (
+                f"STALE ({r['distance']} commits behind)"
+                if r["stale"]
+                else f"FRESH ({r['distance']} commits behind)"
+            )
             flag = "⚠️" if r["stale"] else "✓"
             print(f"  {flag} Commit `{r['commit']}`: {status_str}")
 
         if stale_count > 0:
-            print(f"\n⚠️  [DECAY WARNING] {stale_count} telemetry points exceed freshness window (>{commit_threshold} commits).")
+            print(
+                f"\n⚠️  [DECAY WARNING] {stale_count} telemetry points exceed freshness window (>{commit_threshold} commits)."
+            )
             if not tag_stale:
                 print("   Run with '--tag-stale' to update roadmap.md markers.")
         else:
@@ -226,7 +235,9 @@ def run_decay_command(
     if decisions_file:
         content = decisions_file.read_text(encoding="utf-8", errors="ignore")
         entries = parse_rejection_entries(content)
-        print(f"[DECISIONS GRAVEYARD AUDIT] Found {len(entries)} active entries in {decisions_file.name}")
+        print(
+            f"[DECISIONS GRAVEYARD AUDIT] Found {len(entries)} active entries in {decisions_file.name}"
+        )
 
         if len(entries) > max_entries:
             print(f"⚠️  [BLOAT DETECTED] {len(entries)} entries exceed ceiling of {max_entries}.")
@@ -241,7 +252,9 @@ def run_decay_command(
                 print("   Run with '--prune' to automatically archive oldest entries.")
                 exit_code = 1
         else:
-            print(f"  ✓ Active rejection count ({len(entries)}) is within disciplined threshold (<= {max_entries}).")
+            print(
+                f"  ✓ Active rejection count ({len(entries)}) is within disciplined threshold (<= {max_entries})."
+            )
     else:
         print("  · No decisions.md found. Skipping graveyard audit.")
 

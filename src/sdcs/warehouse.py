@@ -6,12 +6,10 @@ version-bounded TTL expiration, and two-tier hierarchical paging.
 """
 
 import datetime
-import fnmatch
 import os
 import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 try:
@@ -20,7 +18,6 @@ except ImportError:  # pragma: no cover
     yaml = None
 
 from sdcs.verifier.state import count_tokens
-
 
 # -----------------------------------------------------------------------------
 # Gate W: Secret & PII Sanitizer Patterns
@@ -54,42 +51,50 @@ def scan_for_sensitive_data(content: str) -> list[dict]:
     # 1. API Keys & Auth Tokens
     for pattern, label in RE_API_KEY_PATTERNS:
         for match in re.finditer(pattern, content):
-            findings.append({
-                "type": "api_key",
-                "label": label,
-                "match": match.group(0),
-                "span": match.span(),
-            })
+            findings.append(
+                {
+                    "type": "api_key",
+                    "label": label,
+                    "match": match.group(0),
+                    "span": match.span(),
+                }
+            )
 
     # 2. Email Addresses
     for match in RE_EMAIL.finditer(content):
-        findings.append({
-            "type": "email",
-            "label": "Email Address",
-            "match": match.group(0),
-            "span": match.span(),
-        })
+        findings.append(
+            {
+                "type": "email",
+                "label": "Email Address",
+                "match": match.group(0),
+                "span": match.span(),
+            }
+        )
 
     # 3. Phone Numbers
     for match in RE_PHONE.finditer(content):
         val = match.group(0)
         # Avoid matching short version numbers like 1.2.3
         if sum(c.isdigit() for c in val) >= 10:
-            findings.append({
-                "type": "phone",
-                "label": "Phone Number",
-                "match": val,
-                "span": match.span(),
-            })
+            findings.append(
+                {
+                    "type": "phone",
+                    "label": "Phone Number",
+                    "match": val,
+                    "span": match.span(),
+                }
+            )
 
     # 4. Routable IPv4 Addresses
     for match in RE_IPV4.finditer(content):
-        findings.append({
-            "type": "ip",
-            "label": "Routable IPv4 Address",
-            "match": match.group(0),
-            "span": match.span(),
-        })
+        findings.append(
+            {
+                "type": "ip",
+                "label": "Routable IPv4 Address",
+                "match": match.group(0),
+                "span": match.span(),
+            }
+        )
 
     return findings
 
@@ -113,13 +118,18 @@ def sanitize_warehouse_record(content: str) -> tuple[str, list[str]]:
         val = f["match"]
         kind = f["type"]
         placeholder = (
-            "<REDACTED_API_KEY>" if kind == "api_key"
-            else "<REDACTED_EMAIL>" if kind == "email"
-            else "<REDACTED_PHONE_NUMBER>" if kind == "phone"
-            else "<REDACTED_IP>"
+            "<REDACTED_API_KEY>"
+            if kind == "api_key"
+            else (
+                "<REDACTED_EMAIL>"
+                if kind == "email"
+                else "<REDACTED_PHONE_NUMBER>" if kind == "phone" else "<REDACTED_IP>"
+            )
         )
         sanitized = sanitized[:start] + placeholder + sanitized[end:]
-        redactions.append(f"Scrubbed {f['label']} ({val[:4]}...{val[-2:] if len(val) > 6 else ''}) -> {placeholder}")
+        redactions.append(
+            f"Scrubbed {f['label']} ({val[:4]}...{val[-2:] if len(val) > 6 else ''}) -> {placeholder}"
+        )
 
     redactions.reverse()
     return sanitized, redactions
@@ -137,6 +147,7 @@ def run_gate_w_audit(content: str) -> tuple[bool, list[str]]:
 # -----------------------------------------------------------------------------
 # Warehouse Record Parsing & Formatting
 # -----------------------------------------------------------------------------
+
 
 def parse_warehouse_record(content: str, source_path: Path | None = None) -> dict:
     """
@@ -183,7 +194,7 @@ def parse_warehouse_record(content: str, source_path: Path | None = None) -> dic
                 if ":" in line:
                     k, v = line.split(":", 1)
                     k = k.strip().lower()
-                    v = v.strip().strip('"\'')
+                    v = v.strip().strip("\"'")
                     if k in record:
                         record[k] = v
 
@@ -218,7 +229,9 @@ def parse_warehouse_record(content: str, source_path: Path | None = None) -> dic
 
     trap = extract_section(r"(?:THE\s+TRAP|THE\s+CLAIM)", body_text)
     proof = extract_section(r"(?:THE\s+EMPIRICAL\s+PROOF|THE\s+MEASUREMENT)", body_text)
-    mitigation = extract_section(r"(?:THE\s+MITIGATION(?:\s+\(THE\s+INVARIANT\))?|THE\s+INVARIANT)", body_text)
+    mitigation = extract_section(
+        r"(?:THE\s+MITIGATION(?:\s+\(THE\s+INVARIANT\))?|THE\s+INVARIANT)", body_text
+    )
     reopen = extract_section(r"WHAT\s+WOULD\s+REOPEN\s+IT", body_text)
 
     # Fallback: if no recognized section matched, preserve body_text in trap so data is never discarded
@@ -260,7 +273,9 @@ def format_warehouse_record(record: dict) -> str:
             fm_lines.append(f"  {k}: {v}")
     if record.get("affects_version"):
         fm_lines.append(f"affects_version: \"{record['affects_version']}\"")
-    fm_lines.append(f"date_recorded: \"{record.get('date_recorded', datetime.date.today().isoformat())}\"")
+    fm_lines.append(
+        f"date_recorded: \"{record.get('date_recorded', datetime.date.today().isoformat())}\""
+    )
     fm_lines.append(f"ttl_days: {record.get('ttl_days', 365)}")
     fm_lines.append("---\n")
 
@@ -275,7 +290,8 @@ def format_warehouse_record(record: dict) -> str:
         record.get("mitigation", "").strip() or "Enforce boundary contract.",
         "",
         "### WHAT WOULD REOPEN IT",
-        record.get("what_would_reopen_it", "").strip() or "Empirical evidence contradicting the invariant.",
+        record.get("what_would_reopen_it", "").strip()
+        or "Empirical evidence contradicting the invariant.",
         "",
     ]
     return "\n".join(fm_lines) + "\n" + "\n".join(body_lines)
@@ -285,17 +301,21 @@ def format_warehouse_record(record: dict) -> str:
 # Cache & Configuration Management
 # -----------------------------------------------------------------------------
 
+
 def locate_warehouse_config(repo_root: Path, custom_wiring: Path | None = None) -> dict:
     """Reads the 'warehouse' configuration block from wiring.yaml."""
-    candidates = [custom_wiring] if custom_wiring else [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]
+    candidates = (
+        [custom_wiring]
+        if custom_wiring
+        else [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]
+    )
     for c in candidates:
-        if c and c.is_file():
-            if yaml is not None:
-                try:
-                    data = yaml.safe_load(c.read_text(encoding="utf-8")) or {}
-                    return data.get("warehouse", {})
-                except Exception:
-                    pass
+        if c and c.is_file() and yaml is not None:
+            try:
+                data = yaml.safe_load(c.read_text(encoding="utf-8")) or {}
+                return data.get("warehouse", {})
+            except Exception:
+                pass
     return {}
 
 
@@ -327,6 +347,7 @@ def locate_warehouse_cache(
 # -----------------------------------------------------------------------------
 # Synchronization & Publishing
 # -----------------------------------------------------------------------------
+
 
 def sync_warehouse(source: str, cache_dir: Path) -> tuple[bool, str, int]:
     """
@@ -385,11 +406,19 @@ def sync_warehouse(source: str, cache_dir: Path) -> tuple[bool, str, int]:
                 return True, f"Synchronized {count} records from remote '{source}'.", count
             else:
                 existing = len(list(cache_dir.glob("*.md")))
-                return False, f"Network/Git sync failed. Offline fallback active with {existing} cached records.", existing
+                return (
+                    False,
+                    f"Network/Git sync failed. Offline fallback active with {existing} cached records.",
+                    existing,
+                )
         except (subprocess.SubprocessError, OSError) as ex:
             # Offline fallback
             existing = len(list(cache_dir.glob("*.md")))
-            return False, f"Network/Git sync failed ({ex}). Offline fallback active with {existing} cached records.", existing
+            return (
+                False,
+                f"Network/Git sync failed ({ex}). Offline fallback active with {existing} cached records.",
+                existing,
+            )
 
     return False, f"Invalid warehouse source location: '{source}'", 0
 
@@ -450,12 +479,20 @@ def publish_record(
     if not is_clean:
         if not scrub and not force:
             violation_summary = "\n".join(f"  - {v}" for v in violations)
-            return False, f"Gate W rejected publish due to unscrubbed secrets/PII:\n{violation_summary}", []
+            return (
+                False,
+                f"Gate W rejected publish due to unscrubbed secrets/PII:\n{violation_summary}",
+                [],
+            )
         # Auto-scrubbing
         formatted_text, scrubbed_items = sanitize_warehouse_record(formatted_text)
 
     # Write record to warehouse target
-    target_dir = warehouse_target / "records" if (warehouse_target / "records").is_dir() else warehouse_target
+    target_dir = (
+        warehouse_target / "records"
+        if (warehouse_target / "records").is_dir()
+        else warehouse_target
+    )
     target_dir.mkdir(parents=True, exist_ok=True)
     out_file = target_dir / f"{record['id']}.md"
     out_file.write_text(formatted_text, encoding="utf-8")
@@ -466,6 +503,7 @@ def publish_record(
 # -----------------------------------------------------------------------------
 # Filtering & Tier-1 Index Compilation
 # -----------------------------------------------------------------------------
+
 
 def load_cached_records(cache_dir: Path) -> list[dict]:
     """Loads all records stored in the warehouse cache directory."""
@@ -534,18 +572,16 @@ def filter_records(
             if isinstance(env_langs, str):
                 env_langs = [env_langs]
             env_langs = [str(x).lower().strip() for x in env_langs]
-            if env_langs and proj_lang:
-                if proj_lang not in env_langs:
-                    continue  # Mismatch: silently exclude
+            if env_langs and proj_lang and proj_lang not in env_langs:
+                continue  # Mismatch: silently exclude
 
             # Domain constraint
             env_domains = envelope.get("domain", [])
             if isinstance(env_domains, str):
                 env_domains = [env_domains]
             env_domains = [str(x).lower().strip() for x in env_domains]
-            if env_domains and proj_domain:
-                if proj_domain not in env_domains:
-                    continue  # Mismatch: silently exclude
+            if env_domains and proj_domain and proj_domain not in env_domains:
+                continue  # Mismatch: silently exclude
 
         matched.append(r)
 

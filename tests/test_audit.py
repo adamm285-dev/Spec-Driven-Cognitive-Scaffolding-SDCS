@@ -6,7 +6,7 @@ REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT))
 
-from audit_evals_corpus import (
+from audit_evals_corpus import (  # noqa: E402
     calculate_normalized_sha256,
     calculate_sha256,
     parse_evals_table,

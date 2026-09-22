@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -64,6 +63,7 @@ def fresh_repo(tmp_path):
 # Test 1: Turn 1 Boot Hydration
 # -----------------------------------------------------------------------------
 
+
 def test_turn1_boot_hydration_single_pass(fresh_repo):
     """Verifies that an agent in a brand-new repo hydrates all 7 pillars in 1 atomic call."""
     payload, tokens = compile_hydration_payload(fresh_repo, profile="standard")
@@ -82,6 +82,7 @@ def test_turn1_boot_hydration_single_pass(fresh_repo):
 # Test 2: Gate C Blocks Constitutional Invariant Tampering
 # -----------------------------------------------------------------------------
 
+
 def test_gate_c_blocks_constitutional_tampering(fresh_repo):
     """
     Agent Cheat Attempt: Weaken spine.md to remove forbidden actions.
@@ -89,7 +90,9 @@ def test_gate_c_blocks_constitutional_tampering(fresh_repo):
     """
     spine = fresh_repo / "spine.md"
     original_text = spine.read_text(encoding="utf-8")
-    spine.write_text(original_text + "\n## Weakened Rule: Allowed to delete test assertions\n", encoding="utf-8")
+    spine.write_text(
+        original_text + "\n## Weakened Rule: Allowed to delete test assertions\n", encoding="utf-8"
+    )
 
     run_git(fresh_repo, "add", "spine.md")
 
@@ -115,22 +118,32 @@ def test_gate_c_blocks_constitutional_tampering(fresh_repo):
 # Test 3: Gate S Blocks Working Memory Token Bloat
 # -----------------------------------------------------------------------------
 
+
 def test_gate_s_blocks_working_memory_bloat(fresh_repo):
     """
     Agent Cheat Attempt: Dump 500+ tokens of unstructured logs into state.md.
     Kinetic Gate S: Pre-commit hook must block commit if > 350 tokens.
     """
     state_file = fresh_repo / "state.md"
-    bloated_text = """# Dynamic Working Memory (The Blackboard)
+    bloated_text = (
+        """# Dynamic Working Memory (The Blackboard)
 ## Current Objective
 - Trying to build a feature while dumping huge conversational chat transcripts into state.
 
 ## Status & Gate Verification
-""" + "\n".join([f"- Step {i}: Conversation transcript dump with long detailed explanations that burn through context budget rapidly." for i in range(30)]) + """
+"""
+        + "\n".join(
+            [
+                f"- Step {i}: Conversation transcript dump with long detailed explanations that burn through context budget rapidly."
+                for i in range(30)
+            ]
+        )
+        + """
 
 ## Immediate Next Action (Post-Compact)
 - Continue working.
 """
+    )
     assert count_tokens(bloated_text) > 350
 
     state_file.write_text(bloated_text, encoding="utf-8")
@@ -139,12 +152,16 @@ def test_gate_s_blocks_working_memory_bloat(fresh_repo):
     res = run_git(fresh_repo, "commit", "-m", "cheat: dump bloated state", check=False)
     assert res.returncode != 0
     combined_output = res.stdout + res.stderr
-    assert "GATE S: WORKING MEMORY TOKEN BUDGET EXCEEDED" in combined_output or "Total Working Memory Tokens" in combined_output
+    assert (
+        "GATE S: WORKING MEMORY TOKEN BUDGET EXCEEDED" in combined_output
+        or "Total Working Memory Tokens" in combined_output
+    )
 
 
 # -----------------------------------------------------------------------------
 # Test 4: Gate P Blocks Staging Protected Sandbox Files (.env / secrets)
 # -----------------------------------------------------------------------------
+
 
 def test_gate_p_blocks_staging_secrets(fresh_repo):
     """
@@ -158,12 +175,16 @@ def test_gate_p_blocks_staging_secrets(fresh_repo):
     res = run_git(fresh_repo, "commit", "-m", "cheat: commit .env secret", check=False)
     assert res.returncode != 0
     combined_output = res.stdout + res.stderr
-    assert "GATE P: SANDBOX PROTECTED PATH VIOLATION" in combined_output or "Sandbox Protected Path Violation" in combined_output
+    assert (
+        "GATE P: SANDBOX PROTECTED PATH VIOLATION" in combined_output
+        or "Sandbox Protected Path Violation" in combined_output
+    )
 
 
 # -----------------------------------------------------------------------------
 # Test 5: Gate T Blocks Architectural Boundary Violations
 # -----------------------------------------------------------------------------
+
 
 def test_gate_t_blocks_boundary_violation_and_appends_rejection(fresh_repo):
     """
@@ -177,13 +198,20 @@ def test_gate_t_blocks_boundary_violation_and_appends_rejection(fresh_repo):
     core_file.write_text("import interfaces.adapter\n\ndef run():\n    pass\n", encoding="utf-8")
 
     # Also sync cartography so Gate M doesn't fail first
-    subprocess.run([sys.executable, "-m", "sdcs.cli", "map", "--sync", "--repo-root", str(fresh_repo)], check=True, env=ENV)
+    subprocess.run(
+        [sys.executable, "-m", "sdcs.cli", "map", "--sync", "--repo-root", str(fresh_repo)],
+        check=True,
+        env=ENV,
+    )
 
     run_git(fresh_repo, "add", "src/core_leak.py", "app_map.md")
     res = run_git(fresh_repo, "commit", "-m", "cheat: import forbidden dependency", check=False)
     assert res.returncode != 0
     combined_output = res.stdout + res.stderr
-    assert "GATE T: TOPOLOGICAL BOUNDARY VIOLATION DETECTED" in combined_output or "Boundary Violation" in combined_output
+    assert (
+        "GATE T: TOPOLOGICAL BOUNDARY VIOLATION DETECTED" in combined_output
+        or "Boundary Violation" in combined_output
+    )
 
     # Verify that Gate T automatically recorded the rejection to decisions.md
     decisions_content = (fresh_repo / "decisions.md").read_text(encoding="utf-8")
@@ -193,6 +221,7 @@ def test_gate_t_blocks_boundary_violation_and_appends_rejection(fresh_repo):
 # -----------------------------------------------------------------------------
 # Test 6: Gate M Blocks Cartography Drift (Unmapped Files)
 # -----------------------------------------------------------------------------
+
 
 def test_gate_m_blocks_cartography_drift(fresh_repo):
     """
@@ -207,10 +236,17 @@ def test_gate_m_blocks_cartography_drift(fresh_repo):
     res = run_git(fresh_repo, "commit", "-m", "cheat: unmapped file", check=False)
     assert res.returncode != 0
     combined_output = res.stdout + res.stderr
-    assert "GATE M: CARTOGRAPHY DRIFT DETECTED" in combined_output or "Cartography drift detected" in combined_output
+    assert (
+        "GATE M: CARTOGRAPHY DRIFT DETECTED" in combined_output
+        or "Cartography drift detected" in combined_output
+    )
 
     # Reconcile with sdcs map --sync -> commit should now pass
-    subprocess.run([sys.executable, "-m", "sdcs.cli", "map", "--sync", "--repo-root", str(fresh_repo)], check=True, env=ENV)
+    subprocess.run(
+        [sys.executable, "-m", "sdcs.cli", "map", "--sync", "--repo-root", str(fresh_repo)],
+        check=True,
+        env=ENV,
+    )
     run_git(fresh_repo, "add", "app_map.md")
     res_clean = run_git(fresh_repo, "commit", "-m", "fix: synced cartography", check=False)
     assert res_clean.returncode == 0
@@ -219,6 +255,7 @@ def test_gate_m_blocks_cartography_drift(fresh_repo):
 # -----------------------------------------------------------------------------
 # Test 7: Subagent Scoped Blackboard Isolation (No Parallel Collision)
 # -----------------------------------------------------------------------------
+
 
 def test_subagent_blackboard_fork_and_rollup(fresh_repo):
     """
@@ -247,7 +284,8 @@ def test_subagent_blackboard_fork_and_rollup(fresh_repo):
     assert "Build audio pipeline" not in root_state
 
     # 2. Worker updates its status
-    worker_file.write_text("""# Dynamic Working Memory (The Blackboard)
+    worker_file.write_text(
+        """# Dynamic Working Memory (The Blackboard)
 ## Current Objective
 - Build audio pipeline
 
@@ -256,7 +294,9 @@ def test_subagent_blackboard_fork_and_rollup(fresh_repo):
 
 ## Immediate Next Action (Post-Compact)
 - Rollup into root.
-""", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
 
     # 3. Rollup into root
     rollup_cmd = [

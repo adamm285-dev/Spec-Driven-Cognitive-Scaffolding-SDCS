@@ -1,6 +1,7 @@
 """Tests for the SDCS Circuit Breaker & Cyclic Thrashing Detector."""
 
 from pathlib import Path
+
 from sdcs.verifier.cycles import detect_oscillations, run_cycle_audit
 
 
