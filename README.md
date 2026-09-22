@@ -36,28 +36,6 @@ Without the furnished office, an autonomous agent worker is dropped into an empt
 4. **The Scorecard (`evals.md`)**: Cryptographic ground truth anchored to physical test fixtures and SHA-256 hashes.
 5. **The Kinetic Bouncer (8 Gates & Circuit Breaker)**: Physical pre-commit guards blocking broken imports, hollow tests, and file oscillations.
 6. **The Central Warehouse (`sdcs warehouse`)**: Fleet-wide cognitive federation sharing verified traps without leaking proprietary IP.
-7. **The Living Pixel Office HUD (`sdcs watch`)**: A real-time 16-bit isometric pixel-art HUD bringing the furnished office to life!
-
----
-
-## 🎮 The Living Pixel Office HUD (`sdcs watch`)
-
-![SDCS Living Pixel Office HUD](media/pixel_office.jpg)
-
-SDCS v1.7.0 introduces `sdcs watch`, an active background file watcher and zero-dependency local HTTP/SSE server bridging real-time repository telemetry to an animated **16-bit isometric pixel-art HUD** (conforming to the Grok Bot / Clanker Town indie game aesthetic):
-
-```bash
-# Launch the living office HUD (opens http://127.0.0.1:8765)
-sdcs watch
-
-# Run in headless or CI environments on a custom port
-sdcs watch --no-browser --port 8765
-```
-
-- **Interactive Room Hotspots**: Dev Desk, Server Room & Kinetic Bouncer, Central Whiteboard, Rejection Graveyard, Central Warehouse, and Empirical Evals.
-- **60 FPS Animated Sprite Engine**: Animated bot workers physically walk, bob, blink, and pathfind across the office floor using click-to-move, toolbar dispatch, or autonomous wander routines.
-- **Reactive Event Streaming**: Streams live telemetry over Server-Sent Events (SSE) whenever `state.md`, `evals.md`, `decisions.md`, or `sessions/manifest.jsonl` are touched during autonomous coding sessions.
-- **Zero External Dependencies**: Powered entirely by Python's standard library `http.server.ThreadingHTTPServer`.
 
 ---
 
@@ -676,6 +654,22 @@ python sdcs_init.py --grill
 * **Extracts Hard Ceilings & Floors:** Demands quantitative latency, throughput, memory, and coverage targets.
 * **Auto-Populates `roadmap.md`:** Generates structured `[INTENT]` and `[MEASURED]` acceptance criteria.
 * **Scaffolded File:** Generated at `prompts/grillme.md` (or `.agent/prompts/grillme.md`).
+
+---
+
+### 8. Live Telemetry & Event Streaming (`sdcs watch`) *(Experimental)*
+
+```bash
+# Launch the background telemetry server & local interface (default http://127.0.0.1:8765)
+sdcs watch
+
+# Run in headless mode or on a custom port
+sdcs watch --no-browser --port 8765
+```
+
+A lightweight, zero-dependency local HTTP and Server-Sent Events (SSE) server that monitors cognitive files (`state.md`, `evals.md`, `decisions.md`) and streams real-time repository telemetry to a local interface during autonomous shifts.
+
+---
 
 ## Operational Scale Profiles
 
