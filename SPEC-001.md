@@ -3,11 +3,12 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.4.1
+Version: 1.7.0
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.4.0
+Replaces: SPEC-001 v1.6.0
 License: MIT
+
 ```
 
 ---
@@ -48,16 +49,16 @@ Autonomous coding agents cannot operate reliably within an unstructured software
    - **Ontological Role:** Anchors human optative intent (`[INTENT]`) against indicative empirical reality (`[MEASURED]`). It supplies the cybernetic control loop with its error signal ($\Delta = \text{Intent} - \text{Measured}$). The agent's sole objective is driving $\Delta \to 0$.
 
 2. **The Semantic Layer (Definitions / What Exists):**
-   - **Artifacts:** `spine.md` (Pillar 1: Axioms & Laws), `wiring.yaml` (Pillar 2: Declarative Mesh), and `app_map.md` (Pillar 5: Spatial Cartography).
-   - **Ontological Role:** Defines the universe of legal entities, system axioms, subsystem boundaries, and repository cartography. An agent is strictly prohibited from hallucinating or inventing entities outside this declared ontology.
+   - **Artifacts:** `spine.md` (Pillar 1: Axioms & Laws), `wiring.yaml` (Pillar 2: Declarative Mesh & Sandboxing), and `app_map.md` (Pillar 5: Spatial Cartography).
+   - **Ontological Role:** Defines the universe of legal entities, system axioms, subsystem boundaries, repository cartography, and declarative tool/path sandboxing permissions. An agent is strictly prohibited from hallucinating entities or accessing paths outside this declared ontology.
 
 3. **The Kinetic Layer (Actions / The Laws of Motion):**
-   - **Artifacts & Engines:** Gate T AST boundary compiler (`sdcs verify --topology`), Gate M cartography drift engine (`sdcs map --check`), Gate C (Contract Immutability), Gate A token budget linter (`sdcs verify --state`), Gate E evaluation standing auditor (`sdcs eval` / `sdcs audit`), Gate S working memory sync gate, and physical VCS hooks (`.githooks/pre-commit`).
-   - **Ontological Role:** Enforces physical transition rules across Spatial/Structural (Gates T, M, C) and Cognitive/Temporal (Gates A, E, S) tiers. Every code modification represents a state transition $y = f(x)$. If an agent attempts an illegal cross-subsystem import, uncontracted mutation, or drifted file commit, the kinetic layer physically halts the operation on disk (`exit 1`).
+   - **Artifacts & Engines:** Gate T AST/Polyglot boundary auditor (`sdcs verify --topology`), Gate M cartography drift engine (`sdcs map --check`), Gate C (Contract Immutability), Gate S token budget linter (`sdcs verify --state`), Gate P declarative sandbox guard (`sdcs verify --sandbox`), Gate E evaluation standing auditor (`sdcs eval` / `sdcs audit`), Gate D telemetry staleness & pruning engine (`sdcs decay`), and physical VCS hooks (`.githooks/pre-commit`).
+   - **Ontological Role:** Enforces physical transition rules across Spatial/Structural (Gates T, M, C, P) and Cognitive/Temporal (Gates S, E, D) tiers. Every code modification represents a state transition $y = f(x)$. If an agent attempts an illegal cross-subsystem import, uncontracted sandbox mutation, or drifted file commit, the kinetic layer physically halts the operation on disk (`exit 1`).
 
 4. **The Dynamic Layer (Memory, Causality, and Time Evolution):**
-   - **Artifacts & Ledgers:** `decisions.md` (Pillar 6: Negative Memory), `evals.md` (Pillar 7: Positive Memory & Merkle/SHA-256 standing), `state.md` (Pillar 4: Working Memory Blackboard), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
-   - **Ontological Role:** Models state evolution over time with symmetric episodic memory. Failed hypotheses are serialized into negative memory (`REJ-XXX`), verified milestones are locked into cryptographic standing (`evals.md`), working memory is pruned to $\le 300$ tokens, and shift causality is tracked via immutable flight recorder indexes.
+   - **Artifacts & Ledgers:** `decisions.md` (Pillar 6: Negative Memory), `evals.md` (Pillar 7: Positive Memory & Merkle/SHA-256 standing), `state.md` (Pillar 4: Working Memory Blackboard & Subagent Slices), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
+   - **Ontological Role:** Models state evolution over time with symmetric episodic memory. Failed hypotheses are serialized into negative memory (`REJ-XXX`), verified milestones are locked into cryptographic standing (`evals.md`), working memory is pruned to $\le 300$ tokens, parallel subagent states are reconciled via rollup, and shift causality is tracked via immutable flight recorder indexes.
 
 ---
 
@@ -76,6 +77,26 @@ Autonomous coding agents cannot operate reliably within an unstructured software
 
 * **Role:** Formally maps component boundaries, interface bindings, runtime environment requirements, and tool dependencies.
 * **Invariant:** All inter-module calls and external side effects MUST conform to the explicit input/output contracts declared in `wiring.yaml`.
+* **Declarative Sandboxing & Blast-Radius:**
+  `wiring.yaml` declares physical boundary constraints for sensitive files and permitted execution tools:
+  ```yaml
+  sandbox:
+    protected_paths:
+      - ".env*"
+      - "*.jks"
+      - "*.pem"
+      - "credentials/**"
+    allowed_commands:
+      - "pytest"
+      - "git"
+      - "ruff"
+      - "sdcs"
+    prohibited_flags:
+      - "--no-verify"
+      - "-f"
+      - "--force"
+  ```
+  Gate P interceptors audit staged mutations against `protected_paths`. Attempted staging of protected paths without explicit human authorization (`SDCS_ALLOW_SANDBOX_OVERRIDE=1`) is rejected on disk.
 
 ### 3.3 Pillar 3: The Macro Acceptance Contract (`roadmap.md`)
 
@@ -100,8 +121,13 @@ Autonomous coding agents cannot operate reliably within an unstructured software
 ### 3.4 Pillar 4: Dynamic Working Memory (`state.md`)
 
 * **Role:** Serves as the ephemeral whiteboard recording active sub-objectives, blockers, and pending validation gates.
-* **Budget Constraint:** MUST be hard-pruned to a ceiling of approximately 300 tokens.
+* **Budget Constraint:** MUST be hard-pruned to a ceiling of approximately 300 tokens (Gate S enforces a strict 350-token commit ceiling).
 * **Invariant:** Completed tasks MUST be pruned immediately upon verification; task logs MUST NOT accumulate across turns.
+* **Subagent Blackboard Forking & Rollup Protocol:**
+  When executing parallel tasks or spawning autonomous subagents, workers MUST NOT mutate root `state.md` concurrently.
+  1. *Blackboard Fork:* A scoped blackboard slice is instantiated for the worker: `state.<worker-id>.md` via `sdcs state fork <worker-id>`.
+  2. *Isolated Mutation:* The subagent mutates only its local blackboard slice during execution.
+  3. *Rollup Gate:* Upon task completion, `sdcs state rollup <worker-id>` executes a deterministic rollup: synthesizes the worker's status and blockers into root `state.md`, verifies the $\le 350$-token ceiling via Gate S, and deletes the ephemeral subagent slice.
 
 ### 3.5 Pillar 5: Repository Cartography (`app_map.md`)
 
@@ -126,6 +152,7 @@ WHAT WOULD REOPEN IT: [Concrete, falsifiable condition required to re-evaluate]
 * **Compaction & Pruning Lifecycle:** To prevent negative memory bloat over multi-month lifecycles:
   1. *Active Working Set:* `decisions.md` SHOULD carry no more than 10–15 active, high-relevance rejections (~1,000 token budget).
   2. *Archival Protocol:* When subsystems are completely decommissioned, refactored, or replaced, superseded rejections MUST be compacted into `decisions/archive/` or `decisions.archive.md`.
+  3. *Automated Temporal Decay (`sdcs decay`):* Automated kinetic routines inspect git commit distance for `roadmap.md` (`>50` commits tagged `[STALE]`) and archive active rejections exceeding 15 entries into `decisions/archive/YYYY-QX.md` with an inline index table.
 
 ### 3.7 Pillar 7: Positive Episodic Memory (`evals.md`)
 
@@ -157,6 +184,16 @@ To eliminate ceremony overhead on lightweight tasks while providing full cogniti
 | **Standard** | `spine.md` + `roadmap.md` + `app_map.md` + `state.md` | ~1,500 tokens | Single-subsystem feature development, localized refactors, unit test expansions. |
 | **Full Shift** | All 7 Pillars + `sessions/template.md` on close-out | ~2,500–3,500 tokens | Multi-turn unattended autonomous agent runs, overnight refactors, cross-subsystem migrations. |
 
+### 5.1 The Deterministic Context Compiler (`sdcs hydrate`)
+
+To guarantee profile compliance and eliminate multi-tool token burn, the `sdcs hydrate` command compiles and streams a pre-budgeted, single-pass markdown payload directly to stdout:
+
+```bash
+sdcs hydrate [--profile lite|standard|full] [-s <subsystem>]
+```
+
+This condenses 5–7 separate Turn 1 tool calls into 1 atomic CLI invocation, reducing boot latency and preventing context conflation.
+
 ---
 
 ## 6. The Autonomous Execution Cycle
@@ -168,7 +205,7 @@ Autonomous agents conforming to SPEC-001 MUST execute within a deterministic 4-p
       │                   1. ORIENTATION                        │
       │  Hydrate context according to selected Scale Profile:   │
       │  (Full: spine -> roadmap -> app_map -> decisions        │
-      │   -> evals -> state.md)                                 │
+      │   -> evals -> state.md OR sdcs hydrate --profile ...)   │
       └────────────────────────────┬────────────────────────────┘
                                    │
                                    ▼
@@ -193,6 +230,13 @@ Autonomous agents conforming to SPEC-001 MUST execute within a deterministic 4-p
       │  Emit write-once handoff log to sessions/*.md.          │
       └─────────────────────────────────────────────────────────┘
 ```
+
+### 6.1 Post-Compaction Fast-Resume Protocol (Cold-Start Eliminator)
+
+When an agent context window is compacted (`/compact` or context roll-off), conversational history is compressed. To eliminate cold-start hesitation and redundant exploratory surveys:
+1. Inspect `state.md` immediately upon post-compaction wakeup.
+2. If `## Immediate Next Action (Post-Compact)` contains an active, uncompleted task, the agent MUST bypass full exploratory re-orientation.
+3. Transition directly to execution on the designated action.
 
 ---
 
@@ -451,17 +495,45 @@ In multi-turn autonomous coding shifts, AI context windows inevitably saturate. 
 * **REQ-WIRING-01 (Additive In-Stride Rule):** When introducing new modules, packages, or subsystems, agents MUST update `wiring.yaml` in the same commit transaction as the code.
 * **REQ-WIRING-02 (Prohibited Boundary Relaxation):** Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T violations without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly prohibited.
 
+### 7.14 The Circuit Breaker (File Oscillation & Cyclic Thrashing Detector)
+
+Autonomous models encountering subtle bugs often fall into infinite ping-pong edits between two or three files (fixing bug A breaks bug B; reverting B breaks A). This burns API tokens and mangles repository code.
+
+* **REQ-GATE-CYCLES-01 (Oscillation Detection):** Tooling (`sdcs verify --cycles`) MUST inspect recent git commit history or working tree transitions across a rolling window (default: 6 commits).
+* **REQ-GATE-CYCLES-02 (Circuit Trip Condition):** If an alternating period-2 oscillation (e.g. $A \to B \to A \to B$) or repeated single-file isolated modification occurs across $\ge 3$ consecutive commits without architectural progression or net test error reduction, the circuit breaker MUST trip (`exit 1`), physically halting the agent and requesting human intervention.
+
+### 7.15 Gate Q: Test Quality & Anti-Mock AST Auditor
+
+Autonomous models pressured to satisfy passing test suites may commit "hollow" or fraudulent tests that inflate test pass rates without validating runtime logic.
+
+* **REQ-GATE-Q-01 (No Trivial Assertions):** Test functions where all assertions are trivial constants (e.g. `assert True`, `assert not False`, `assert 1 == 1`, or `assert x is not None` as the sole assertion) MUST be rejected.
+* **REQ-GATE-Q-02 (No Assertless Execution):** Test functions containing execution statements but zero assertions or expected exception contexts (`pytest.raises`) MUST be rejected.
+* **REQ-GATE-Q-03 (No Swallowed Exceptions):** Wrapping test assertions in `try ... except Exception: pass` or bare `except: pass` silently masking failures MUST be rejected.
+* **REQ-GATE-Q-04 (Mock Abuse Ceiling):** Test cases containing excessive mock patches relative to substantive target executions without an active call to the system under test MUST be flagged and rejected.
+
+### 7.16 Gate E & `sdcs doctor`: Runtime & Toolchain Invariant Lock
+
+When test suites fail due to mismatched local interpreters (e.g. Python 3.10 vs 3.12), missing system tools (`git`, `pytest`, `npm`), or unset environment variables, agents often misdiagnose the failure and rewrite valid application code.
+
+* **REQ-GATE-ENV-01 (Environment Invariant Verification):** Runtime specifications declared in `wiring.yaml` (under `environment:`) or `pyproject.toml` MUST be audited via `sdcs verify --env`.
+* **REQ-GATE-ENV-02 (Code Mutation Prohibition on Environment Mismatch):** If the local interpreter, required CLI tools, or required environment variables are absent, Gate E MUST abort execution and instruct the agent: *"DO NOT edit application code. Fix local environment first."*
+* **REQ-DOCTOR-01 (Comprehensive Diagnostic Health Check):** The `sdcs doctor` command MUST execute a unified audit verifying toolchains, OS environment, all 7 cognitive pillars, and Git pre-commit hook installations.
+
 ---
 
 ## 8. Verification and Compliance Tooling
 
-Conformity with SPEC-001 v1.4.1 is validated via reference CLI tools:
+Conformity with SPEC-001 v1.7.0 is validated via reference CLI tools:
 
 * `sdcs init` (`python sdcs_init.py`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
+* `sdcs doctor` (`sdcs doctor`): Executes complete system diagnostics across toolchains, environment invariants, cognitive pillars, and VCS hooks.
 * `sdcs grill` (`python sdcs_init.py --grill`): Runs the `/grillme` Adversarial Spec Elicitation Protocol to harden requirements into quantifiable `[INTENT]` contracts.
-* `sdcs verify` (`sdcs verify [--topology] [--state] [--all]`): Audits codebase AST against `wiring.yaml` (Gate T), lints `state.md` token budgets (Gate A), and runs evals (Gate E).
+* `sdcs verify` (`sdcs verify [--topology] [--state] [--sandbox] [--warehouse] [--cycles] [--quality] [--env] [--all]`): Audits codebase AST boundaries (Gate T), working state tokens (Gate S), sandbox blast-radius (Gate P), secret screening (Gate W), thrashing loops (Circuit Breaker), test quality (Gate Q), and toolchains (Gate E).
 * `sdcs eval` / `sdcs audit` (`sdcs eval record <ID>|all`, `sdcs audit [--update-pending] [--recalibrate <ID>]`): Cryptographically verifies fixture integrity, normalizes anti-evasion variance, enforces corpus diversity, and recalibrates golden digests atomically.
 * `sdcs map` (`sdcs map [--check] [--sync] [--subsystem <path|name>]`): Audits and synchronizes `app_map.md` against disk state (Gate M), and pages focused cartographic slices to conserve tokens.
+* `sdcs hydrate` (`sdcs hydrate [--profile lite|standard|full]`): Compiles a pre-budgeted, single-pass boot payload in 1 atomic command.
+* `sdcs decay` (`sdcs decay [--check|--prune]`): Automatically tags and archives stale rejections and telemetry exceeding active ceilings.
+* `sdcs warehouse` (`sdcs warehouse [sync|publish|list]`): Hub-and-spoke federation engine synchronizing global vendor rejections with Gate W sanitization.
 * `sdcs session` (`sdcs session [index|list]`): Indexes and forensically queries flight recorder shift handoffs via `sessions/manifest.jsonl`.
 * `sdcs graph` (`sdcs graph [--format mermaid|ascii]`): Visualizes subsystem architecture and dependency flow as Mermaid diagrams or ASCII terminal DAGs.
 

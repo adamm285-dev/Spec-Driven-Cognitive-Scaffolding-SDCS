@@ -1,8 +1,8 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.4-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.4.1-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.4.1)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.7.0-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.7.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.7.0)
 [![YouTube](https://img.shields.io/badge/YouTube-Watch%20Overview-FF0000.svg?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/Ap0bXGM0MbU)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
@@ -16,7 +16,48 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications
 
-- **[SPEC-001 (v1.4.1)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.7.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+
+---
+
+## 🏢 The Furnished Office Metaphor: Why SDCS?
+
+> **The Bot** is the *Brain* without arms (LLM reasoning & inference).  
+> **The Harness** is the Brain's *arms & hands* (execution loop, shell access, tool calling).  
+> **Skills** are the *tools held in the hands* (linters, APIs, test runners, git).  
+> **SDCS** is the **Furnished Office** (the constitutional rules on the wall, the floor plan, the central whiteboard, the rejection graveyard, the kinetic bouncer, and the central warehouse).
+
+Without the furnished office, an autonomous agent worker is dropped into an empty, pitch-black room with a box of tools and no lighting. It blindly runs frantic `find` and `grep` loops (burning 2,000 tokens before writing a single line of code), invents non-existent file paths, and repeatedly attempts yesterday's measured failures.
+
+**SDCS provides deterministic lighting for the furnished office:**
+1. **The Floor Plan (`app_map.md` & `wiring.yaml`)**: The agent knows the exact layout and boundary contracts before touching code.
+2. **The Whiteboard (`state.md`)**: Volatile turn-by-turn memory strictly capped $\le 350$ tokens.
+3. **The Rejection Graveyard (`decisions.md`)**: Negative episodic memory stopping the agent from retrying rejected dead ends.
+4. **The Scorecard (`evals.md`)**: Cryptographic ground truth anchored to physical test fixtures and SHA-256 hashes.
+5. **The Kinetic Bouncer (8 Gates & Circuit Breaker)**: Physical pre-commit guards blocking broken imports, hollow tests, and file oscillations.
+6. **The Central Warehouse (`sdcs warehouse`)**: Fleet-wide cognitive federation sharing verified traps without leaking proprietary IP.
+7. **The Living Pixel Office HUD (`sdcs watch`)**: A real-time 16-bit isometric pixel-art HUD bringing the furnished office to life!
+
+---
+
+## 🎮 The Living Pixel Office HUD (`sdcs watch`)
+
+![SDCS Living Pixel Office HUD](media/pixel_office.jpg)
+
+SDCS v1.7.0 introduces `sdcs watch`, an active background file watcher and zero-dependency local HTTP/SSE server bridging real-time repository telemetry to an animated **16-bit isometric pixel-art HUD** (conforming to the Grok Bot / Clanker Town indie game aesthetic):
+
+```bash
+# Launch the living office HUD (opens http://127.0.0.1:8765)
+sdcs watch
+
+# Run in headless or CI environments on a custom port
+sdcs watch --no-browser --port 8765
+```
+
+- **Interactive Room Hotspots**: Dev Desk, Server Room & Kinetic Bouncer, Central Whiteboard, Rejection Graveyard, Central Warehouse, and Empirical Evals.
+- **60 FPS Animated Sprite Engine**: Animated bot workers physically walk, bob, blink, and pathfind across the office floor using click-to-move, toolbar dispatch, or autonomous wander routines.
+- **Reactive Event Streaming**: Streams live telemetry over Server-Sent Events (SSE) whenever `state.md`, `evals.md`, `decisions.md`, or `sessions/manifest.jsonl` are touched during autonomous coding sessions.
+- **Zero External Dependencies**: Powered entirely by Python's standard library `http.server.ThreadingHTTPServer`.
 
 ---
 
@@ -259,18 +300,25 @@ flowchart TD
 
     subgraph KINETIC ["2. Kinetic Gate Defenses (Closed-Loop Defense-in-Depth)"]
         direction TB
-        GT["Gate T: AST Boundary Audits (sdcs verify --topology)"]
-        GM["Gate M: Cartography Drift Check (sdcs map --check)"]
         GC["Gate C: Constitutional Immutability (spine.md / wiring.yaml lock)"]
-        GA["Gate A: Working Memory Budget (sdcs verify --state <= 300 tokens)"]
-        GE["Gate E: Evaluation Standing (sdcs eval / sdcs audit)"]
-        GS["Gate S: Working Memory Sync (CI PR >= 40 lines)"]
+        GT["Gate T: AST Boundary Audits (sdcs verify --topology)"]
+        GP["Gate P: Blast-Radius Sandbox Guard (sdcs verify --sandbox)"]
+        GM["Gate M: Cartography Drift Check (sdcs map --check)"]
+        GS["Gate S: Working Memory Budget (sdcs verify --state <= 350t)"]
+        GW["Gate W: Secret & PII Sanitizer (sdcs verify --warehouse)"]
+        GQ["Gate Q: Test Quality & Anti-Mock (sdcs verify --quality)"]
+        GE["Gate E: Environment & Toolchain Lock (sdcs doctor / sdcs verify --env)"]
+        CB["Circuit Breaker: File Thrashing Prevention (sdcs verify --cycles)"]
     end
 
     subgraph TACTICAL ["3. Tactical In-Stride Agent Tools"]
         direction TB
+        WATCH["sdcs watch (Realtime 16-bit Living Pixel Office HUD)"]
+        HYDRATE["sdcs hydrate -p standard (Single-pass context compiler)"]
         MAP["sdcs map -s <subsystem> (Page focused cartography slices)"]
         EVAL["sdcs eval record <ID> (Atomically update verified fixture hashes)"]
+        DECAY["sdcs decay --prune (Archive superseded dead-end rejections)"]
+        WH["sdcs warehouse sync (Federate global traps and failure modes)"]
         REJ["sdcs verify --topology --append-rejections (Serialize Inverted ADRs)"]
         COMPACT["prepare for compact (5-step lossless context checkpointing)"]
     end
@@ -294,7 +342,7 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 5. **`evals.md` (Positive Ground Truth - Cryptographic Scorecard):**
    *Why Fifth:* Ingests current empirical benchmark standing and golden SHA-256 fixture locks, establishing ground truth reality.
 6. **`state.md` (The Blackboard - Active Working Memory):**
-   *Why Sixth:* Hydrates the immediate turn-by-turn context: current subtask objective, active blockers, and pending verification gates ($\le 300$ tokens).
+   *Why Sixth:* Hydrates the immediate turn-by-turn context: current subtask objective, active blockers, and pending verification gates ($\le 350$ tokens).
 7. **`wiring.yaml` (The Mesh - Declarative Topology):**
    *Why Seventh:* Ingests component boundaries, service mesh interfaces, and forbidden import edges immediately prior to proposing code diffs in Phase 2 (Planning).
 
@@ -307,16 +355,19 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 
 ![The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth](media/slides/slide_10.png)
 
-Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.4.1, the agent treats repository constraints as **physical laws of motion** organized across two ontological defense tiers:
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.7.0, the agent treats repository constraints as **physical laws of motion** organized across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Enforcement Trigger | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
+| **Spatial & Structural** | **Gate C** | Constitutional Immutability | `.githooks/pre-commit` | Unauthorized tampering with `spine.md` or `wiring.yaml`. |
 | **Spatial & Structural** | **Gate T** | Topological Invariant Gate | `sdcs verify --topology` | Prohibited AST cross-subsystem imports violating `wiring.yaml`. |
-| **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked or orphaned files in `app_map.md`. |
-| **Spatial & Structural** | **Gate C** | Constitutional Immutability | `.githooks/pre-commit` | Unauthorized mutation of `spine.md` or `wiring.yaml`. |
-| **Cognitive & Temporal** | **Gate A** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia (`state.md` > 300–350 tokens). |
-| **Cognitive & Temporal** | **Gate E** | Evaluation Standing Gate | `sdcs eval` / `sdcs audit` | Phantom corpus duplicate fixtures and SHA-256 hash drift. |
-| **Cognitive & Temporal** | **Gate S** | Working Memory Sync Gate | CI diff trigger ($\ge 40$ lines) | Merging large pull requests without updating `state.md`. |
+| **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
+| **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
+| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia (`state.md` > 350 tokens) & subagent lifecycle. |
+| **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Leaking API keys, tokens, emails, or IPs to central warehouse. |
+| **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless tests, or swallowed exceptions. |
+| **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime or interpreter drift. |
+| **Kinetic Circuit** | **Breaker** | The Circuit Breaker | `sdcs verify --cycles` | Alternating period-2 file thrashing ($A \to B \to A \to B$) and infinite token loops. |
 
 #### Kinetic Defenses in Action: Automated Inverted ADR Serialization
 
@@ -643,14 +694,17 @@ SDCS is built for **autonomous, multi-turn shifts** where context drift causes e
 ### Defense-in-Depth: Stopping the "Soft Invariant" Hole
 When an autonomous agent encounters a failing test gate on Turn 12, a known failure mode is **rationalization**: editing `spine.md` or altering test runner flags to force "task completion." SDCS secures invariants across distinct architectural layers:
 
-1. **Behavioral Layer (`AGENTS.md`):** Non-negotiable system rules prohibiting invariant tampering and requiring structured hydration.
-2. **Topological Invariant Gate (Gate T):** AST-level static import audit ensuring code respects `wiring.yaml` subsystem boundaries, serializing violations into `decisions.md`.
-3. **Cartography Drift Gate (Gate M):** Pre-commit verification (`sdcs map --check`) asserting zero unmapped or orphaned files in `app_map.md` before code can be staged.
-4. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly overridden via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
-5. **Working Memory Budget Gate (Gate A):** Token-budget linter guaranteeing `state.md` never exceeds 300–350 tokens (`sdcs verify --state`), preventing context window saturation.
-6. **Evaluation Standing Gate (Gate E):** Anti-evasion SHA-256 fixture auditor (`sdcs eval` / `sdcs audit`) preventing phantom test suites and baseline drift.
-7. **Working Memory Sync Gate (Gate S):** CI/pre-commit checks requiring `state.md` synchronization whenever PRs or commits introduce $\ge 40$ modified lines.
-8. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
+1. **Behavioral Layer (`AGENTS.md`):** Non-negotiable system rules commanding hydration order and mid-shift checkpoints.
+2. **Constitutional Invariant Gate (Gate C):** Pre-commit hook automatically rejects commits modifying `spine.md` or `wiring.yaml` unless explicitly authorized via `SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1`.
+3. **Topological Invariant Gate (Gate T):** AST-level static import audit ensuring code respects `wiring.yaml` subsystem boundaries, serializing violations into `decisions.md`.
+4. **Blast-Radius Sandbox Guard (Gate P):** Verifies staged files against declarative `protected_paths` in `wiring.yaml` (`sdcs verify --sandbox`).
+5. **Cartography Drift Gate (Gate M):** Pre-commit verification (`sdcs map --check`) asserting zero unmapped or orphaned files in `app_map.md` before code can be staged.
+6. **Working Memory Budget Gate (Gate S):** Token-budget linter guaranteeing `state.md` never exceeds 350 tokens (`sdcs verify --state`), preventing context window saturation.
+7. **Secret & PII Sanitizer (Gate W):** Static scanner blocking sensitive API keys, bearer tokens, emails, phone numbers, and routable IPs from being committed or published (`sdcs verify --warehouse`).
+8. **Test Quality & Anti-Mock Gate (Gate Q):** Static AST auditor blocking trivial assertions (`assert True`), assertless test functions, and swallowed exceptions (`sdcs verify --quality`).
+9. **Toolchain & Environment Lock (Gate E & `sdcs doctor`):** Diagnoses interpreter versions, tools, and 7-pillar health to prevent agents from blaming working application code on environment drift (`sdcs doctor`, `sdcs verify --env`).
+10. **The Circuit Breaker:** Static transition-graph analyzer halting alternating period-2 file oscillations ($A \to B \to A \to B$) and infinite token-thrashing loops (`sdcs verify --cycles`).
+11. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
 ### Git Hook Modes
 
@@ -658,7 +712,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 | :--- | :--- | :--- | :--- |
 | **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order, wiring invariants, and mid-shift checkpoint ("prepare for compact") protocols into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
-| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), or AST topology boundaries are breached (Gate T). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
+| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), AST topology boundaries are breached (Gate T), tests are hollow (Gate Q), or secrets are leaked (Gate W). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 
 ### Activating Git Hooks
 
@@ -681,7 +735,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.4.1},
+  version = {v1.7.0},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

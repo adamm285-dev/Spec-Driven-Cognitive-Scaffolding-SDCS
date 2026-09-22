@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdcs"
-version = "1.4.1"
+version = "1.7.0"
 description = "Spec-Driven Cognitive Scaffolding (SDCS) - A deterministic cognitive harness for autonomous agentic software engineering."
+
 readme = "README.md"
 authors = [
     { name = "Adam Murphy" }
@@ -59,6 +60,9 @@ Specification = "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffoldi
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+sdcs = ["static/*"]
 
 [tool.ruff]
 line-length = 100

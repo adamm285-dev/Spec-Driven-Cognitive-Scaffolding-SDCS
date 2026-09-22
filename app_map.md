@@ -28,6 +28,7 @@
 
 ### `media/`
 - `Deterministic_Agent_Architecture_(3) (1).pdf`
+- `pixel_office.jpg`
 
 ### `media/AV/`
 - `README.md`
@@ -95,6 +96,7 @@
 - `CONTRIBUTING.md`
 - `LICENSE`
 - `README.md`
+- `RELEASE_NOTES_v1.7.0.md`
 - `SECURITY.md`
 - `SPEC-001.md`
 - `audit_evals_corpus.py`
@@ -109,22 +111,46 @@
 - `__init__.py`
 - `audit.py`
 - `cli.py`
+- `decay.py`
 - `graph.py`
+- `hydrate.py`
 - `init.py`
 - `map.py`
 - `session.py`
+- `warehouse.py`
+- `watch.py`
+
+### `src/sdcs/static/`
+- `hud.html`
+- `pixel_office.jpg`
 
 ### `src/sdcs/verifier/`
 - `__init__.py`
+- `cycles.py`
+- `environment.py`
+- `quality.py`
+- `sandbox.py`
 - `state.py`
 - `topology.py`
 
 ### `tests/`
 - `test_audit.py`
 - `test_cli.py`
+- `test_cycles.py`
+- `test_decay.py`
+- `test_e2e_agent_cheating.py`
+- `test_environment.py`
 - `test_graph.py`
+- `test_hydrate.py`
 - `test_init.py`
+- `test_init_casing.py`
 - `test_map.py`
+- `test_polyglot_topology.py`
+- `test_quality.py`
+- `test_sandbox.py`
 - `test_session.py`
 - `test_state.py`
+- `test_subagent_state.py`
 - `test_topology.py`
+- `test_warehouse.py`
+- `test_watch.py`

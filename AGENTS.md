@@ -1,15 +1,16 @@
-# Agent Instructions (SDCS Framework v1.4.1)
-<!-- Conforming to SPEC-001 v1.4.1 -->
+# Agent Instructions (SDCS Framework v1.7.0)
+<!-- Conforming to SPEC-001 v1.7.0 -->
 
-This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.4)**.
+This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.7.0)**.
 
 ## 1. The Operational Ontology
 You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three physical layers governed by a teleological anchor:
 
 - **0. Teleological Anchor (The Target):** `roadmap.md` (Pillar 3: The North Star). Macro acceptance contract: `[INTENT]` vs `[MEASURED]`. Your sole task is driving the measured delta to zero.
 - **1. Semantic Layer (What Exists):** `spine.md` (Pillar 1: Constitutional Invariants & Axioms), `wiring.yaml` (Pillar 2: Subsystem Boundaries & Dependency Mesh), and `app_map.md` (Pillar 5: Repository Cartography). You cannot invent entities or subsystems outside this declared schema.
-- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate topological contracts are physically rejected on disk.
+- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), Gate S (Working Memory Budget), Gate P (Sandbox Guard), Gate W (Secret Sanitizer), Gate Q (Test Quality & Anti-Mock), Gate E & `sdcs doctor` (Environment Invariant Lock), the Circuit Breaker (`sdcs verify --cycles`), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate contracts are physically rejected on disk.
 - **3. Dynamic Layer (Memory & Time Evolution):** `decisions.md` (Pillar 6: Negative Episodic Memory / Graveyard), `evals.md` (Pillar 7: Positive Episodic Memory / Empirical Standing & SHA-256 fixture locks), `state.md` (Pillar 4: Active Working Blackboard $\le 300$ tokens), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
+
 
 ## 2. Turn 1 Boot Hydration Order (7 Pillars)
 On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in this exact sequence:
@@ -20,6 +21,13 @@ On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in 
 5. `evals.md`        -> Verified empirical baseline & ground truth (Pillar 7: Positive Ground Truth)
 6. `state.md`        -> Turn-by-turn active working memory (Pillar 4: The Blackboard)
 7. `wiring.yaml`     -> Declarative topology & subsystem boundaries (Pillar 2: The Mesh)
+
+*Single-Pass Hydration:* Alternatively, run `sdcs hydrate --profile standard [-s <subsystem>]` (or `--profile lite` / `--profile full`) to stream a pre-budgeted, single-pass context payload in 1 atomic tool call.
+
+## +0 Fast-Resume Protocol (Cold-Start Eliminator)
+IRON LAW: When booting or waking up after context compaction (/compact), immediately inspect `state.md`.
+If `## Immediate Next Action (Post-Compact)` contains an active, uncompleted action, you MUST bypass full exploratory re-hydration and execute that exact action immediately.
+Do not hesitate, re-read historical archives, or re-run exploratory surveys when an unblocked next action is pending.
 
 ## +1 Flight Recorder Invariant
 CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.

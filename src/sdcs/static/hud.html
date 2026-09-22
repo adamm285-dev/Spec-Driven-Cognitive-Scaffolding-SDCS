@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDCS Living Office — Realtime Agent HUD</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #090d13;
+      color: #e6edf3;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .cabinet {
+      max-width: 1020px;
+      width: 100%;
+      background: #161b22;
+      border: 4px solid #30363d;
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 0 2px #000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: #05080c;
+      border-bottom: 3px solid #30363d;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .title-group { display: flex; align-items: center; gap: 10px; }
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      background: rgba(35, 134, 54, 0.2);
+      border: 2px solid #2ea043;
+      border-radius: 6px;
+      color: #3fb950;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .title-text h1 {
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: #3fb950;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag {
+      font-size: 10px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #8b949e;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3fb950;
+      box-shadow: 0 0 8px #3fb950;
+      animation: pulse-dot 1.5s infinite;
+    }
+    .live-dot.disconnected {
+      background: #f85149;
+      box-shadow: 0 0 8px #f85149;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .status-pills { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; }
+    .pill {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .pill:hover { border-color: #58a6ff; }
+    .pill-label { font-size: 9px; color: #8b949e; }
+    .pill-value { font-weight: bold; color: #3fb950; font-size: 12px; }
+    .pill-value.warn { color: #d29922; }
+    .pill-value.danger { color: #f85149; }
+
+    /* Controls bar */
+    .control-bar {
+      background: #090d13;
+      border-bottom: 2px solid #30363d;
+      padding: 8px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+    .control-title {
+      color: #3fb950;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .btn-retro {
+      background: #161b22;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-retro:hover {
+      background: #21262d;
+      border-color: #58a6ff;
+      color: #58a6ff;
+      transform: translateY(-1px);
+    }
+    .btn-retro.active {
+      background: rgba(63, 185, 80, 0.2);
+      border-color: #3fb950;
+      color: #3fb950;
+    }
+    .hint-text {
+      color: #8b949e;
+      font-size: 10px;
+      margin-left: auto;
+    }
+
+    .stage-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      background: #000;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    .diorama-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      display: block;
+      user-select: none;
+    }
+    .actors-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      z-index: 6;
+      image-rendering: pixelated;
+    }
+
+    .hotspot {
+      position: absolute;
+      border: 2px dashed transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 5;
+    }
+    .hotspot:hover {
+      background: rgba(63, 185, 80, 0.15);
+      border-color: #3fb950;
+    }
+    .hotspot-label {
+      position: absolute;
+      top: -22px;
+      left: 4px;
+      background: #000;
+      color: #3fb950;
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+      pointer-events: none;
+      border: 1px solid #3fb950;
+    }
+    .hotspot:hover .hotspot-label { opacity: 1; }
+
+    /* Dialogue box overlay */
+    .dialogue-box {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      max-width: 380px;
+      background: rgba(9, 13, 19, 0.94);
+      border: 2px solid #3fb950;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+      animation: float-box 3s ease-in-out infinite;
+    }
+    @keyframes float-box {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .dialogue-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+      font-size: 10px;
+      color: #8b949e;
+    }
+    .agent-id { color: #58a6ff; font-weight: bold; }
+    .dialogue-content { font-size: 11px; line-height: 1.4; color: #e6edf3; }
+    .dialogue-action {
+      margin-top: 6px;
+      padding: 4px 6px;
+      background: rgba(63, 185, 80, 0.1);
+      border-left: 2px solid #3fb950;
+      font-size: 10px;
+      color: #7ee787;
+    }
+
+    /* Footer / Ticker */
+    .footer-bar {
+      background: #05080c;
+      border-top: 2px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: #8b949e;
+    }
+    .ticker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-prefix { color: #3fb950; font-weight: bold; }
+    .ticker-text { color: #c9d1d9; }
+
+    /* Modal / Inspector */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: #161b22;
+      border: 3px solid #30363d;
+      border-radius: 10px;
+      max-width: 650px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+      overflow: hidden;
+    }
+    .modal-header {
+      background: #090d13;
+      padding: 10px 16px;
+      border-bottom: 2px solid #30363d;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title { font-size: 13px; color: #3fb950; font-weight: bold; }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #8b949e;
+      font-size: 18px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .modal-close:hover { color: #f85149; }
+    .modal-body {
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .modal-body pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      padding: 10px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #7ee787;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .metric-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .metric-box .label { color: #8b949e; font-size: 10px; }
+    .metric-box .val { color: #58a6ff; font-weight: bold; font-size: 12px; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="cabinet">
+    <!-- Top Header & Pills -->
+    <div class="header">
+      <div class="title-group">
+        <div class="logo-badge">⚡</div>
+        <div class="title-text">
+          <h1>SDCS LIVING OFFICE <span class="tag" id="repo-name">REPO</span></h1>
+          <div class="subtitle">Deterministic Cybernetic Scaffolding (SPEC-001 v<span id="sdcs-ver">1.7.0</span>)</div>
+        </div>
+      </div>
+      <div class="status-pills">
+        <div class="pill" onclick="openRoom('whiteboard')">
+          <span class="pill-label">WORKING MEMORY</span>
+          <span class="pill-value" id="pill-tokens">-- / 350t</span>
+        </div>
+        <div class="pill" onclick="openRoom('bouncer')">
+          <span class="pill-label">KINETIC GATES</span>
+          <span class="pill-value" id="pill-gates">8/8 PASS</span>
+        </div>
+        <div class="pill" onclick="openRoom('evals')">
+          <span class="pill-label">POSITIVE EVALS</span>
+          <span class="pill-value" id="pill-evals">--</span>
+        </div>
+        <div class="pill" onclick="openRoom('graveyard')">
+          <span class="pill-label">NEGATIVE GRAVEYARD</span>
+          <span class="pill-value" id="pill-decisions">--</span>
+        </div>
+        <div class="pill" onclick="openRoom('warehouse')">
+          <span class="pill-label">CENTRAL WAREHOUSE</span>
+          <span class="pill-value" id="pill-warehouse">SYNCED</span>
+        </div>
+      </div>
+      <div class="status-indicator">
+        <span class="live-dot" id="live-dot"></span>
+        <span id="live-status">LIVE STREAM</span>
+      </div>
+    </div>
+
+    <!-- Dispatch & Movement Toolbar -->
+    <div class="control-bar">
+      <span class="control-title">🎮 DISPATCH BOT:</span>
+      <button class="btn-retro active" id="btn-wander" onclick="toggleWander()">🚶 WANDER: ON</button>
+      <button class="btn-retro" onclick="sendBotTo('devdesk')">🖥️ DEV DESK</button>
+      <button class="btn-retro" onclick="sendBotTo('whiteboard')">📋 WHITEBOARD</button>
+      <button class="btn-retro" onclick="sendBotTo('bouncer')">🛡️ SERVER ROOM</button>
+      <button class="btn-retro" onclick="sendBotTo('breakroom')">☕ BREAKROOM</button>
+      <button class="btn-retro" onclick="sendBotTo('warehouse')">🏛️ WAREHOUSE</button>
+      <button class="btn-retro" onclick="sendBotTo('graveyard')">🪦 GRAVEYARD</button>
+      <span class="hint-text">💡 Click floor to walk! Double-click room to inspect</span>
+    </div>
+
+    <!-- 16-bit Isometric Diorama Stage -->
+    <div class="stage-container" id="stage-container">
+      <img id="diorama-img" class="diorama-img" src="/static/pixel_office.jpg" alt="SDCS 16-bit Living Pixel Office">
+      
+      <!-- Interactive 60fps Canvas for Living Bots & Pathfinding -->
+      <canvas id="actors-canvas" class="actors-canvas"></canvas>
+
+      <!-- Hotspots for quick inspector clicks -->
+      <div class="hotspot" style="left: 12%; top: 38%; width: 28%; height: 32%;" ondblclick="openRoom('devdesk')">
+        <div class="hotspot-label">DEV DESK (Double-click to inspect)</div>
+      </div>
+      <div class="hotspot" style="left: 58%; top: 10%; width: 36%; height: 34%;" ondblclick="openRoom('bouncer')">
+        <div class="hotspot-label">SERVER ROOM (Double-click to inspect)</div>
+      </div>
+      <div class="hotspot" style="left: 42%; top: 32%; width: 16%; height: 26%;" ondblclick="openRoom('whiteboard')">
+        <div class="hotspot-label">WHITEBOARD (Double-click to inspect)</div>
+      </div>
+      <div class="hotspot" style="left: 74%; top: 52%; width: 22%; height: 38%;" ondblclick="openRoom('graveyard')">
+        <div class="hotspot-label">GRAVEYARD (Double-click to inspect)</div>
+      </div>
+      <div class="hotspot" style="left: 38%; top: 62%; width: 26%; height: 34%;" ondblclick="openRoom('warehouse')">
+        <div class="hotspot-label">WAREHOUSE (Double-click to inspect)</div>
+      </div>
+
+      <!-- Floating Dialogue Box -->
+      <div class="dialogue-box" id="dialogue-box">
+        <div class="dialogue-header">
+          <span class="agent-id">🤖 AGENT WORKER</span>
+          <span id="agent-state-badge" style="color: #3fb950;">IN PROGRESS</span>
+        </div>
+        <div class="dialogue-content" id="agent-objective">
+          Hydrating 7 cognitive pillars and loading active milestone intent...
+        </div>
+        <div class="dialogue-action" id="agent-action">
+          ⚡ Next Action: Ready
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Ticker -->
+    <div class="footer-bar">
+      <div class="ticker">
+        <span class="ticker-prefix">[FLIGHT RECORDER]</span>
+        <span class="ticker-text" id="ticker-text">Listening for telemetry updates across repository cognitive files...</span>
+      </div>
+      <div id="subagent-count">Parallel Workers: 0</div>
+    </div>
+  </div>
+
+  <!-- Inspector Modal -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-title">ROOM INSPECTION</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        Loading room state...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentData = null;
+
+    // --------------------------------------------------------------------------
+    // 16-BIT ISOMETRIC SPRITE & PATHFINDING ENGINE
+    // --------------------------------------------------------------------------
+    const canvas = document.getElementById('actors-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const VIRTUAL_WIDTH = 900;
+    const VIRTUAL_HEIGHT = 600;
+
+    const STATIONS = {
+      devdesk:   { x: 230, y: 320, name: "Dev Desk", emote: "💻", msg: "Coding at Dev Desk 💻" },
+      whiteboard:{ x: 440, y: 260, name: "Whiteboard", emote: "📋", msg: "Updating state.md 📋" },
+      bouncer:   { x: 650, y: 200, name: "Server Room", emote: "🛡️", msg: "Checking Gate Bouncer 🛡️" },
+      breakroom: { x: 770, y: 430, name: "Breakroom", emote: "☕", msg: "Fresh coffee break ☕" },
+      warehouse: { x: 460, y: 480, name: "Warehouse", emote: "🏛️", msg: "Checking central traps 🏛️" },
+      graveyard: { x: 710, y: 340, name: "Graveyard", emote: "🪦", msg: "Reviewing dead ends 🪦" },
+      lounge:    { x: 270, y: 450, name: "Lounge", emote: "🛋️", msg: "Relaxing in the lounge" },
+    };
+
+    // Actors
+    const leadBot = {
+      name: "Lead Bot",
+      x: 230,
+      y: 320,
+      targetX: 230,
+      targetY: 320,
+      speed: 3.2,
+      facing: 1, // 1 = right, -1 = left
+      color: "#38bdf8",
+      bodyColor: "#f1f5f9",
+      walkCycle: 0,
+      isMoving: false,
+      blinkTimer: 120,
+      isBlinking: false,
+      speech: "Ready for tasks! ⚡",
+      speechTimer: 250,
+      alert: false,
+    };
+
+    const bouncerBot = {
+      name: "Gate Bouncer",
+      x: 690,
+      y: 175,
+      targetX: 690,
+      targetY: 175,
+      speed: 2.0,
+      facing: -1,
+      color: "#eab308",
+      bodyColor: "#334155",
+      walkCycle: 0,
+      isMoving: false,
+      blinkTimer: 180,
+      isBlinking: false,
+      speech: "Gate T & Cycles Armed! 🛡️",
+      speechTimer: 300,
+      sunglasses: true,
+      alert: false,
+    };
+
+    const archivistBot = {
+      name: "Archivist",
+      x: 470,
+      y: 250,
+      targetX: 470,
+      targetY: 250,
+      speed: 2.0,
+      facing: -1,
+      color: "#a855f7",
+      bodyColor: "#cbd5e1",
+      walkCycle: 0,
+      isMoving: false,
+      blinkTimer: 150,
+      isBlinking: false,
+      speech: "state.md <= 350t 📋",
+      speechTimer: 280,
+      alert: false,
+    };
+
+    let subagentBots = [];
+    let ripples = [];
+    let wanderEnabled = true;
+    let wanderCooldown = 240;
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function toggleWander() {
+      wanderEnabled = !wanderEnabled;
+      const btn = document.getElementById('btn-wander');
+      if (wanderEnabled) {
+        btn.classList.add('active');
+        btn.innerText = '🚶 WANDER: ON';
+        leadBot.speech = 'Wandering around office! 🐾';
+        leadBot.speechTimer = 120;
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = '🚶 WANDER: OFF';
+        leadBot.speech = 'Standing by at station.';
+        leadBot.speechTimer = 120;
+      }
+    }
+
+    function sendBotTo(stationKey) {
+      const st = STATIONS[stationKey];
+      if (!st) return;
+
+      leadBot.targetX = st.x;
+      leadBot.targetY = st.y;
+      leadBot.speech = st.msg;
+      leadBot.speechTimer = 180;
+
+      // Add arrival ripple
+      ripples.push({ x: st.x, y: st.y, radius: 4, maxRadius: 28, alpha: 1.0 });
+
+      // Highlight button briefly
+      document.querySelectorAll('.btn-retro').forEach(b => {
+        if (b.id !== 'btn-wander') b.classList.remove('active');
+      });
+      const btns = Array.from(document.querySelectorAll('.btn-retro'));
+      const match = btns.find(b => b.innerText.toLowerCase().includes(st.name.toLowerCase()));
+      if (match) {
+        match.classList.add('active');
+        setTimeout(() => match.classList.remove('active'), 2500);
+      }
+    }
+
+    // Click anywhere on stage floor to command bot to walk there!
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = VIRTUAL_WIDTH / rect.width;
+      const scaleY = VIRTUAL_HEIGHT / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Add animated target beacon
+      ripples.push({ x: clickX, y: clickY, radius: 3, maxRadius: 26, alpha: 1.0 });
+
+      leadBot.targetX = clickX;
+      leadBot.targetY = clickY;
+      leadBot.speech = "Walking here! 🐾";
+      leadBot.speechTimer = 120;
+    });
+
+    function updateBot(bot) {
+      const dx = bot.targetX - bot.x;
+      const dy = bot.targetY - bot.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > 3) {
+        bot.isMoving = true;
+        bot.facing = dx >= 0 ? 1 : -1;
+        const step = Math.min(dist, bot.speed);
+        bot.x += (dx / dist) * step;
+        bot.y += (dy / dist) * step;
+        bot.walkCycle += 0.28;
+      } else {
+        bot.isMoving = false;
+        bot.x = bot.targetX;
+        bot.y = bot.targetY;
+      }
+
+      // Blink animation
+      bot.blinkTimer--;
+      if (bot.blinkTimer <= 0) {
+        bot.isBlinking = !bot.isBlinking;
+        bot.blinkTimer = bot.isBlinking ? 8 : (100 + Math.random() * 200);
+      }
+
+      // Speech bubble timer
+      if (bot.speechTimer > 0) bot.speechTimer--;
+    }
+
+    function drawBot(bot) {
+      ctx.save();
+      ctx.translate(bot.x, bot.y);
+
+      // Soft Ground Drop Shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.beginPath();
+      ctx.ellipse(0, 18, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Walking bounce & leg cycles
+      const bob = bot.isMoving ? Math.sin(bot.walkCycle) * 3.5 : Math.sin(Date.now() / 450) * 1.2;
+      const legStep = bot.isMoving ? Math.sin(bot.walkCycle) * 4 : 0;
+
+      // Feet / Treads
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(-10, 13 + legStep + bob, 7, 5);
+      ctx.fillRect(3, 13 - legStep + bob, 7, 5);
+
+      // Bot Chassis / Body
+      ctx.fillStyle = bot.bodyColor || "#f1f5f9";
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-13, -11 + bob, 26, 24, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Dark Faceplate Visor
+      ctx.fillStyle = "#090d16";
+      ctx.beginPath();
+      ctx.roundRect(-10, -7 + bob, 20, 13, 3);
+      ctx.fill();
+
+      // Glowing Animated Eyes
+      const lookOffset = bot.facing * 2;
+      if (!bot.isBlinking) {
+        ctx.fillStyle = bot.color || "#38bdf8";
+        ctx.shadowColor = bot.color || "#38bdf8";
+        ctx.shadowBlur = 6;
+        // Left eye
+        ctx.fillRect(-7 + lookOffset, -4 + bob, 4, 6);
+        // Right eye
+        ctx.fillRect(2 + lookOffset, -4 + bob, 4, 6);
+        ctx.shadowBlur = 0;
+      } else {
+        // Blinking slit
+        ctx.fillStyle = bot.color || "#38bdf8";
+        ctx.fillRect(-7 + lookOffset, -2 + bob, 4, 1.5);
+        ctx.fillRect(2 + lookOffset, -2 + bob, 4, 1.5);
+      }
+
+      // Sunglasses for Bouncer Bot
+      if (bot.sunglasses) {
+        ctx.fillStyle = "#020617";
+        ctx.fillRect(-10, -5 + bob, 20, 5);
+        ctx.strokeStyle = "#eab308";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-10, -5 + bob, 20, 5);
+      }
+
+      // Antenna
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -11 + bob);
+      ctx.lineTo(0, -19 + bob);
+      ctx.stroke();
+
+      // Pulsing Antenna LED
+      ctx.fillStyle = bot.alert ? "#ef4444" : (bot.color || "#38bdf8");
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(0, -20 + bob, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Speech bubble
+      if (bot.speech && bot.speechTimer > 0) {
+        drawSpeechBubble(0, -30 + bob, bot.speech);
+      }
+
+      ctx.restore();
+    }
+
+    function drawSpeechBubble(x, y, text) {
+      ctx.font = "bold 11px 'Courier New', monospace";
+      const metrics = ctx.measureText(text);
+      const w = metrics.width + 14;
+      const h = 18;
+
+      ctx.fillStyle = "rgba(13, 17, 23, 0.95)";
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, y - h, w, h, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Tail pointer
+      ctx.fillStyle = "#0d1117";
+      ctx.beginPath();
+      ctx.moveTo(x - 3, y);
+      ctx.lineTo(x + 3, y);
+      ctx.lineTo(x, y + 4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Text
+      ctx.fillStyle = "#f0f6fc";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x, y - h / 2);
+    }
+
+    function drawRipples() {
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        ctx.strokeStyle = `rgba(56, 189, 248, ${r.alpha})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        r.radius += 1.2;
+        r.alpha -= 0.04;
+        if (r.alpha <= 0) ripples.splice(i, 1);
+      }
+    }
+
+    // Main 60fps game loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(canvas.width / VIRTUAL_WIDTH, canvas.height / VIRTUAL_HEIGHT);
+
+      // Draw click target beacons
+      drawRipples();
+
+      // Autonomous wander loop
+      if (wanderEnabled && !leadBot.isMoving) {
+        wanderCooldown--;
+        if (wanderCooldown <= 0) {
+          wanderCooldown = 320 + Math.random() * 280; // 5 - 10s
+          const keys = Object.keys(STATIONS);
+          const rKey = keys[Math.floor(Math.random() * keys.length)];
+          sendBotTo(rKey);
+        }
+      }
+
+      // Update positions
+      updateBot(leadBot);
+      updateBot(bouncerBot);
+      updateBot(archivistBot);
+      for (const sb of subagentBots) updateBot(sb);
+
+      // Sort actors by Y coordinate for correct isometric depth layering
+      const actors = [leadBot, bouncerBot, archivistBot, ...subagentBots];
+      actors.sort((a, b) => a.y - b.y);
+
+      // Draw all actors
+      for (const actor of actors) {
+        drawBot(actor);
+      }
+
+      ctx.restore();
+    }
+    animate();
+
+    // --------------------------------------------------------------------------
+    // STATUS & SSE TELEMETRY LOGIC
+    // --------------------------------------------------------------------------
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error('Status fetch failed');
+        const data = await res.json();
+        currentData = data;
+        updateHUD(data);
+        setConnectionStatus(true);
+      } catch (err) {
+        console.warn('Failed to fetch status:', err);
+        setConnectionStatus(false);
+      }
+    }
+
+    function setConnectionStatus(connected) {
+      const dot = document.getElementById('live-dot');
+      const status = document.getElementById('live-status');
+      if (connected) {
+        dot.className = 'live-dot';
+        status.innerText = 'LIVE STREAM';
+      } else {
+        dot.className = 'live-dot disconnected';
+        status.innerText = 'DISCONNECTED';
+      }
+    }
+
+    function updateHUD(data) {
+      if (!data) return;
+
+      // Header info
+      document.getElementById('repo-name').innerText = data.repo_name || 'REPO';
+      document.getElementById('sdcs-ver').innerText = data.version || '1.7.0';
+
+      // Working memory
+      const tokens = data.state ? data.state.tokens : 0;
+      const budget = (data.state && data.state.budget) || 350;
+      const tokEl = document.getElementById('pill-tokens');
+      tokEl.innerText = `${tokens} / ${budget}t`;
+      if (tokens > budget) {
+        tokEl.className = 'pill-value danger';
+        leadBot.alert = true;
+      } else if (tokens > budget * 0.85) {
+        tokEl.className = 'pill-value warn';
+        leadBot.alert = false;
+      } else {
+        tokEl.className = 'pill-value';
+        leadBot.alert = false;
+      }
+
+      // Kinetic Gates
+      const gatesEl = document.getElementById('pill-gates');
+      if (data.gates) {
+        const passCount = Object.values(data.gates).filter(v => v.passed).length;
+        const totalCount = Object.keys(data.gates).length;
+        gatesEl.innerText = `${passCount}/${totalCount} PASS`;
+        gatesEl.className = (passCount === totalCount) ? 'pill-value' : 'pill-value danger';
+      }
+
+      // Evals
+      const evalsEl = document.getElementById('pill-evals');
+      if (data.evals) {
+        evalsEl.innerText = `${data.evals.passing || 0} PASS (${data.evals.total || 0} fixtures)`;
+      }
+
+      // Decisions
+      const decEl = document.getElementById('pill-decisions');
+      if (data.decisions !== undefined) {
+        decEl.innerText = `${data.decisions} REJECTED`;
+      }
+
+      // Warehouse
+      const whEl = document.getElementById('pill-warehouse');
+      if (data.warehouse) {
+        whEl.innerText = `${data.warehouse.records || 0} TRAPS`;
+      }
+
+      // Agent Dialogue Box
+      if (data.state) {
+        document.getElementById('agent-objective').innerText = data.state.objective || 'No active objective';
+        document.getElementById('agent-action').innerText = '⚡ Next: ' + (data.state.next_action || 'Standing by');
+        document.getElementById('agent-state-badge').innerText = data.state.within_budget ? 'IN SPEC' : 'BUDGET EXCEEDED';
+        document.getElementById('agent-state-badge').style.color = data.state.within_budget ? '#3fb950' : '#f85149';
+      }
+
+      // Subagent worker bots
+      const subEl = document.getElementById('subagent-count');
+      const subCount = data.subagents ? data.subagents.length : 0;
+      subEl.innerText = `Parallel Workers: ${subCount}`;
+
+      // Synchronize subagent sprite bots
+      if (data.subagents && data.subagents.length !== subagentBots.length) {
+        subagentBots = data.subagents.map((id, idx) => {
+          const colors = ["#ec4899", "#f97316", "#10b981", "#8b5cf6"];
+          return {
+            name: `Worker ${id}`,
+            x: 280 + (idx * 50),
+            y: 350 + (idx * 20),
+            targetX: 280 + (idx * 50),
+            targetY: 350 + (idx * 20),
+            speed: 2.8,
+            facing: 1,
+            color: colors[idx % colors.length],
+            bodyColor: "#e2e8f0",
+            walkCycle: 0,
+            isMoving: false,
+            blinkTimer: 100,
+            isBlinking: false,
+            speech: `Subagent [${id}]`,
+            speechTimer: 200,
+          };
+        });
+      }
+
+      // Ticker
+      if (data.last_event) {
+        document.getElementById('ticker-text').innerText = `${data.last_event.time} — Modified ${data.last_event.file} (${data.last_event.action || 'change'})`;
+      } else if (data.sessions_count !== undefined) {
+        document.getElementById('ticker-text').innerText = `Flight Recorder: ${data.sessions_count} logged shifts. Ready for commands.`;
+      }
+    }
+
+    function openRoom(room) {
+      const modal = document.getElementById('modal-overlay');
+      const title = document.getElementById('modal-title');
+      const body = document.getElementById('modal-body');
+      modal.classList.add('active');
+
+      if (!currentData) {
+        title.innerText = 'ROOM INSPECTION';
+        body.innerHTML = '<div>Fetching repository telemetry...</div>';
+        return;
+      }
+
+      if (room === 'devdesk') {
+        title.innerText = '🖥️ DEV DESK — ACTIVE AGENT WORKER';
+        body.innerHTML = `
+          <div class="metric-box">
+            <div class="label">CURRENT OBJECTIVE</div>
+            <div class="val" style="color: #7ee787;">${currentData.state ? currentData.state.objective : 'None'}</div>
+          </div>
+          <div class="metric-box" style="margin-top: 8px;">
+            <div class="label">IMMEDIATE NEXT ACTION</div>
+            <div class="val" style="color: #58a6ff;">${currentData.state ? currentData.state.next_action : 'None'}</div>
+          </div>
+          <div class="grid-2" style="margin-top: 8px;">
+            <div class="metric-box">
+              <div class="label">WORKING MEMORY BUDGET</div>
+              <div class="val">${currentData.state ? currentData.state.tokens : 0} / 350 tokens</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">PARALLEL WORKERS (FORKS)</div>
+              <div class="val">${currentData.subagents ? currentData.subagents.length : 0} active</div>
+            </div>
+          </div>
+        `;
+      } else if (room === 'bouncer') {
+        title.innerText = '🛡️ SERVER ROOM — THE KINETIC BOUNCER & GATES';
+        let gatesHtml = '<div class="grid-2">';
+        if (currentData.gates) {
+          for (const [name, g] of Object.entries(currentData.gates)) {
+            const icon = g.passed ? '✓' : '🛑';
+            const color = g.passed ? '#3fb950' : '#f85149';
+            gatesHtml += `
+              <div class="metric-box">
+                <div class="label">${name}</div>
+                <div class="val" style="color: ${color};">${icon} ${g.status || (g.passed ? 'PASSED' : 'VIOLATION')}</div>
+              </div>
+            `;
+          }
+        }
+        gatesHtml += '</div>';
+        body.innerHTML = `
+          <div>The Kinetic Layer physically halts invalid state mutations before they are committed:</div>
+          ${gatesHtml}
+        `;
+      } else if (room === 'whiteboard') {
+        title.innerText = '📋 CENTRAL WHITEBOARD — WORKING BLACKBOARD (state.md)';
+        body.innerHTML = `
+          <div class="metric-box">
+            <div class="label">MEMORY DENSITY</div>
+            <div class="val">${currentData.state ? currentData.state.tokens : 0} / 350 tokens (${currentData.state && currentData.state.within_budget ? 'CLEAN' : 'OVERFLOW'})</div>
+          </div>
+          <pre style="margin-top: 8px;">${currentData.state && currentData.state.raw ? currentData.state.raw : 'state.md content unavailable'}</pre>
+        `;
+      } else if (room === 'graveyard') {
+        title.innerText = '🪦 NEGATIVE GRAVEYARD — REJECTIONS LEDGER (decisions.md)';
+        body.innerHTML = `
+          <div class="metric-box">
+            <div class="label">ACTIVE REJECTIONS RECORDED</div>
+            <div class="val">${currentData.decisions || 0} documented dead-ends</div>
+          </div>
+          <div style="margin-top: 8px;">Negative Episodic Memory ensures the agent never retries a falsified hypothesis or broken architecture.</div>
+          <pre style="margin-top: 8px;">${currentData.decisions_preview || 'decisions.md empty or unpopulated.'}</pre>
+        `;
+      } else if (room === 'warehouse') {
+        title.innerText = '🏛️ CENTRAL WAREHOUSE — FLEET COGNITIVE FEDERATION';
+        body.innerHTML = `
+          <div class="grid-2">
+            <div class="metric-box">
+              <div class="label">FEDERATED TRAPS</div>
+              <div class="val">${currentData.warehouse ? currentData.warehouse.records : 0} records</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">GATE W SANITIZER</div>
+              <div class="val" style="color: #3fb950;">✓ ACTIVE</div>
+            </div>
+          </div>
+          <div style="margin-top: 8px;">Central repository sharing negative knowledge and vendor traps across agent fleets without leaking proprietary IP.</div>
+        `;
+      } else if (room === 'evals') {
+        title.innerText = '🎯 EMPIRICAL STANDING & SCORECARD (evals.md)';
+        body.innerHTML = `
+          <div class="grid-2">
+            <div class="metric-box">
+              <div class="label">TEST FIXTURES</div>
+              <div class="val">${currentData.evals ? currentData.evals.total : 0} fixtures</div>
+            </div>
+            <div class="metric-box">
+              <div class="label">PASSING RATIO</div>
+              <div class="val" style="color: #3fb950;">${currentData.evals ? currentData.evals.passing : 0} passed</div>
+            </div>
+          </div>
+          <div style="margin-top: 8px;">Positive episodic memory anchoring code changes to empirical verification and SHA-256 asset fixtures.</div>
+        `;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    // Connect SSE stream with auto-reconnect
+    function setupSSE() {
+      try {
+        const sse = new EventSource('/api/events');
+        sse.onmessage = (event) => {
+          try {
+            const ev = JSON.parse(event.data);
+            if (ev.type === 'change') {
+              fetchStatus();
+              // React to file changes with bot navigation!
+              if (ev.file && ev.file.includes('state')) {
+                sendBotTo('whiteboard');
+              } else if (ev.file && ev.file.includes('evals')) {
+                sendBotTo('bouncer');
+              } else if (ev.file && ev.file.includes('decisions')) {
+                sendBotTo('graveyard');
+              } else {
+                sendBotTo('devdesk');
+              }
+            }
+          } catch(e) {}
+        };
+        sse.onerror = () => {
+          setConnectionStatus(false);
+          sse.close();
+          setTimeout(setupSSE, 3000);
+        };
+        sse.onopen = () => {
+          setConnectionStatus(true);
+        };
+      } catch (e) {
+        setConnectionStatus(false);
+      }
+    }
+
+    // Initial load and polling fallback
+    fetchStatus();
+    setupSSE();
+    setInterval(fetchStatus, 2500);
+  </script>
+</body>
+</html>

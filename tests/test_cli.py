@@ -11,8 +11,8 @@ def test_cli_version():
     cmd = [sys.executable, "-m", "sdcs.cli", "--version"]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     output = result.stdout + result.stderr
-    assert "sdcs 1.4.1" in output
-    assert "SPEC-001 v1.4.1" in output
+    assert "sdcs 1.7.0" in output
+    assert "SPEC-001 v1.7.0" in output
 
 
 def test_cli_help():
@@ -23,9 +23,15 @@ def test_cli_help():
     assert "eval" in result.stdout
     assert "grill" in result.stdout
     assert "map" in result.stdout
+    assert "warehouse" in result.stdout
     assert "session" in result.stdout
     assert "graph" in result.stdout
     assert "verify" in result.stdout
+    assert "hydrate" in result.stdout
+    assert "decay" in result.stdout
+    assert "state" in result.stdout
+    assert "doctor" in result.stdout
+    assert "watch" in result.stdout
 
 
 def test_cli_grill():

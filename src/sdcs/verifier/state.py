@@ -163,3 +163,128 @@ def run_state_audit(
             "\n🛑 [STATUS: FAILED] Working memory bloat detected. Prune state.md before compacting."
         )
         return 1
+
+
+def locate_subagent_state_file(repo_root: Path, worker_id: str) -> Path:
+    """Returns the expected path for a subagent blackboard."""
+    agent_dir = repo_root / ".agent"
+    if agent_dir.is_dir():
+        return agent_dir / f"state.{worker_id}.md"
+    return repo_root / f"state.{worker_id}.md"
+
+
+def fork_subagent_state(
+    repo_root: Path,
+    worker_id: str,
+    subtask_objective: str | None = None,
+    state_path: str | Path | None = None,
+) -> Path:
+    """
+    Forks a lightweight scoped working memory blackboard for a parallel worker/subagent.
+    Inherits context from root state.md and creates state.<worker_id>.md.
+    """
+    root_state = locate_state_file(repo_root, state_path)
+    subagent_file = locate_subagent_state_file(repo_root, worker_id)
+
+    objective = subtask_objective or f"Autonomous execution slice assigned to worker [{worker_id}]"
+
+    content = f"""# Dynamic Working Memory: Subagent [{worker_id}]
+<!-- Ephemeral Subagent Blackboard | Conforming to SPEC-001 v1.5.0 Pillar 4 -->
+<!-- Forked from root state.md. Rollup via 'sdcs state rollup {worker_id}' -->
+
+## Current Objective
+- {objective}
+
+## Status & Gate Verification
+- [PENDING] Worker [{worker_id}] initialized. Awaiting execution.
+
+## Immediate Blockers
+- None.
+
+## Immediate Next Action (Post-Compact)
+- Execute assigned objective and update status before rollup.
+"""
+    subagent_file.write_text(content.strip() + "\n", encoding="utf-8")
+    return subagent_file
+
+
+def rollup_subagent_state(
+    repo_root: Path,
+    worker_id: str,
+    state_path: str | Path | None = None,
+    delete_after_rollup: bool = True,
+) -> tuple[bool, str]:
+    """
+    Rolls up a subagent blackboard (state.<worker_id>.md) into the primary state.md.
+    Synthesizes the worker's status and blockers into root state.md, audits token budget,
+    and removes the ephemeral slice.
+    """
+    subagent_file = locate_subagent_state_file(repo_root, worker_id)
+    if not subagent_file.is_file():
+        alt_path = repo_root / f"state.{worker_id}.md"
+        if alt_path.is_file():
+            subagent_file = alt_path
+        else:
+            return False, f"Subagent blackboard not found: {subagent_file}"
+
+    root_state = locate_state_file(repo_root, state_path)
+    if not root_state or not root_state.is_file():
+        return False, f"Root state.md not found in {repo_root}"
+
+    worker_content = subagent_file.read_text(encoding="utf-8")
+    worker_sections = parse_state_sections(worker_content)
+
+    worker_status = worker_sections.get("Status & Gate Verification", "").strip()
+    if not worker_status:
+        worker_status = worker_sections.get("Status", "Execution completed.")
+
+    worker_blockers = worker_sections.get("Immediate Blockers", "None.").strip()
+
+    root_content = root_state.read_text(encoding="utf-8")
+    root_sections = parse_state_sections(root_content)
+
+    status_summary = worker_status.replace("\n", " ")
+    if len(status_summary) > 120:
+        status_summary = status_summary[:117] + "..."
+
+    curr_status = root_sections.get("Status & Gate Verification", "").strip()
+    new_status_line = f"- Subagent [{worker_id}]: {status_summary}"
+    if curr_status:
+        updated_status = f"{curr_status}\n{new_status_line}"
+    else:
+        updated_status = new_status_line
+    root_sections["Status & Gate Verification"] = updated_status
+
+    if worker_blockers and worker_blockers.lower() not in ("none", "none."):
+        curr_blockers = root_sections.get("Immediate Blockers", "").strip()
+        blocker_line = f"- Subagent [{worker_id}] Blocker: {worker_blockers}"
+        if curr_blockers and curr_blockers.lower() not in ("none", "none."):
+            root_sections["Immediate Blockers"] = f"{curr_blockers}\n{blocker_line}"
+        else:
+            root_sections["Immediate Blockers"] = blocker_line
+
+    output_lines = [
+        "# Dynamic Working Memory (The Blackboard)",
+        "<!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->\n",
+    ]
+    for h, sec_text in root_sections.items():
+        if h == "__preamble__":
+            continue
+        output_lines.append(f"## {h}")
+        output_lines.append(sec_text)
+        output_lines.append("")
+
+    root_state.write_text("\n".join(output_lines).strip() + "\n", encoding="utf-8")
+
+    if delete_after_rollup:
+        try:
+            subagent_file.unlink()
+        except OSError:
+            pass
+
+    passed, tokens, _, warnings = audit_state_tokens(root_state, max_tokens=350)
+    msg = f"Rollup completed for worker [{worker_id}]. Root state.md: {tokens} tokens."
+    if not passed:
+        msg += " ⚠️ WARNING: Root state exceeds 350 tokens. Pruning recommended."
+    return True, msg
+

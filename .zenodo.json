@@ -1,5 +1,6 @@
 {
   "title": "Spec-Driven Cognitive Scaffolding (SDCS): Deterministic AI Engineering & Cybernetic Control",
+  "version": "1.7.0",
   "description": "Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001) is an open-source, file-based cognitive harness and closed-loop cybernetic control system for autonomous coding agents (Claude Code, Cursor, Codex, Gemini CLI). SDCS externalizes memory into seven deterministic repository artifacts (spine.md, wiring.yaml, roadmap.md, state.md, app_map.md, decisions.md, evals.md) and an immutable flight recorder (sessions/), enforced by physical Abstract Syntax Tree (AST) boundary gates (Gate T), cartography drift detection (Gate M), and cryptographic test diversity audits.",
   "creators": [
     {

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-sdcs_init.py - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
+sdcs.init - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
 Conforming to SPEC-001 v1.4.0
 
 Scaffolds the complete 7-pillar deterministic cognitive harness:
   1. spine.md        — Constitutional Invariants
-  2. wiring.yaml     — Declarative Dependency Mesh
+  2. wiring.yaml     — Declarative Topology
   3. roadmap.md      — Macro Acceptance Contract ([INTENT] vs [MEASURED])
-  4. state.md        — Working Memory Blackboard (~300 token budget)
-  5. app_map.md      — Repository Cartography (Flat or Hierarchical)
-  6. decisions.md    — Negative Episodic Memory (Rejection Log)
-  7. evals.md        — Positive Ground Truth (Empirical Scorecard & Corpus)
-  +  AGENTS.md       — Operational Boot Instructions (Behavioral Scaffolding)
-  +  sessions/       — Engineering Shift Handoff Templates (Flight Recorder)
+  4. state.md        — Dynamic Working Memory (~300 token budget)
+  5. app_map.md      — Repository Cartography (Hierarchical or Flat)
+  6. decisions.md    — Negative Episodic Memory (Rejection Graveyard)
+  7. evals.md        — Positive Ground Truth & Standing
+  +  sessions/*.md   — Flight Recorder Shift Logs
+  +  prompts/        — Authoring Protocols (/grillme)
+  +  AGENTS.md       — Operational Hydration Contract
   +  .githooks/      — Invariant Lock & State Sync Git Hook
 """
 
@@ -30,7 +31,7 @@ SPEC_VERSION = "1.4.0"
 # -----------------------------------------------------------------------------
 
 TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
-<!-- SPEC-001 v1.3.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
+<!-- SPEC-001 v1.4.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
 
 ## Non-Negotiable Domain Axioms
 1. Determinism First: No silent fallbacks, unverified mocks, or unhandled exceptions in production pathways.
@@ -66,9 +67,36 @@ tool_boundaries:
   allowed_binaries: ["pytest", "git", "python", "ruff"]
   forbidden_flags: ["--no-verify", "-f", "--force"]
 
+sandbox:
+  protected_paths:
+    - ".env*"
+    - "*.jks"
+    - "*.pem"
+    - "*.key"
+    - "credentials/**"
+  allowed_commands:
+    - "pytest"
+    - "git"
+    - "python"
+    - "ruff"
+    - "sdcs"
+  prohibited_flags:
+    - "--no-verify"
+    - "-f"
+    - "--force"
+
 contracts:
   strict_imports: true
   circular_dependencies: false
+
+# Central Cognitive Warehouse Integration (SPEC-001 v1.6.0)
+warehouse:
+  source: ""                  # Local path or git URL to central warehouse repository
+  cache_dir: "~/.sdcs/warehouse"
+  subscriptions:
+    tags: []                  # Subscribed tags (e.g., ["telecom", "android", "stripe"])
+    severity_floor: "advisory" # critical | high | medium | advisory
+  auto_sync: false            # false = use local cache without blocking network calls
 """
 
 TEMPLATE_ROADMAP = """# Macro Acceptance Contract (The North Star)
@@ -233,9 +261,9 @@ fi
 # 2. Working Memory Synchronization Gate (state.md)
 SDCS_MODE=$(git config sdcs.mode || echo "advisory")
 DIFF_LINES=$(git diff --cached --shortstat | awk '{print $4+$6}')
+STATE_TOUCHED=$(git diff --cached --name-only | grep -E '^(state\\.md|\\.agent/state\\.md)$' || true)
 
 if [ "${DIFF_LINES:-0}" -ge 40 ]; then
-  STATE_TOUCHED=$(git diff --cached --name-only | grep -E '^(state\\.md|\\.agent/state\\.md)$')
   if [ -z "$STATE_TOUCHED" ]; then
     if [ "$SDCS_MODE" = "strict" ]; then
       echo "===================================================================="
@@ -273,6 +301,55 @@ if [ -z "$PYTHON_BIN" ]; then
       fi
     fi
   done
+fi
+
+# 2b. Working Memory Token Budget & Schema Gate (Gate S: state.md <= 350 tokens)
+STATE_FILE=""
+if [ -f "state.md" ]; then
+  STATE_FILE="state.md"
+elif [ -f ".agent/state.md" ]; then
+  STATE_FILE=".agent/state.md"
+fi
+
+if [ -n "$STATE_FILE" ] && [ -n "$STATE_TOUCHED" ]; then
+  if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --state --max-tokens 350; then
+      if [ "$SDCS_MODE" = "strict" ]; then
+        echo "===================================================================="
+        echo " [SDCS ERROR] GATE S: WORKING MEMORY TOKEN BUDGET EXCEEDED"
+        echo "===================================================================="
+        echo "state.md exceeds the 350-token budget ceiling or has schema violations."
+        echo "Please prune state.md to <= 300 tokens before committing."
+        echo "===================================================================="
+        exit 1
+      else
+        echo "--------------------------------------------------------------------"
+        echo " [SDCS ADVISORY] Gate S: state.md exceeds 350 tokens or has schema warnings."
+        echo "--------------------------------------------------------------------"
+      fi
+    fi
+  fi
+fi
+
+# 2c. Declarative Sandbox & Protected Paths Gate (Gate P: wiring.yaml sandbox)
+if [ "$SDCS_ALLOW_SANDBOX_OVERRIDE" != "1" ]; then
+  if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --sandbox; then
+      if [ "$SDCS_MODE" = "strict" ]; then
+        echo "===================================================================="
+        echo " [SDCS ERROR] GATE P: SANDBOX PROTECTED PATH VIOLATION"
+        echo "===================================================================="
+        echo "Staged files violate sandbox protected_paths declared in wiring.yaml."
+        echo "To override: export SDCS_ALLOW_SANDBOX_OVERRIDE=1"
+        echo "===================================================================="
+        exit 1
+      else
+        echo "--------------------------------------------------------------------"
+        echo " [SDCS ADVISORY] Gate P: Sandbox protected path modification detected."
+        echo "--------------------------------------------------------------------"
+      fi
+    fi
+  fi
 fi
 
 # 3. Topological Invariant Gate (Gate T: wiring.yaml AST audit)
@@ -339,8 +416,67 @@ if [ -n "$MAP_FILE" ]; then
   fi
 fi
 
+# 5. Circuit Breaker Gate (Gate Cycles: thrashing & oscillation detection)
+if [ -n "$PYTHON_BIN" ]; then
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --cycles; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] CIRCUIT BREAKER TRIPPED: CYCLIC THRASHING DETECTED"
+      echo "===================================================================="
+      echo "Repeated file oscillation or ping-ponging detected across recent commits."
+      echo "Halted to prevent token exhaustion and repository damage."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Circuit breaker warning: file oscillation detected."
+      echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
+# 6. Test Quality & Anti-Mock Gate (Gate Q: test assertion audits)
+if [ -n "$PYTHON_BIN" ]; then
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --quality; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] GATE Q: TEST QUALITY / ANTI-MOCKING REJECTION"
+      echo "===================================================================="
+      echo "One or more test files contain hollow tests, assertless tests, or mock abuse."
+      echo "Provide substantive assertions before committing."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Gate Q: Test quality warning detected."
+      echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
+# 7. Environment Invariant Gate (Gate E: toolchain & runtime checks)
+if [ -n "$PYTHON_BIN" ]; then
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --env; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] GATE E: ENVIRONMENT INVARIANT MISMATCH"
+      echo "===================================================================="
+      echo "Toolchain or runtime environment mismatch detected."
+      echo "DO NOT edit application code to circumvent environment errors."
+      echo "Fix your local interpreter, tools, or environment variables."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Gate E: Environment mismatch detected."
+      echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
 exit 0
 """
+
 
 
 def generate_grillme_md(milestone: str | None = None) -> str:
@@ -542,7 +678,75 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
 # -----------------------------------------------------------------------------
 
 
+CANONICAL_PAGES = [
+    "spine.md",
+    "wiring.yaml",
+    "roadmap.md",
+    "state.md",
+    "decisions.md",
+    "evals.md",
+    "app_map.md",
+]
+
+
+def normalize_legacy_casing(target_dir: Path) -> list[tuple[str, str]]:
+    """
+    Detects legacy uppercase or mixed-case SDCS filenames (e.g. STATE.md, SPINE.md)
+    and normalizes them to canonical lowercase to prevent Windows NTFS case-insensitivity
+    collisions and git index phantom duplicates.
+    """
+    if not target_dir.is_dir():
+        return []
+
+    normalized = []
+    canonical_map = {name.lower(): name for name in CANONICAL_PAGES}
+
+    for item in list(target_dir.iterdir()):
+        if not item.is_file():
+            continue
+        lower_name = item.name.lower()
+        if lower_name in canonical_map:
+            canonical_name = canonical_map[lower_name]
+            if item.name != canonical_name:
+                temp_file = item.parent / f".sdcs_norm_{item.name}.tmp"
+                target_file = item.parent / canonical_name
+                try:
+                    git_res = subprocess.run(
+                        ["git", "mv", "-f", item.name, temp_file.name],
+                        cwd=str(target_dir),
+                        capture_output=True,
+                        text=True,
+                    )
+                    if git_res.returncode == 0:
+                        subprocess.run(
+                            ["git", "mv", "-f", temp_file.name, canonical_name],
+                            cwd=str(target_dir),
+                            capture_output=True,
+                            text=True,
+                        )
+                    else:
+                        item.rename(temp_file)
+                        temp_file.rename(target_file)
+                    normalized.append((item.name, canonical_name))
+                    print(f"  * Normalized casing: {item.name} -> {canonical_name}")
+                except Exception as ex:
+                    print(f"  ⚠️ Warning: Failed to normalize casing for {item.name}: {ex}", file=sys.stderr)
+    return normalized
+
+
 def write_file(path: Path, content: str, force: bool = False):
+    if path.parent.exists():
+        for sibling in path.parent.iterdir():
+            if sibling.is_file() and sibling.name.lower() == path.name.lower() and sibling.name != path.name:
+                temp_file = sibling.parent / f".sdcs_norm_{sibling.name}.tmp"
+                try:
+                    sibling.rename(temp_file)
+                    temp_file.rename(path)
+                    print(f"  * Normalized casing: {sibling.name} -> {path.name}")
+                except Exception:
+                    pass
+                break
+
     if path.exists() and not force:
         print(f"  · Exists:  {path} (skipping)")
         return
@@ -589,6 +793,11 @@ def init_scaffold(
     print(f" Mode:        {'Hierarchical' if hierarchical else 'Flat Cartography'}")
     print("====================================================================\n")
 
+    # Normalize existing legacy casing (STATE.md -> state.md) before writing
+    normalize_legacy_casing(scaffold_dir)
+    if use_agent_dir:
+        normalize_legacy_casing(repo_root)
+
     # 1. Primary Pillars
     write_file(scaffold_dir / "spine.md", TEMPLATE_SPINE, force)
     write_file(scaffold_dir / "wiring.yaml", TEMPLATE_WIRING, force)
@@ -597,29 +806,22 @@ def init_scaffold(
     write_file(scaffold_dir / "decisions.md", TEMPLATE_DECISIONS, force)
     write_file(scaffold_dir / "evals.md", TEMPLATE_EVALS, force)
 
-    # 2. Cartography (Pillar 5)
-    if hierarchical:
-        generate_hierarchical_cartography(repo_root, scaffold_dir, force)
-    else:
-        flat_map = generate_flat_app_map(repo_root)
-        write_file(scaffold_dir / "app_map.md", flat_map, force)
-
-    # 3. Flight Recorder Infrastructure
+    # 2. Flight Recorder Infrastructure
     sessions_dir = scaffold_dir / "sessions"
     sessions_dir.mkdir(parents=True, exist_ok=True)
     template_session = TEMPLATE_SESSION_HANDOFF.format(timestamp="YYYY-MM-DD HH:MM UTC")
     write_file(sessions_dir / "template.md", template_session, force)
 
-    # 4. Authoring Protocol (/grillme)
+    # 3. Authoring Protocol (/grillme)
     prompts_dir = scaffold_dir / "prompts"
     prompts_dir.mkdir(parents=True, exist_ok=True)
     write_file(prompts_dir / "grillme.md", generate_grillme_md(), force)
 
-    # 5. Behavioral Contract
+    # 4. Behavioral Contract
     if not skip_agents_md:
         write_file(repo_root / "AGENTS.md", TEMPLATE_AGENTS, force)
 
-    # 6. Git Invariant Protection Hook
+    # 5. Git Invariant Protection Hook
     if not skip_hooks:
         install_githook(repo_root)
 
@@ -630,6 +832,13 @@ def init_scaffold(
     if not init_fixture.exists():
         init_fixture.write_text("SDCS Golden Test Fixture Placeholder\n", encoding="utf-8")
         print(f"  + Fixture: {init_fixture}")
+
+    # 6. Cartography (Pillar 5) - Generated after all scaffolding files exist
+    if hierarchical:
+        generate_hierarchical_cartography(repo_root, scaffold_dir, force)
+    else:
+        flat_map = generate_flat_app_map(repo_root)
+        write_file(scaffold_dir / "app_map.md", flat_map, force)
 
     print("\n[OK] Scaffolding complete.")
     if not skip_hooks:

@@ -142,6 +142,47 @@ if [ -z "$PYTHON_BIN" ]; then
     done
 fi
 
+# Gate S: Working Memory Token Budget Gate (state.md <= 350 tokens)
+# Enforces physical token ceiling on working memory to prevent context bloat
+if [ "$STATE_STAGED" = true ]; then
+    if [ -z "$PYTHON_BIN" ]; then
+        echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate S token check."
+    else
+        echo "[SDCS::GATE_S] Auditing state.md working memory token budget (<= 350 tokens)..."
+        if ! "$PYTHON_BIN" -m sdcs.cli verify --state --max-tokens 350; then
+            if [ "$SDCS_MODE" = "advisory" ]; then
+                echo "💡 [SDCS Advisory] state.md working memory budget exceeded, but running in advisory mode."
+                echo ""
+            else
+                echo "🛑 [SDCS Gate Failure] Gate S: Working Memory Token Budget Exceeded!"
+                echo "   state.md exceeds the 350-token budget ceiling or has schema violations."
+                echo "   Prune state.md to <= 300 tokens before committing."
+                echo ""
+                ERRORS=$((ERRORS + 1))
+            fi
+        fi
+    fi
+fi
+
+# Gate P: Declarative Sandbox & Protected Paths Gate (wiring.yaml)
+# Blocks uncontracted mutations to sensitive secrets (.env, credentials)
+if [ "$SDCS_ALLOW_SANDBOX_OVERRIDE" != "1" ]; then
+    if [ -n "$PYTHON_BIN" ]; then
+        if ! "$PYTHON_BIN" -m sdcs.cli verify --sandbox; then
+            if [ "$SDCS_MODE" = "advisory" ]; then
+                echo "💡 [SDCS Advisory] Sandbox protected path modification detected (advisory mode)."
+                echo ""
+            else
+                echo "🛑 [SDCS Gate Failure] Gate P: Sandbox Protected Path Mutation Detected!"
+                echo "   One or more staged files violate sandbox protected_paths in wiring.yaml."
+                echo "   To override: export SDCS_ALLOW_SANDBOX_OVERRIDE=1"
+                echo ""
+                ERRORS=$((ERRORS + 1))
+            fi
+        fi
+    fi
+fi
+
 # Gate T: AST Topology Boundary Audit & Negative Memory Persistence (wiring.yaml)
 # Checks codebase AST against declared subsystem boundaries and appends violations to decisions.md
 WIRING_EXISTS=false
@@ -207,7 +248,58 @@ if [ "$MAP_EXISTS" = true ]; then
     fi
 fi
 
+
+# Gate Cycles: Circuit Breaker Oscillation & Thrashing Audit
+if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --cycles; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "💡 [SDCS Advisory] Circuit breaker detected file oscillation across recent commits."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Circuit Breaker: Cyclic Thrashing Detected!"
+            echo "   Repeated file oscillation detected across recent commits without architectural progression."
+            echo "   Halted to prevent token exhaustion and repository damage."
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
+# Gate Q: Test Quality & Anti-Mock AST Audit
+if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --quality; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "💡 [SDCS Advisory] Test quality violations detected but running in advisory mode."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Gate Q: Test Quality / Anti-Mocking Violation Detected!"
+            echo "   One or more test files contain hollow tests (assert True, assertless, swallowed exceptions, or mock abuse)."
+            echo "   Provide substantive assertions before committing."
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
+# Gate E: Toolchain & Environment Invariant Audit
+if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --env; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "💡 [SDCS Advisory] Environment invariant mismatch detected but running in advisory mode."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Gate E: Environment Invariant Mismatch Detected!"
+            echo "   Toolchain or runtime environment does not satisfy declared requirements."
+            echo "   DO NOT edit application code to circumvent environment errors."
+            echo "   Fix your local interpreter, tools, or environment variables."
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
 # --- Step 5: Exit Evaluation ---
+
 if [ "$ERRORS" -gt 0 ]; then
     echo "Commit rejected by SDCS pre-commit hook."
     echo "To bypass (emergency hotfixes only): git commit --no-verify"

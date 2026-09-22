@@ -1,15 +1,15 @@
-# Active Working Blackboard (Pillar 4: state.md)
+# Dynamic Working Memory (The Blackboard)
+<!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 350 Tokens -->
 
 ## Current Objective
-Polish Tab 1 UI in FloorsmithCalling Android companion app by centering the 4 segmented filter tabs and maintaining clean SDCS framework health.
+- Build `sdcs watch` living office HUD, verify 101-test suite, and package v1.7.0 multi-channel release (GitHub, PyPI, Zenodo).
 
 ## Status & Gate Verification
-- Tab 1 filter tabs centered with responsive equal-weight layout (`layout_weight="1"`).
-- Labels updated: "Urgent", "GPS", "Leads", "⭐ VIP".
-- Android Gradle compilation (`:app:compileStoreDebugSources`): PASSED (0 errors).
-- SDCS framework test suite: 45/45 PASSED.
-- Cartography (`sdcs map --check`): PASSED (Clean).
+- `sdcs watch` (`src/sdcs/watch.py` & `src/sdcs/static/`): Living 16-bit isometric pixel art HUD with zero-dependency HTTP/SSE server, live telemetry, and room hotspots.
+- Autonomous Safety Triad: Circuit Breaker (`sdcs verify --cycles`), Gate Q (`sdcs verify --quality`), Gate E (`sdcs doctor`, `sdcs verify --env`) verified.
+- Kinetic Gates: Gate S (278/350t PASS), Gate M (Cartography CLEAN), Gate Q (PASS), Circuit Breaker (PASS).
+- Test Suite: 101/101 PASSED (100% green in pytest).
+- Release Packaging: Wheel & sdist compiled (`sdcs-1.7.0`), Twine check PASSED, CITATION.cff and .zenodo.json aligned to v1.7.0.
 
 ## Immediate Next Action (Post-Compact)
-- Deploy or install debug APK for user testing of the centered Tab 1 segmented pill bar.
-- Merge PR #1 on GitHub if instructed.
+- Commit and tag v1.7.0 release across GitHub, PyPI, and Zenodo.

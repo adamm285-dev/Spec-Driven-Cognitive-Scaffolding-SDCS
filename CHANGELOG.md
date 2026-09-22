@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] - 2026-09-22: Autonomous Safety Triad & Living Pixel Office HUD
+
+### Added
+- **Living Pixel Office HUD (`sdcs watch`):** A zero-dependency real-time background file watcher and HTTP/SSE server bridging repository cognitive scaffolding to a 16-bit isometric pixel-art HUD (conforming to the Grok Bot / Clanker Town indie aesthetic). Features interactive room hotspots (Dev Desk, Server Room/Bouncer, Central Whiteboard, Rejection Graveyard, Central Warehouse, Flight Recorder), real-time telemetry streaming (`GET /api/status`, `GET /api/events`), and auto-browser launch (`--no-browser` supported).
+- **The Circuit Breaker (`sdcs verify --cycles`):** Static file transition graph and commit-history analyzer halting alternating period-2 oscillations ($A \to B \to A \to B$) and single-file thrashing before tokens are burned.
+- **Gate Q (Test Quality & Anti-Mock AST Auditor, `sdcs verify --quality`):** Static AST auditor preventing "hollow tests" by rejecting trivial assertions (`assert True`, `assert not False`), assertless test functions, swallowed test exceptions (`try...except: pass`), and mock abuse.
+- **Gate E & System Diagnostic Doctor (`sdcs doctor` & `sdcs verify --env`):** Toolchain, interpreter, environment variable, and 7-pillar diagnostic health check, preventing agents from refactoring valid code when failures are caused by environment drift.
+- **Pre-Commit Protection Hook:** Wired all 8 kinetic gates (Gate C, Gate T, Gate S, Gate P, Gate W, Gate M, Gate Q, Gate E + Circuit Breaker) into `.githooks/pre-commit` and initializer templates.
+- **101-Item Automated Test Suite:** 100% test pass rate across unit, integration, and CLI suites.
+
+---
+
+## [1.6.0] - 2026-09-21: Cognitive Federation, Secret Sanitization & Blast-Radius Isolation
+
+### Added
+- **Central Cognitive Warehouse (`sdcs warehouse sync|publish|list`):** Cross-project organizational memory engine federating rejections, traps, and failure modes across agent fleets without leaking proprietary IP.
+- **Gate W (Secret & PII Sanitizer):** Automated pre-publish scanner scrubbing API keys, auth tokens, emails, phone numbers, and routable IP addresses.
+- **Gate P (Blast-Radius Sandbox Guard, `sdcs verify --sandbox`):** Verifies git staged modifications against declarative `protected_paths` declared in `wiring.yaml`.
+- **Parallel Worker Ephemeral Blackboards (`sdcs state fork|rollup`):** Scoped subagent blackboards (`state.<worker_id>.md`) with deterministic rollup into root working memory.
+
+---
+
+## [1.5.0] - 2026-09-21: Deterministic Context Compiler & Staleness Decay
+
+### Added
+- **Deterministic Context Compiler (`sdcs hydrate [--profile lite|standard|full]`):** Single-pass pre-budgeted context stream eliminating the "Grep Reflex" and token waste on Turn 1 boot.
+- **Automated Staleness Decay (`sdcs decay --check|--prune|--tag-stale`):** Scans commit distance in `roadmap.md` and tags stale telemetry (>50 commits); automatically archives superseded rejections in `decisions.md` (>15 active entries).
+
+---
+
 ## [1.4.1] - 2026-09-20: Operational Hardening & Micro-Frictions Suite
 
 ### Added

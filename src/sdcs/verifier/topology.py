@@ -64,6 +64,111 @@ class ImportExtractor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+POLYGLOT_EXTENSIONS = {
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".kts",
+    ".java",
+    ".go",
+    ".rs",
+}
+
+
+def extract_polyglot_imports(
+    file_path: Path, repo_root: Path
+) -> list[tuple[str, int, bool]]:
+    """
+    Extracts imports across Python, TypeScript/JS, Kotlin/Java, Go, and Rust.
+    Returns: list of (import_specifier, line_number, is_relative_path)
+    """
+    ext = file_path.suffix.lower()
+    imports: list[tuple[str, int, bool]] = []
+
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+    except (OSError, UnicodeDecodeError):
+        return []
+
+    lines = content.splitlines()
+
+    if ext == ".py":
+        try:
+            tree = ast.parse(content, filename=str(file_path))
+            py_extractor = ImportExtractor(file_path, repo_root)
+            py_extractor.visit(tree)
+            return [(mod, line, False) for mod, line in py_extractor.imports]
+        except (SyntaxError, UnicodeDecodeError):
+            return []
+
+    elif ext in (".ts", ".tsx", ".js", ".jsx"):
+        ts_import_re = re.compile(r"""(?:import|export)\s+(?:.*?from\s+)?['"]([^'"]+)['"]""")
+        ts_require_re = re.compile(r"""require\(\s*['"]([^'"]+)['"]\s*\)""")
+        for idx, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            if stripped.startswith("//") or stripped.startswith("/*"):
+                continue
+            for m in ts_import_re.finditer(line):
+                spec = m.group(1)
+                is_rel = spec.startswith(".")
+                imports.append((spec, idx, is_rel))
+            for m in ts_require_re.finditer(line):
+                spec = m.group(1)
+                is_rel = spec.startswith(".")
+                imports.append((spec, idx, is_rel))
+
+    elif ext in (".kt", ".kts", ".java"):
+        kt_re = re.compile(r"^\s*import\s+([a-zA-Z0-9_.]+(?:\.\*)?)")
+        for idx, line in enumerate(lines, start=1):
+            m = kt_re.match(line)
+            if m:
+                spec = m.group(1).rstrip(".*")
+                imports.append((spec, idx, False))
+
+    elif ext == ".go":
+        in_block = False
+        go_single_re = re.compile(r"""^\s*import\s+['"]([^'"]+)['"]""")
+        go_block_re = re.compile(r"""^\s*(?:[a-zA-Z0-9_]+\s+)?['"]([^'"]+)['"]""")
+        for idx, line in enumerate(lines, start=1):
+            trimmed = line.strip()
+            if trimmed.startswith("//"):
+                continue
+            if trimmed.startswith("import ("):
+                in_block = True
+                continue
+            if in_block:
+                if trimmed == ")":
+                    in_block = False
+                    continue
+                m = go_block_re.match(line)
+                if m:
+                    imports.append((m.group(1), idx, False))
+            else:
+                m = go_single_re.match(line)
+                if m:
+                    imports.append((m.group(1), idx, False))
+
+    elif ext == ".rs":
+        rs_use_re = re.compile(r"^\s*use\s+(?:crate::)?([a-zA-Z0-9_:]+)")
+        rs_mod_re = re.compile(r"^\s*mod\s+([a-zA-Z0-9_]+)\s*;")
+        for idx, line in enumerate(lines, start=1):
+            trimmed = line.strip()
+            if trimmed.startswith("//"):
+                continue
+            m = rs_use_re.match(line)
+            if m:
+                spec = m.group(1).split("::")[0]
+                imports.append((spec, idx, False))
+            m2 = rs_mod_re.match(line)
+            if m2:
+                imports.append((m2.group(1), idx, False))
+
+    return imports
+
+
 class TopologyValidator:
     """Audits codebase abstract syntax trees against declarative contracts."""
 
@@ -128,16 +233,16 @@ class TopologyValidator:
         cfg = self.subsystems[source_subsystem]
         violations: list[ImportViolation] = []
 
-        try:
-            tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
-        except (SyntaxError, UnicodeDecodeError):
-            return []
+        raw_imports = extract_polyglot_imports(file_path, self.repo_root)
 
-        extractor = ImportExtractor(file_path, self.repo_root)
-        extractor.visit(tree)
+        for module_name, lineno, is_relative in raw_imports:
+            if is_relative:
+                # Relative file reference (e.g. '../other_subsystem/module')
+                resolved_target_file = (file_path.parent / module_name).resolve()
+                target_subsystem = self.resolve_subsystem_for_file(resolved_target_file)
+            else:
+                target_subsystem = self.resolve_subsystem_for_module(module_name)
 
-        for module_name, lineno in extractor.imports:
-            target_subsystem = self.resolve_subsystem_for_module(module_name)
             if not target_subsystem or target_subsystem == source_subsystem:
                 continue
             if target_subsystem not in cfg.allowed_dependencies:
@@ -154,11 +259,16 @@ class TopologyValidator:
 
     def audit_tree(self) -> list[ImportViolation]:
         violations: list[ImportViolation] = []
-        for file_path in self.repo_root.rglob("*.py"):
-            if any(
-                part.startswith(".") or part in ("venv", ".venv", "build", "dist")
-                for part in file_path.parts
-            ):
+        ignored_dirs = {
+            "venv", ".venv", "build", "dist", "node_modules",
+            ".gradle", "target", "__pycache__", ".git"
+        }
+        for file_path in self.repo_root.rglob("*"):
+            if not file_path.is_file():
+                continue
+            if file_path.suffix.lower() not in POLYGLOT_EXTENSIONS:
+                continue
+            if any(part.startswith(".") or part in ignored_dirs for part in file_path.parts):
                 continue
             violations.extend(self.audit_file(file_path))
         return violations

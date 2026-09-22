@@ -1,20 +1,30 @@
 # The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth
 
-In SDCS v1.4.1, repository constraints are not suggestions—they are **physical laws of motion** enforced across two ontological defense tiers:
+In **SDCS v1.7.0**, repository constraints are not suggestions—they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Trigger / Command | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
+| **Spatial & Structural** | **Gate C** | Constitutional Immutability | `.githooks/pre-commit` | Unauthorized tampering or loosening of `spine.md` or `wiring.yaml`. |
 | **Spatial & Structural** | **Gate T** | Topological Invariant Gate | `sdcs verify --topology` | Prohibited AST cross-subsystem imports violating `wiring.yaml`. |
+| **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
 | **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
-| **Spatial & Structural** | **Gate C** | Constitutional Immutability | `.githooks/pre-commit` | Unauthorized tampering with `spine.md` or `wiring.yaml`. |
-| **Cognitive & Temporal** | **Gate A** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>300–350 tokens). |
-| **Cognitive & Temporal** | **Gate E** | Evaluation Standing Gate | `sdcs eval` / `sdcs audit` | Phantom corpus duplicate fixtures & SHA-256 baseline hash drift. |
-| **Cognitive & Temporal** | **Gate S** | Working Memory Sync Gate | CI diff trigger ($\ge 40$ lines) | Merging large pull requests with stale working memory. |
+| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>350 tokens) & subagent lifecycle. |
+| **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Publishing sensitive API keys, tokens, emails, phone numbers, or IPs to central warehouse. |
+| **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless test functions, or swallowed exceptions. |
+| **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime, interpreter, or toolchain drift. |
+| **Kinetic Circuit** | **Breaker** | The Circuit Breaker | `sdcs verify --cycles` | Alternating period-2 file thrashing ($A \to B \to A \to B$) and infinite token loops. |
 
 ---
 
-## 1. Gate T: Topological Invariant Gate
-* **Mechanism:** Evaluates Python Abstract Syntax Trees (AST) using Python's native `ast` module. Does not execute code or trigger module initializers.
+## 1. Gate C: Constitutional Immutability
+* **Mechanism:** Git pre-commit hook checks `git diff --cached --name-only` for `spine.md` and `wiring.yaml`.
+* **Enforcement:** Aborts commit unless overridden by explicit human environment variable:
+  ```bash
+  export SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1
+  ```
+
+## 2. Gate T: Topological Invariant Gate
+* **Mechanism:** Evaluates Python Abstract Syntax Trees (AST) using Python's native `ast` module (plus polyglot JS/TS support). Does not execute untrusted code or trigger module initializers.
 * **Contract:** Validates every import against `allowed_dependencies` declared in `wiring.yaml`.
 * **Zero-Argumentation Loop:** When an import fails Gate T:
   ```bash
@@ -24,7 +34,11 @@ In SDCS v1.4.1, repository constraints are not suggestions—they are **physical
   ```
   The rejection remains unstaged on disk, forcing the agent to reflect on negative memory and refactor.
 
-## 2. Gate M: Cartography Drift Gate (v1.4.1)
+## 3. Gate P: Blast-Radius Sandbox Guard
+* **Mechanism:** Verifies staged git modifications against declarative `protected_paths` in `wiring.yaml`.
+* **Enforcement:** Halts commits attempting to mutate infrastructure, deployment configurations, or protected schemas without explicit authorization (`sdcs verify --sandbox`).
+
+## 4. Gate M: Cartography Drift Gate
 * **Mechanism:** Statically compares tracked Git repository files against entries in `app_map.md`.
 * **Enforcement:** Integrated into `.githooks/pre-commit`. Halts `git commit` if new files exist without cartography entries.
 * **Remediation:**
@@ -36,21 +50,26 @@ In SDCS v1.4.1, repository constraints are not suggestions—they are **physical
   sdcs map --sync
   ```
 
-## 3. Gate C: Constitutional Immutability
-* **Mechanism:** Git pre-commit hook checks `git diff --cached --name-only` for `spine.md` and `wiring.yaml`.
-* **Enforcement:** Aborts commit unless overridden by explicit human environment variable:
-  ```bash
-  export SDCS_ALLOW_CONSTITUTIONAL_MUTATION=1
-  ```
+## 5. Gate S: Working Memory Budget Gate
+* **Mechanism:** Deterministic token-budget linter verifying token counts and canonical 3-section schema of `state.md`.
+* **Enforcement:** Requires `state.md` $\le 350$ tokens (or custom ceiling via `--max-tokens`) and enforces canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Also handles ephemeral subagent blackboard lifecycle (`sdcs state fork` and `sdcs state rollup`).
 
-## 4. Gate A: Working Memory Budget Gate
-* **Mechanism:** Token-budget linter verifying word counts and canonical schema of `state.md`.
-* **Enforcement:** Requires `state.md` $\le 300$ tokens (or custom ceiling via `--max-tokens`) and enforces the 3 canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`.
+## 6. Gate W: Secret & PII Sanitizer
+* **Mechanism:** Static AST and regex scanner inspecting code and documentation before publication to the central cognitive warehouse.
+* **Enforcement:** Automatically redacts Google, OpenAI, GitHub, and AWS API keys, bearer tokens, email addresses, phone numbers, and routable IPv4 addresses (`sdcs verify --warehouse` and `sdcs warehouse publish`).
 
-## 5. Gate E: Evaluation Standing Gate
-* **Mechanism:** Validates that every benchmark fixture in `evals.md` exists, computes normalized SHA-256 digests (stripping comments and trailing whitespace), and detects duplicate fixtures.
-* **Enforcement:** Halts execution if two fixtures share identical normalized hashes under different filenames (Phantom Corpus detection).
+## 7. Gate Q: Test Quality & Anti-Mock AST Auditor
+* **Mechanism:** Static AST inspector auditing newly created or modified test suites.
+* **Enforcement:** Halts commits introducing:
+  - **Rule Q1 (Trivial Assertions):** Tests asserting `True`, `not False`, or `x is not None`.
+  - **Rule Q2 (Assertless Tests):** Test functions executing code without assertions.
+  - **Rule Q3 (Swallowed Exceptions):** Masking test failures via `try...except Exception: pass`.
+  - **Rule Q4 (Mock Abuse):** Mocks exceeding assertions without invoking the target unit.
 
-## 6. Gate S: Working Memory Sync Gate
-* **Mechanism:** CI workflow (`sdcs-ci.yml`) and pre-commit hook calculate changed code lines in pull requests.
-* **Enforcement:** If code diff exceeds 40 lines, `state.md` must be staged and modified in the same commit transaction.
+## 8. Gate E: Toolchain & Environment Invariant Lock
+* **Mechanism:** Verifies local Python runtime interpreter, system tools (`git`, `pytest`), and required environment variables declared in `wiring.yaml` or `pyproject.toml`.
+* **Enforcement:** Blocks commits if the environment is misconfigured (`sdcs verify --env`), and provides comprehensive diagnostic reporting via `sdcs doctor`.
+
+## 9. The Circuit Breaker (File Oscillation & Thrashing Prevention)
+* **Mechanism:** Static transition graph analyzer tracking modified file sets across consecutive commits and turns.
+* **Enforcement:** Detects period-2 alternating thrashing loops ($A \to B \to A \to B$) and isolated single-file thrashing. Trips immediately to prevent agents from burning tokens and introducing Frankenstein patches (`sdcs verify --cycles`).

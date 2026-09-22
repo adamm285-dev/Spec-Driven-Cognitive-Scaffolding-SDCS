@@ -1,10 +1,96 @@
 # CLI Command Reference (`sdcs`)
 
-The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, and verifying Spec-Driven Cognitive Scaffolding repositories.
+The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.7.0).
 
 ---
 
-## 1. Initializer: `sdcs init` (or `python sdcs_init.py`)
+## 1. Living Office HUD: `sdcs watch`
+
+Launches the real-time background file watcher and local HTTP/SSE telemetry server with an interactive 16-bit isometric pixel-art HUD.
+
+```bash
+# Launch living office HUD (opens http://127.0.0.1:8765 in browser)
+sdcs watch
+
+# Run in headless or CI environments on a custom port
+sdcs watch --no-browser --port 8765
+
+# Configure custom polling interval
+sdcs watch --poll-interval 0.5
+```
+
+---
+
+## 2. System Diagnostics: `sdcs doctor`
+
+Runs a comprehensive health check across runtime interpreter, system tools (`git`, `pytest`), and all 7 cognitive pillars.
+
+```bash
+# Run comprehensive diagnostic report
+sdcs doctor
+
+# Audit environment invariants (Gate E)
+sdcs verify --env
+```
+
+---
+
+## 3. Context Compiler: `sdcs hydrate`
+
+Compiles and streams a deterministic, pre-budgeted context payload in a single atomic pass, breaking the LLM "Grep Reflex" on boot.
+
+```bash
+# Standard profile (~1,500 tokens)
+sdcs hydrate --profile standard
+
+# Lite profile for small fixes (~400 tokens)
+sdcs hydrate -p lite
+
+# Full shift profile (~3,500 tokens)
+sdcs hydrate -p full
+
+# Subsystem-focused context slicing
+sdcs hydrate -p standard -s core
+```
+
+---
+
+## 4. Verification Suite: `sdcs verify`
+
+Audits code mutations against declared kinetic gates.
+
+```bash
+# Gate T: Audit AST imports against wiring.yaml contracts
+sdcs verify --topology
+
+# Gate T + Inverted ADR: Format and append boundary failures to decisions.md
+sdcs verify --topology --append-rejections
+
+# Gate S: Audit state.md working memory budget (default <= 350 tokens)
+sdcs verify --state
+
+# Gate P: Audit staged files against wiring.yaml sandbox protected_paths
+sdcs verify --sandbox
+
+# Gate W: Audit warehouse records and rejections against secret/PII filters
+sdcs verify --warehouse
+
+# Circuit Breaker: Detect cyclic file oscillations and thrashing loops
+sdcs verify --cycles
+
+# Gate Q: Audit test files for hollow tests and anti-mocking violations
+sdcs verify --quality
+
+# Gate E: Audit toolchain and runtime invariants
+sdcs verify --env
+
+# Execute all verification gates simultaneously
+sdcs verify --all
+```
+
+---
+
+## 5. Initializer: `sdcs init` (or `python sdcs_init.py`)
 
 Scaffolds the 7 pillars, `sessions/`, and `AGENTS.md` into any repository.
 
@@ -24,30 +110,7 @@ sdcs init --force
 
 ---
 
-## 2. Verification Suite: `sdcs verify`
-
-Audits code mutations against declared kinetic gates.
-
-```bash
-# Gate T: Audit AST imports against wiring.yaml contracts
-sdcs verify --topology
-
-# Gate T + Inverted ADR: Format and append boundary failures to decisions.md
-sdcs verify --topology --append-rejections
-
-# Gate A: Audit state.md working memory budget (default <= 350 tokens)
-sdcs verify --state
-
-# Gate A: Custom token budget ceiling
-sdcs verify --state --max-tokens 300
-
-# Execute all verification gates (topology, state budget, evals)
-sdcs verify --all
-```
-
----
-
-## 3. Cartography Engine: `sdcs map`
+## 6. Cartography Engine: `sdcs map`
 
 Manages repository cartography (`app_map.md`) and token-optimized subsystem paging.
 
@@ -65,7 +128,56 @@ sdcs map -s src/sdcs
 
 ---
 
-## 4. Evaluation Suite: `sdcs eval` & `sdcs audit`
+## 7. Working Memory Blackboard: `sdcs state`
+
+Manages volatile working memory and ephemeral blackboards for parallel subagent workers.
+
+```bash
+# Fork an ephemeral blackboard for a parallel subagent
+sdcs state fork worker-1 --objective "Implement auth endpoints"
+
+# Rollup subagent findings into root state.md and cleanup
+sdcs state rollup worker-1
+```
+
+---
+
+## 8. Cognitive Warehouse: `sdcs warehouse`
+
+Federates organizational memory and failure modes across fleets without leaking proprietary IP.
+
+```bash
+# Synchronize global traps and rejections into local cache
+sdcs warehouse sync
+
+# Promote a local rejection to warehouse with Gate W secret/PII scrubbing
+sdcs warehouse publish REJ-001
+
+# List cached warehouse traps
+sdcs warehouse list
+sdcs warehouse list --tag performance
+```
+
+---
+
+## 9. Staleness Decay Engine: `sdcs decay`
+
+Audits telemetry staleness in `roadmap.md` and prunes dead ends in `decisions.md`.
+
+```bash
+# Audit staleness across roadmap and decisions
+sdcs decay --check
+
+# Prune active rejections exceeding ceiling (>15 entries)
+sdcs decay --prune
+
+# Automatically tag stale [MEASURED] entries (>50 commits)
+sdcs decay --tag-stale
+```
+
+---
+
+## 10. Evaluation Suite: `sdcs eval` & `sdcs audit`
 
 Audits ground truth test fixtures, computes SHA-256 digests, and recalibrates baselines.
 
@@ -87,7 +199,7 @@ sdcs eval record all
 
 ---
 
-## 5. Flight Recorder Manager: `sdcs session`
+## 11. Flight Recorder: `sdcs session`
 
 Indexes and queries discrete shift handoff logs without violating boot amnesia.
 
@@ -99,7 +211,7 @@ sdcs session index
 sdcs session list
 
 # Forensically search sessions by keyword or milestone
-sdcs session list --query "Gate T"
+sdcs session list --query "Circuit Breaker"
 
 # Output structured records as JSON
 sdcs session list --json
@@ -107,7 +219,7 @@ sdcs session list --json
 
 ---
 
-## 6. Topology Visualizer: `sdcs graph`
+## 12. Topology Visualizer: `sdcs graph`
 
 Transforms `wiring.yaml` contracts into visual graphs.
 
@@ -121,7 +233,7 @@ sdcs graph --format mermaid --output docs/topology.mmd
 
 ---
 
-## 7. Adversarial Spec Elicitation: `sdcs grill`
+## 13. Adversarial Spec Elicitation: `sdcs grill`
 
 Emits the `/grillme` adversarial interview prompt to harden requirements before writing code.
 
