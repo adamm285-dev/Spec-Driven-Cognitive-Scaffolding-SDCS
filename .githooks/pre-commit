@@ -142,6 +142,13 @@ if [ -z "$PYTHON_BIN" ]; then
     done
 fi
 
+# --- Step 3.5: Deterministic Pre-Flight Auto-Repair (sdcs repair) ---
+# Executes local formatters (ruff --fix, black, prettier) to fix style/whitespace
+# with ZERO LLM inference tokens before kinetic gates evaluate.
+if [ -n "$PYTHON_BIN" ] && [ "$SDCS_SKIP_AUTO_REPAIR" != "1" ]; then
+    "$PYTHON_BIN" -m sdcs.cli repair --staged >/dev/null 2>&1 || true
+fi
+
 # Gate S: Working Memory Token Budget Gate (state.md <= 350 tokens)
 # Enforces physical token ceiling on working memory to prevent context bloat
 if [ "$STATE_STAGED" = true ]; then
@@ -292,6 +299,22 @@ if [ -n "$PYTHON_BIN" ]; then
             echo "   Toolchain or runtime environment does not satisfy declared requirements."
             echo "   DO NOT edit application code to circumvent environment errors."
             echo "   Fix your local interpreter, tools, or environment variables."
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
+# Gate C-Cache: KV-Cache Prefix Invariance Audit
+if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --cache-invariance; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "💡 [SDCS Advisory] Cache-busting volatile prefix detected in templates (advisory mode)."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Gate C-Cache: Cache-Busting Volatile Prefix Detected!"
+            echo "   Dynamic timestamps, turn counters, or session IDs were found in system instructions."
+            echo "   Move volatile state to dynamic state.md tail to preserve KV caching."
             echo ""
             ERRORS=$((ERRORS + 1))
         fi

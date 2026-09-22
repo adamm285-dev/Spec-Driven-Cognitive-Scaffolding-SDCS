@@ -116,7 +116,10 @@
 - `hydrate.py`
 - `init.py`
 - `map.py`
+- `repair.py`
+- `router.py`
 - `session.py`
+- `skeleton.py`
 - `warehouse.py`
 - `watch.py`
 
@@ -126,6 +129,7 @@
 
 ### `src/sdcs/verifier/`
 - `__init__.py`
+- `cache.py`
 - `cycles.py`
 - `environment.py`
 - `quality.py`
@@ -135,6 +139,7 @@
 
 ### `tests/`
 - `test_audit.py`
+- `test_cache.py`
 - `test_cli.py`
 - `test_cycles.py`
 - `test_decay.py`
@@ -147,8 +152,11 @@
 - `test_map.py`
 - `test_polyglot_topology.py`
 - `test_quality.py`
+- `test_repair.py`
+- `test_router.py`
 - `test_sandbox.py`
 - `test_session.py`
+- `test_skeleton.py`
 - `test_state.py`
 - `test_subagent_state.py`
 - `test_topology.py`

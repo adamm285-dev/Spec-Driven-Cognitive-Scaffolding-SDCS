@@ -2,14 +2,14 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 350 Tokens -->
 
 ## Current Objective
-- Complete v1.7.0 release verification across GitHub, PyPI, and Zenodo.
+- Implement SDCS v1.8.0 Sub-Dime Loop Engineering Suite.
 
 ## Status & Gate Verification
-- GitHub Repository: v1.7.0 tag & release published live (`main` up to date).
-- PyPI Distribution: `sdcs-1.7.0` wheel & sdist live on PyPI via Twine.
-- Living Office HUD: `sdcs watch` bundled with pixel office & SSE telemetry.
-- Autonomous Safety Triad: Gates S/T/M/Q/P/E/W & Circuit Breaker all verified.
-- Code Quality: Ruff & Black formatting pass 100% clean across all 41 files.
+- AST Skeletal Compaction: `sdcs slice` extracts structural skeletons with ~85% token compression.
+- Pre-Flight Auto-Repair: `sdcs repair` executes local formatters with 0 LLM tokens.
+- KV-Cache Invariance: Gate C-Cache (`sdcs verify --cache-invariance`) passes 100% clean.
+- Governed Tier Router: `sdcs route` evaluates 4 deterministic escalation triggers with sticky lock.
+- Test Suite: 119/119 PASSED (100% green in pytest across 24 suites).
 
 ## Immediate Next Action (Post-Compact)
-- Commit and push Black/Ruff formatting normalization to verify CI green.
+- Commit and verify v1.8.0 Sub-Dime suite across repository gates.

@@ -336,9 +336,14 @@ def main():
         help="Audit toolchain and runtime invariants (Gate E)",
     )
     verify_parser.add_argument(
+        "--cache-invariance",
+        action="store_true",
+        help="Audit boot instructions and hydration templates for KV-cache prefix stability (Gate C-Cache)",
+    )
+    verify_parser.add_argument(
         "--all",
         action="store_true",
-        help="Execute all verification checks (topology, state, sandbox, warehouse, cycles, quality, env, and evals)",
+        help="Execute all verification checks (topology, state, sandbox, warehouse, cycles, quality, env, cache, and evals)",
     )
 
     # Subcommand: hydrate
@@ -359,6 +364,11 @@ def main():
         type=str,
         default=None,
         help="Filter context, cartography, and rejections for a specific subsystem",
+    )
+    hydrate_parser.add_argument(
+        "--skeletal",
+        action="store_true",
+        help="Include structural AST skeletons of subsystem files instead of full source",
     )
     hydrate_parser.add_argument(
         "--repo-root",
@@ -598,6 +608,94 @@ def main():
         help="Path to repository root (default: current directory)",
     )
 
+    # Subcommand: slice
+    slice_parser = subparsers.add_parser(
+        "slice",
+        help="AST skeletal observation compactor and structural code slicer",
+    )
+    slice_parser.add_argument(
+        "target_path",
+        type=Path,
+        nargs="?",
+        default=Path("."),
+        help="File or directory to extract structural AST skeleton from",
+    )
+    slice_parser.add_argument(
+        "--skeleton",
+        action="store_true",
+        default=True,
+        help="Extract structural AST skeleton (replaces method bodies with '...')",
+    )
+
+    # Subcommand: repair
+    repair_parser = subparsers.add_parser(
+        "repair",
+        help="Deterministic pre-flight auto-repair engine (ruff --fix, black, prettier)",
+    )
+    repair_parser.add_argument(
+        "paths",
+        type=Path,
+        nargs="*",
+        default=[],
+        help="Explicit file paths to auto-repair",
+    )
+    repair_parser.add_argument(
+        "--staged",
+        action="store_true",
+        help="Target staged files in git index (pre-commit mode)",
+    )
+    repair_parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Check for formatting deviations without applying edits",
+    )
+    repair_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+
+    # Subcommand: route
+    route_parser = subparsers.add_parser(
+        "route",
+        help="Governed model tier router (Workhorse vs Frontier escalation)",
+    )
+    route_parser.add_argument(
+        "--file",
+        "-f",
+        type=Path,
+        default=None,
+        help="Target file for AST public signature mutation check",
+    )
+    route_parser.add_argument(
+        "--failures",
+        type=int,
+        default=0,
+        help="Current count of consecutive gate failures for target",
+    )
+    route_parser.add_argument(
+        "--planning",
+        action="store_true",
+        help="Flag active turn as planning / task graph decomposition phase",
+    )
+    route_parser.add_argument(
+        "--schema-error",
+        action="store_true",
+        help="Flag active turn with schema/structured validation failure",
+    )
+    route_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output routing recommendation as JSON",
+    )
+    route_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -806,7 +904,15 @@ def main():
             if env_code != 0:
                 exit_code = env_code
 
-        # 8. If --all is requested, also run the evals audit
+        # 8. Execute Gate C-Cache prefix invariance audit if requested
+        if getattr(args, "cache_invariance", False) or args.all:
+            from sdcs.verifier.cache import run_cache_invariance_audit
+
+            cache_code = run_cache_invariance_audit(repo_root=repo_root)
+            if cache_code != 0:
+                exit_code = cache_code
+
+        # 9. If --all is requested, also run the evals audit
         if run_evals:
             evals_file = locate_evals_file(repo_root)
             if evals_file and evals_file.is_file():
@@ -824,6 +930,7 @@ def main():
             repo_root=repo_root,
             profile=args.profile,
             subsystem=args.subsystem,
+            skeletal=getattr(args, "skeletal", False),
         )
         sys.exit(code)
     elif args.command == "decay":
@@ -951,6 +1058,38 @@ def main():
             poll_interval=args.poll_interval,
         )
         sys.exit(0)
+    elif args.command == "slice":
+        from sdcs.skeleton import run_skeleton_command
+
+        target = args.target_path.resolve()
+        code = run_skeleton_command(target)
+        sys.exit(code)
+    elif args.command == "repair":
+        from sdcs.repair import run_repair_command
+
+        repo_root = args.repo_root.resolve()
+        explicit = [p.resolve() for p in args.paths] if args.paths else None
+        code = run_repair_command(
+            repo_root=repo_root,
+            staged=args.staged,
+            check_only=args.check_only,
+            explicit_paths=explicit,
+        )
+        sys.exit(code)
+    elif args.command == "route":
+        from sdcs.router import run_router_command
+
+        repo_root = args.repo_root.resolve()
+        target_f = args.file.resolve() if args.file else None
+        code = run_router_command(
+            repo_root=repo_root,
+            target_file=target_f,
+            failure_count=args.failures,
+            is_planning=args.planning,
+            schema_error=args.schema_error,
+            json_output=args.json,
+        )
+        sys.exit(code)
     else:
         parser.print_help()
         sys.exit(0)

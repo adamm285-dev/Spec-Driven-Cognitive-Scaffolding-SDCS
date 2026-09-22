@@ -102,12 +102,12 @@ def compile_hydration_payload(
     repo_root: Path,
     profile: str = "standard",
     subsystem: str | None = None,
+    skeletal: bool = False,
 ) -> tuple[str, int]:
-    """
-    Compiles a structured, single-pass markdown payload based on the requested scale profile.
-    Returns: (compiled_markdown, estimated_tokens)
-    """
+    """Compiles single-pass cognitive hydration payload across pillars."""
     profile = profile.lower().strip()
+    if profile not in ("lite", "standard", "full"):
+        profile = "standard"
     sections: list[str] = []
 
     spine_file = locate_pillar_file(repo_root, "spine.md")
@@ -234,6 +234,32 @@ def compile_hydration_payload(
                             f"# [CENTRAL WAREHOUSE: FLEET FEDERATION] Subscribed Vendor Traps (Tier-1 Index)\n\n{tier1_table}"
                         )
 
+    # Skeletal Hydration Option (SPEC-001 v1.8.0 Section 7.12)
+    if skeletal:
+        from sdcs.skeleton import extract_file_skeleton
+
+        target_dir = (
+            (repo_root / subsystem)
+            if subsystem and (repo_root / subsystem).is_dir()
+            else (repo_root / "src")
+        )
+        if target_dir.is_dir():
+            skel_parts = ["# [AST SKELETAL INTERFACES] Subsystem Type Signatures\n"]
+            code_files = [
+                f
+                for f in target_dir.rglob("*.py")
+                if f.is_file() and not any(p.startswith(".") for p in f.parts)
+            ][:15]
+            for cf in code_files:
+                try:
+                    s = extract_file_skeleton(cf)
+                    rel = cf.relative_to(repo_root).as_posix()
+                    skel_parts.append(f"### `{rel}`\n```python\n{s}\n```\n")
+                except Exception:
+                    pass
+            if len(skel_parts) > 1:
+                sections.append("\n".join(skel_parts))
+
     full_payload = "\n\n---\n\n".join(sections)
     total_tokens = count_tokens(full_payload)
     return full_payload, total_tokens
@@ -243,12 +269,14 @@ def run_hydrate_command(
     repo_root: Path,
     profile: str = "standard",
     subsystem: str | None = None,
+    skeletal: bool = False,
 ) -> int:
     """CLI execution entrypoint for sdcs hydrate."""
     payload, total_tokens = compile_hydration_payload(
         repo_root=repo_root,
         profile=profile,
         subsystem=subsystem,
+        skeletal=skeletal,
     )
 
     # Stream to stdout
@@ -257,6 +285,6 @@ def run_hydrate_command(
     # Telemetry report to stderr
     sys.stderr.write(
         f"\n[SDCS::HYDRATE] Compiled single-pass context: ~{total_tokens} tokens "
-        f"(Profile: {profile}, Subsystem: {subsystem or 'ALL'}).\n"
+        f"(Profile: {profile}, Subsystem: {subsystem or 'ALL'}, Skeletal: {skeletal}).\n"
     )
     return 0

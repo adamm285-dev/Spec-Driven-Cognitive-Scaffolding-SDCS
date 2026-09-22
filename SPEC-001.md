@@ -519,6 +519,41 @@ When test suites fail due to mismatched local interpreters (e.g. Python 3.10 vs 
 * **REQ-GATE-ENV-02 (Code Mutation Prohibition on Environment Mismatch):** If the local interpreter, required CLI tools, or required environment variables are absent, Gate E MUST abort execution and instruct the agent: *"DO NOT edit application code. Fix local environment first."*
 * **REQ-DOCTOR-01 (Comprehensive Diagnostic Health Check):** The `sdcs doctor` command MUST execute a unified audit verifying toolchains, OS environment, all 7 cognitive pillars, and Git pre-commit hook installations.
 
+### 7.17 AST Skeletal Observation Compaction (`sdcs slice`)
+
+Autonomous agents exploring unmapped codebases frequently ingest entire multi-thousand-line source files, wasting up to 95% of observation tokens on internal method execution bodies that are irrelevant during the navigation and orientation phase.
+
+* **REQ-SKELETON-01 (AST Body Truncation):** Conforming tooling (`sdcs slice --skeleton <path>`) MUST parse source files into Abstract Syntax Trees, replacing function, async function, and method bodies with Ellipsis (`...`) while strictly retaining class names, docstrings, parameter signatures, and return type annotations.
+* **REQ-SKELETON-02 (Polyglot Skeletal Support):** In non-Python environments (TypeScript, JavaScript, Go, Rust), structural signature extractors MUST emit interface definitions and function signatures with stripped bodies to conserve context.
+* **REQ-SKELETON-03 (Observation Compression Target):** Structural skeletal compaction MUST achieve $\ge 80\%$ token reduction compared to raw source file ingestion.
+
+### 7.18 KV-Cache Prefix Pinning & Split-Brain Context Layout (Gate C-Cache)
+
+Server-side prompt caching mechanisms (e.g. Google Gemini Context Caching, Anthropic Prompt Caching) hash token prefixes starting at token index 0. Any mutation in prefix tokens invalidates the entire downstream KV-cache, turning a 75–90% discounted task into an expensive full-price execution.
+
+* **REQ-GATE-CACHE-01 (Prefix Invariance):** Static system instructions, constitutional laws (`spine.md`), and subsystem contracts (`wiring.yaml`) MUST remain completely free of dynamic timestamps, turn counters (`Turn 4 of 20`), process IDs, or volatile session hashes.
+* **REQ-GATE-CACHE-02 (Split-Brain Layout):** All volatile state (turn-by-turn memory, immediate observations) MUST be strictly sequestered into the **Append-Only Dynamic Tail** (`state.md`).
+* **REQ-GATE-CACHE-03 (Cache Invariance Audit):** Conforming systems MUST provide `sdcs verify --cache-invariance` to statically audit boot templates and system instructions for volatile prefix tokens.
+
+### 7.19 Deterministic Pre-Flight Auto-Repair (`sdcs repair`)
+
+Invoking Frontier-tier LLM inference to repair code formatting, indentation errors, or unused import ordering is an anti-pattern that burns latency and expensive completion tokens.
+
+* **REQ-REPAIR-01 (Zero-Token Formatting Interception):** Prior to evaluating kinetic verification gates or staging code mutations, conforming harnesses MUST execute local deterministic formatters (`ruff --fix`, `black`, `prettier`, `gofmt`) directly inside the execution sandbox.
+* **REQ-REPAIR-02 (Pre-Commit Zero Friction):** When trivial formatting or lint defects are resolved by deterministic tools, the repair MUST conclude with zero LLM inference tokens spent.
+
+### 7.20 Governed Model Tier Routing & Sticky Escalation Lock (`sdcs route`)
+
+Defaulting all execution turns to high-reasoning Frontier models burns excessive budget on mechanical file writes, diff parsing, and basic test execution.
+
+* **REQ-ROUTER-01 (Workhorse-First Default):** Autonomous trajectories MUST default to the Workhorse tier (fast, efficient models e.g. Gemini 2.0 Flash) for routine edits, test executions, and git transactions.
+* **REQ-ROUTER-02 (4 Deterministic Escalation Triggers):** Execution MUST escalate to the Frontier tier (e.g. Gemini 2.5 Pro) if and only if one of four deterministic conditions is met:
+  1. *Planning Phase:* Initial turn architectural decomposition and roadmap planning.
+  2. *Repeated Gate Failures:* Target file has failed verification gates $\ge 3$ consecutive times.
+  3. *AST Public Signature Mutation:* Public classes, functions, or method parameter signatures differ between git HEAD and the working file.
+  4. *Schema Validation Failure:* Model output breaches structural JSON schema contracts.
+* **REQ-ROUTER-03 (Sticky Escalation Lock):** Once escalated to Frontier tier, the session MUST maintain a sticky lock on Frontier mode until the active file passes all kinetic verification gates, preventing thrashing oscillations between model tiers.
+
 ---
 
 ## 8. Verification and Compliance Tooling
@@ -536,4 +571,7 @@ Conformity with SPEC-001 v1.7.0 is validated via reference CLI tools:
 * `sdcs warehouse` (`sdcs warehouse [sync|publish|list]`): Hub-and-spoke federation engine synchronizing global vendor rejections with Gate W sanitization.
 * `sdcs session` (`sdcs session [index|list]`): Indexes and forensically queries flight recorder shift handoffs via `sessions/manifest.jsonl`.
 * `sdcs graph` (`sdcs graph [--format mermaid|ascii]`): Visualizes subsystem architecture and dependency flow as Mermaid diagrams or ASCII terminal DAGs.
+* `sdcs slice` (`sdcs slice [--skeleton <path>]`): Extracts structural AST skeletons (classes, signatures, type hints, docstrings) replacing bodies with `...` for 95% token savings.
+* `sdcs repair` (`sdcs repair [--staged] [--check-only]`): Deterministically auto-repairs code formatting and trivial lints locally with zero LLM inference tokens.
+* `sdcs route` (`sdcs route [--file <path>] [--failures <int>] [--planning]`): Evaluates governed model tier routing across 4 deterministic escalation triggers with sticky lock.
 
