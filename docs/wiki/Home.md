@@ -1,6 +1,6 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Wiki
 
-Welcome to the official developer and architecture wiki for **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.7.0)**.
+Welcome to the official developer and architecture wiki for **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.8.0)**.
 
 SDCS is an open-source, file-based cognitive harness and closed-loop cybernetic control system designed to eliminate context drift, cartographic hallucinations, and episodic amnesia in autonomous coding agents (Claude Code, Cursor, Codex, Gemini CLI).
 

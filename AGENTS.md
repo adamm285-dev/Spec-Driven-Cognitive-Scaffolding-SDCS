@@ -1,14 +1,14 @@
-# Agent Instructions (SDCS Framework v1.7.0)
-<!-- Conforming to SPEC-001 v1.7.0 -->
+# Agent Instructions (SDCS Framework v1.8.0)
+<!-- Conforming to SPEC-001 v1.8.0 -->
 
-This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.7.0)**.
+This repository follows **Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.8.0)**.
 
 ## 1. The Operational Ontology
 You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three physical layers governed by a teleological anchor:
 
 - **0. Teleological Anchor (The Target):** `roadmap.md` (Pillar 3: The North Star). Macro acceptance contract: `[INTENT]` vs `[MEASURED]`. Your sole task is driving the measured delta to zero.
 - **1. Semantic Layer (What Exists):** `spine.md` (Pillar 1: Constitutional Invariants & Axioms), `wiring.yaml` (Pillar 2: Subsystem Boundaries & Dependency Mesh), and `app_map.md` (Pillar 5: Repository Cartography). You cannot invent entities or subsystems outside this declared schema.
-- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), Gate S (Working Memory Budget), Gate P (Sandbox Guard), Gate W (Secret Sanitizer), Gate Q (Test Quality & Anti-Mock), Gate E & `sdcs doctor` (Environment Invariant Lock), the Circuit Breaker (`sdcs verify --cycles`), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate contracts are physically rejected on disk.
+- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), Gate S (Working Memory Budget), Gate P (Sandbox Guard), Gate W (Secret Sanitizer), Gate Q (Test Quality & Anti-Mock), Gate E & `sdcs doctor` (Environment Invariant Lock), Gate C-Cache (`sdcs verify --cache-invariance`), the Circuit Breaker (`sdcs verify --cycles`), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate contracts are physically rejected on disk.
 - **3. Dynamic Layer (Memory & Time Evolution):** `decisions.md` (Pillar 6: Negative Episodic Memory / Graveyard), `evals.md` (Pillar 7: Positive Episodic Memory / Empirical Standing & SHA-256 fixture locks), `state.md` (Pillar 4: Active Working Blackboard $\le 300$ tokens), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
 
 

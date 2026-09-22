@@ -1,6 +1,6 @@
 # The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth
 
-In **SDCS v1.7.0**, repository constraints are not suggestions—they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
+In **SDCS v1.8.0**, repository constraints are not suggestions—they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Trigger / Command | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
@@ -9,6 +9,7 @@ In **SDCS v1.7.0**, repository constraints are not suggestions—they are **phys
 | **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
 | **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
 | **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>350 tokens) & subagent lifecycle. |
+| **Cognitive & Cache** | **Gate C-Cache** | KV-Cache Prefix Invariance | `sdcs verify --cache-invariance` | Cache-busting volatile tokens (timestamps, turn counters) in system prompt prefix. |
 | **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Publishing sensitive API keys, tokens, emails, phone numbers, or IPs to central warehouse. |
 | **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless test functions, or swallowed exceptions. |
 | **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime, interpreter, or toolchain drift. |
@@ -73,3 +74,11 @@ In **SDCS v1.7.0**, repository constraints are not suggestions—they are **phys
 ## 9. The Circuit Breaker (File Oscillation & Thrashing Prevention)
 * **Mechanism:** Static transition graph analyzer tracking modified file sets across consecutive commits and turns.
 * **Enforcement:** Detects period-2 alternating thrashing loops ($A \to B \to A \to B$) and isolated single-file thrashing. Trips immediately to prevent agents from burning tokens and introducing Frankenstein patches (`sdcs verify --cycles`).
+
+## 10. Gate C-Cache: KV-Cache Prefix Invariance Guard
+* **Mechanism:** Static token and regex analyzer auditing system prompts, boot instructions, and hydration templates.
+* **Enforcement:** Rejects cache-busting volatile tokens (ISO timestamps, turn counters like `Turn 4 of 20`, process IDs) from being positioned in the static prompt prefix. Guarantees 100% KV-cache hit rate across multi-turn trajectories (`sdcs verify --cache-invariance`).
+
+## 11. Deterministic Pre-Flight Auto-Repair
+* **Mechanism:** Sandbox execution hook intercepting code changes before kinetic gates and test suites run.
+* **Enforcement:** Runs local determinist formatters (`ruff --fix`, `black`, `prettier`, `gofmt`) using **0 LLM inference tokens**, eliminating unnecessary LLM turns caused by trivial style and formatting failures (`sdcs repair`).

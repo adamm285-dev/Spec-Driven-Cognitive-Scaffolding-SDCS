@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.7.0
+Version: 1.8.0
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.6.0
+Replaces: SPEC-001 v1.7.0
 License: MIT
 
 ```
@@ -558,12 +558,12 @@ Defaulting all execution turns to high-reasoning Frontier models burns excessive
 
 ## 8. Verification and Compliance Tooling
 
-Conformity with SPEC-001 v1.7.0 is validated via reference CLI tools:
+Conformity with SPEC-001 v1.8.0 is validated via reference CLI tools:
 
 * `sdcs init` (`python sdcs_init.py`): Scaffolds the 7 pillars, configures `AGENTS.md`, and generates initial directory indexes.
 * `sdcs doctor` (`sdcs doctor`): Executes complete system diagnostics across toolchains, environment invariants, cognitive pillars, and VCS hooks.
 * `sdcs grill` (`python sdcs_init.py --grill`): Runs the `/grillme` Adversarial Spec Elicitation Protocol to harden requirements into quantifiable `[INTENT]` contracts.
-* `sdcs verify` (`sdcs verify [--topology] [--state] [--sandbox] [--warehouse] [--cycles] [--quality] [--env] [--all]`): Audits codebase AST boundaries (Gate T), working state tokens (Gate S), sandbox blast-radius (Gate P), secret screening (Gate W), thrashing loops (Circuit Breaker), test quality (Gate Q), and toolchains (Gate E).
+* `sdcs verify` (`sdcs verify [--topology] [--state] [--sandbox] [--warehouse] [--cycles] [--quality] [--env] [--cache-invariance] [--all]`): Audits codebase AST boundaries (Gate T), working state tokens (Gate S), sandbox blast-radius (Gate P), secret screening (Gate W), thrashing loops (Circuit Breaker), test quality (Gate Q), toolchains (Gate E), and KV-cache prefix invariance (Gate C-Cache).
 * `sdcs eval` / `sdcs audit` (`sdcs eval record <ID>|all`, `sdcs audit [--update-pending] [--recalibrate <ID>]`): Cryptographically verifies fixture integrity, normalizes anti-evasion variance, enforces corpus diversity, and recalibrates golden digests atomically.
 * `sdcs map` (`sdcs map [--check] [--sync] [--subsystem <path|name>]`): Audits and synchronizes `app_map.md` against disk state (Gate M), and pages focused cartographic slices to conserve tokens.
 * `sdcs hydrate` (`sdcs hydrate [--profile lite|standard|full]`): Compiles a pre-budgeted, single-pass boot payload in 1 atomic command.

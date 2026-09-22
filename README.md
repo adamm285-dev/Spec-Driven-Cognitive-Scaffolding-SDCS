@@ -1,8 +1,8 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.7.0-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.7.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.7.0)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.8.0-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.8.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.8.0)
 [![YouTube](https://img.shields.io/badge/YouTube-Watch%20Overview-FF0000.svg?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/Ap0bXGM0MbU)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
@@ -16,7 +16,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications
 
-- **[SPEC-001 (v1.7.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.8.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 
 ---
 
@@ -333,7 +333,7 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 
 ![The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth](media/slides/slide_10.png)
 
-Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.7.0, the agent treats repository constraints as **physical laws of motion** organized across spatial, cognitive, and epistemic defense tiers:
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures—they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.8.0, the agent treats repository constraints as **physical laws of motion** organized across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Enforcement Trigger | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
@@ -342,6 +342,7 @@ Un-scaffolded agents often enter argumentative rationalization loops when encoun
 | **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
 | **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
 | **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia (`state.md` > 350 tokens) & subagent lifecycle. |
+| **Cognitive & Cache** | **Gate C-Cache** | KV-Cache Prefix Invariance | `sdcs verify --cache-invariance` | Cache-busting volatile tokens (timestamps, turn counters) in system prompt prefix. |
 | **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Leaking API keys, tokens, emails, or IPs to central warehouse. |
 | **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless tests, or swallowed exceptions. |
 | **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime or interpreter drift. |
@@ -671,6 +672,42 @@ A lightweight, zero-dependency local HTTP and Server-Sent Events (SSE) server th
 
 ---
 
+### 9. Sub-Dime Loop Engineering Suite (AST Skeletons, Repair & Governed Routing)
+
+Autonomous agents frequently suffer from exponential token bloat and unsustainable costs during multi-turn loops. SDCS v1.8.0 introduces the **Sub-Dime Loop Engineering Suite**, compressing loop overhead down to fractions of a cent:
+
+```bash
+# 1. Structural AST Skeletal Compactor (85%–95% observation token compression)
+# Extracts classes, types, and method signatures; strips implementation bodies to '...'
+sdcs slice src/sdcs/verifier/topology.py
+sdcs slice --skeleton path/to/module.py
+
+# 2. Deterministic Pre-Flight Auto-Repair (0 LLM inference tokens)
+# Automatically runs local formatters (ruff, black, prettier, gofmt) in sandbox before gates
+sdcs repair
+sdcs repair --check-only
+
+# 3. KV-Cache Prefix Invariance Audit (Gate C-Cache)
+# Verifies system prompt prefix has zero volatile tokens (timestamps, turn counters)
+sdcs verify --cache-invariance
+
+# 4. Governed Model Tier Router (Deterministic Escalation Engine)
+# Routes to Workhorse (Flash/Haiku) by default; escalates to Frontier only on 4 triggers
+sdcs route --file src/sdcs/core.py --failures 0
+sdcs route --file src/sdcs/core.py --failures 3   # Escalates to Frontier tier
+
+# 5. Skeletal Context Hydration (Turn 1 Boot Optimization)
+# Streams structural AST skeletons into Turn 1 boot hydration
+sdcs hydrate --profile standard --skeletal
+```
+
+* **AST Skeletal Compactor (`sdcs slice`):** Replaces code viewing and grep bloat with structural outlines across Python, TypeScript, JavaScript, Go, and Rust.
+* **Deterministic Pre-Flight Auto-Repair (`sdcs repair`):** Intercepts syntax/style errors in the sandbox using local formatters with **0 LLM tokens**, preventing expensive LLM re-prompt loops.
+* **KV-Cache Invariance Guard (Gate C-Cache):** Audits system prompts and boot templates to ensure 100% cache hit rates on static prefixes across multi-turn trajectories.
+* **Governed Tier Router (`sdcs route`):** Evaluates 4 deterministic escalation triggers (Planning, $\ge 3$ Gate Failures, AST Signature Mutation, Schema Error) with sticky escalation locking until gates pass.
+
+---
+
 ## Operational Scale Profiles
 
 SDCS is built for **autonomous, multi-turn shifts** where context drift causes expensive regressions—not for single-line autocomplete. To prevent ceremony overhead on small tasks, use the appropriate profile:
@@ -698,7 +735,9 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 8. **Test Quality & Anti-Mock Gate (Gate Q):** Static AST auditor blocking trivial assertions (`assert True`), assertless test functions, and swallowed exceptions (`sdcs verify --quality`).
 9. **Toolchain & Environment Lock (Gate E & `sdcs doctor`):** Diagnoses interpreter versions, tools, and 7-pillar health to prevent agents from blaming working application code on environment drift (`sdcs doctor`, `sdcs verify --env`).
 10. **The Circuit Breaker:** Static transition-graph analyzer halting alternating period-2 file oscillations ($A \to B \to A \to B$) and infinite token-thrashing loops (`sdcs verify --cycles`).
-11. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
+11. **KV-Cache Prefix Invariance Guard (Gate C-Cache):** Statically audits system prompts and boot instructions to reject volatile, cache-busting tokens (timestamps, turn counters) in the prefix (`sdcs verify --cache-invariance`).
+12. **Deterministic Pre-Flight Auto-Repair:** Runs local formatting and lint fixers in the sandbox with 0 LLM tokens before verification gates or tests execute (`sdcs repair`).
+13. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
 ### Git Hook Modes
 
@@ -706,7 +745,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 | :--- | :--- | :--- | :--- |
 | **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order, wiring invariants, and mid-shift checkpoint ("prepare for compact") protocols into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
-| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), AST topology boundaries are breached (Gate T), tests are hollow (Gate Q), or secrets are leaked (Gate W). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
+| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), AST topology boundaries are breached (Gate T), tests are hollow (Gate Q), cache invariance fails (Gate C-Cache), or secrets are leaked (Gate W). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 
 ### Activating Git Hooks
 
@@ -729,7 +768,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.7.0},
+  version = {v1.8.0},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

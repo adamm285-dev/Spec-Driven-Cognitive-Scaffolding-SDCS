@@ -4,7 +4,7 @@ authors:
   - family-names: "Murphy"
     given-names: "Adam"
 title: "Spec-Driven Cognitive Scaffolding (SDCS): Deterministic AI Engineering & Cybernetic Control"
-version: "1.7.0"
+version: "1.8.0"
 date-released: "2026-09-22"
 url: "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS"
 license: "MIT"

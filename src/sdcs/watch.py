@@ -1,5 +1,5 @@
 """
-sdcs.watch - Living Office HUD & Background Telemetry Engine (SPEC-001 v1.7.0)
+sdcs.watch - Living Office HUD & Background Telemetry Engine (SPEC-001 v1.8.0)
 
 Provides a real-time HTTP server and file-watching daemon bridging repository
 cognitive scaffolding state to a 16-bit isometric pixel-art HUD.

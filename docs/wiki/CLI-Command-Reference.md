@@ -1,6 +1,6 @@
 # CLI Command Reference (`sdcs`)
 
-The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.7.0).
+The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.8.0).
 
 ---
 
@@ -243,4 +243,52 @@ sdcs grill
 
 # Target a specific milestone contract
 sdcs grill --milestone M-001
+```
+
+---
+
+## 14. AST Skeletal Compactor: `sdcs slice`
+
+Extracts structural AST skeletons (classes, methods, type hints, docstrings) while replacing execution bodies with `...`, yielding 85%–95% token savings across Python, TypeScript, JavaScript, Go, and Rust.
+
+```bash
+# Extract skeleton of a specific file
+sdcs slice src/sdcs/verifier/topology.py
+
+# Explicit flag syntax
+sdcs slice --skeleton path/to/module.py
+```
+
+---
+
+## 15. Deterministic Pre-Flight Auto-Repair: `sdcs repair`
+
+Intercepts code modifications in the sandbox to execute local formatters and linters (`ruff --fix`, `black`, `prettier`, `gofmt`) using 0 LLM inference tokens before kinetic gates or test suites run.
+
+```bash
+# Auto-repair staged/modified files in place
+sdcs repair
+
+# Check if repairs are needed without modifying files
+sdcs repair --check-only
+
+# Target only git-staged files
+sdcs repair --staged
+```
+
+---
+
+## 16. Governed Model Tier Router: `sdcs route`
+
+Evaluates deterministic escalation triggers to decide whether to route the next turn to Workhorse tier (`flash`/`haiku`) or Frontier tier (`pro`/`sonnet`), implementing a Sticky Escalation Lock.
+
+```bash
+# Evaluate tier routing for a file under edit
+sdcs route --file src/sdcs/core.py
+
+# Evaluate with consecutive gate failure count
+sdcs route --file src/sdcs/core.py --failures 3
+
+# Evaluate during planning phase (always routes to Frontier)
+sdcs route --planning
 ```
