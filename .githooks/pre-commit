@@ -288,6 +288,22 @@ if [ -n "$PYTHON_BIN" ]; then
     fi
 fi
 
+# Gate L: Mock Ledger Reconciliation (MOCKS.md vs MOCK markers in product code)
+if [ -n "$PYTHON_BIN" ]; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --mocks; then
+        if [ "$SDCS_MODE" = "advisory" ]; then
+            echo "⚠️ [SDCS Advisory] Mock ledger out of sync but running in advisory mode."
+            echo ""
+        else
+            echo "🛑 [SDCS Gate Failure] Gate L: Mock Ledger Out of Sync!"
+            echo "   MOCKS.md and the MOCK markers in the code disagree (see list above)."
+            echo "   Add or remove the ledger entry or marker in this same commit."
+            echo ""
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
 # Gate E: Toolchain & Environment Invariant Audit
 if [ -n "$PYTHON_BIN" ]; then
     if ! "$PYTHON_BIN" -m sdcs.cli verify --env; then

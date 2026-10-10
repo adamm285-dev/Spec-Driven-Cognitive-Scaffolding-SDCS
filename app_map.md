@@ -119,10 +119,12 @@
 - `CONTRIBUTING.md`
 - `EVIDENCE.md`
 - `LICENSE`
+- `MOCKS.md`
 - `README.md`
 - `RELEASE_NOTES_v1.7.0.md`
 - `RELEASE_NOTES_v1.8.0.md`
 - `RELEASE_NOTES_v1.8.1.md`
+- `RELEASE_NOTES_v1.9.0.md`
 - `SECURITY.md`
 - `SPEC-001.md`
 - `audit_evals_corpus.py`
@@ -165,6 +167,7 @@
 - `cache.py`
 - `cycles.py`
 - `environment.py`
+- `mocks.py`
 - `quality.py`
 - `sandbox.py`
 - `state.py`
@@ -183,6 +186,7 @@
 - `test_init.py`
 - `test_init_casing.py`
 - `test_map.py`
+- `test_mocks.py`
 - `test_polyglot_topology.py`
 - `test_quality.py`
 - `test_repair.py`

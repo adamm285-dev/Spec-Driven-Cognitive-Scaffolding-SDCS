@@ -49,3 +49,10 @@ Permanent: true
 * **WHY REJECTED:** File-set alternation without diff reversals is the healthy, canonical cadence of Test-Driven Development (TDD). Hard blocks must be reserved for repeated identical diff reversals where the same code diff is repeatedly undone and redone.
 * **WHAT WOULD REOPEN IT:** None. When git diffs are available, circuit breaker blocking must inspect semantic diff reversals rather than file touch alternation.
 
+## REJ-007: Folding the Product Mock Ledger into Gate Q
+Status: FOUNDATIONAL
+Permanent: false
+* **THE CLAIM:** Gate Q already audits "anti-mock" violations, so checking a product-code mock ledger belongs inside Gate Q.
+* **THE MEASUREMENT:** Gate Q's `TestASTVisitor` (`src/sdcs/verifier/quality.py`) inspects Python test functions only. In the downstream ap2-commerce repository all 19 declared mocks live in non-test product code, and 5 of them are partly or wholly in TypeScript, which Gate Q never parses.
+* **WHY REJECTED:** Different targets and failure modes: Gate Q rejects hollow tests; the ledger reconciles declared stand-ins in shipping code across languages. Merging them would widen Gate Q's scan to product code and blur its precision guarantees.
+* **WHAT WOULD REOPEN IT:** Gate Q gaining a polyglot product-code scan for an unrelated reason, making a shared scanner cheaper than two gates.

@@ -84,6 +84,9 @@ sdcs verify --quality
 # Gate E: Audit toolchain and runtime invariants
 sdcs verify --env
 
+# Gate L: Reconcile MOCKS.md with MOCK(M-NNN) markers in product code
+sdcs verify --mocks
+
 # Execute all verification gates simultaneously
 sdcs verify --all
 ```

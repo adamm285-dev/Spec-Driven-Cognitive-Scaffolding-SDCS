@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-10-10: Gate L Mock Ledger
+
+### Added
+- **Gate L: Mock Ledger Reconciliation (`sdcs verify --mocks`):** Product-code mocks must carry a `MOCK(M-NNN)` comment marker and a matching `MOCKS.md` entry (`Where` as `path::symbol`, `What it fakes`, `Why`, `To make it real`). Rejects markers without entries, entries without markers, mismatched files, missing paths or symbols, missing fields, duplicate IDs and malformed markers. Test, vendored and generated paths are not scanned. Runs in `sdcs verify --all` and the pre-commit hook. SPEC-001 Section 7.21.
+- **`sdcs init` scaffolds `MOCKS.md`** (skipped when one already exists at the root, in `.agent/` or in `docs/`).
+
+### Changed
+- `AGENTS.md` template: lists Gate L, adds the Mock Ledger Invariant, and says the three layers hold the 7 pillars.
+- Version 1.9.0 across `pyproject.toml`, `sdcs.__version__`, `init.SPEC_VERSION`, templates, `CITATION.cff` and SPEC-001.
+- Fixed: `AGENTS.md` and its template told agents to run `sdcs session --sync`, which doesn't exist; they now say `sdcs session index`.
+- Includes the post-1.8.1 work committed in `342492f`. Notes for 1.8.0 and 1.8.1 are in `RELEASE_NOTES_v1.8.0.md` and `RELEASE_NOTES_v1.8.1.md`.
+
+---
+
 ## [1.7.0] - 2026-09-22: Autonomous Safety Triad & Living Pixel Office HUD
 
 ### Added

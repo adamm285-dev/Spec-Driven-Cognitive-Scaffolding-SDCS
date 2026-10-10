@@ -3,10 +3,10 @@
 ```text
 Specification: SPEC-001
 Title: Spec-Driven Cognitive Scaffolding: A Deterministic 7-Pillar Cognitive Architecture
-Version: 1.8.1
+Version: 1.9.0
 Status: Active (Standard)
 Author: Adam Murphy
-Replaces: SPEC-001 v1.8.0
+Replaces: SPEC-001 v1.8.1
 License: MIT
 
 ```
@@ -553,6 +553,17 @@ Defaulting all execution turns to high-reasoning Frontier models burns excessive
   3. *AST Public Signature Mutation:* Public classes, functions, or method parameter signatures differ between git HEAD and the working file.
   4. *Schema Validation Failure:* Model output breaches structural JSON schema contracts.
 * **REQ-ROUTER-03 (Sticky Escalation Lock):** Once escalated to Frontier tier, the session MUST maintain a sticky lock on Frontier mode until the active file passes all kinetic verification gates, preventing thrashing oscillations between model tiers.
+
+### 7.21 Gate L: Mock Ledger Reconciliation (`sdcs verify --mocks`)
+
+Agents under time pressure stand in simulated responses, seeded data, demo-only keys and fallbacks for real behavior, then leave them undocumented. Reviewers are left to find them by searching. Gate Q audits test doubles; Gate L covers mocks in product code.
+
+* **REQ-GATE-L-01 (Declared at the Source):** Every product-code mock MUST carry a comment marker `MOCK(M-NNN)` (digits in real IDs) inside or directly above the code that fakes.
+* **REQ-GATE-L-02 (Recorded in the Ledger):** Every marker ID MUST have exactly one entry in `MOCKS.md` (repo root, `.agent/` or `docs/`) with four fields: `Where` (one or more `path::symbol`), `What it fakes`, `Why`, `To make it real`.
+* **REQ-GATE-L-03 (Bidirectional Agreement):** The gate MUST reject a marker without an entry, an entry without a marker, an entry listing a file that carries no marker for it, and a marker in a file its entry does not list.
+* **REQ-GATE-L-04 (Disk Reality):** Every listed path MUST exist and every listed symbol MUST be defined in it (exactly via the AST for Python; by declaration patterns for other languages).
+* **REQ-GATE-L-05 (Scope):** Test paths, vendored and generated code MUST NOT be scanned. A repository with no ledger and no markers passes; markers without a ledger fail.
+* **REQ-GATE-L-06 (No Fake Success):** A fallback that reports a failed call as a success MUST NOT be introduced, even when declared as a mock.
 
 ---
 

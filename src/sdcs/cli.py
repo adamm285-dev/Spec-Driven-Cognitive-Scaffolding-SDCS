@@ -341,9 +341,14 @@ def main():
         help="Audit boot instructions and hydration templates for KV-cache prefix stability (Gate C-Cache)",
     )
     verify_parser.add_argument(
+        "--mocks",
+        action="store_true",
+        help="Reconcile MOCKS.md with MOCK(M-NNN) markers in product code (Gate L)",
+    )
+    verify_parser.add_argument(
         "--all",
         action="store_true",
-        help="Execute all verification checks (topology, state, sandbox, warehouse, cycles, quality, env, cache, and evals)",
+        help="Execute all verification checks (topology, state, sandbox, warehouse, cycles, quality, env, cache, mocks, and evals)",
     )
 
     # Subcommand: hydrate
@@ -804,6 +809,7 @@ def main():
             or getattr(args, "quality", False)
             or getattr(args, "env", False)
             or getattr(args, "cache_invariance", False)
+            or getattr(args, "mocks", False)
             or args.all
         )
         run_topology = args.topology or args.all or (not any_specific_check)
@@ -913,7 +919,15 @@ def main():
             if cache_code != 0:
                 exit_code = cache_code
 
-        # 9. If --all is requested, also run the evals audit
+        # 9. Execute Gate L mock ledger reconciliation if requested
+        if getattr(args, "mocks", False) or args.all:
+            from sdcs.verifier.mocks import run_mock_ledger_audit
+
+            mocks_code = run_mock_ledger_audit(repo_root=repo_root)
+            if mocks_code != 0:
+                exit_code = mocks_code
+
+        # 10. If --all is requested, also run the evals audit
         if run_evals:
             evals_file = locate_evals_file(repo_root)
             if evals_file and evals_file.is_file():

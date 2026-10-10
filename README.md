@@ -1,8 +1,8 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.8.1-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.8.1-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.8.1)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.9.0-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.9.0-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.9.0)
 [![YouTube](https://img.shields.io/badge/YouTube-Watch%20Overview-FF0000.svg?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/Ap0bXGM0MbU)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
@@ -16,7 +16,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 
 ## Specifications & Empirical Telemetry
 
-- **[SPEC-001 (v1.8.1)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.9.0)](SPEC-001.md):** Single-Agent Cognitive Harness — The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 - **[EVIDENCE.md (Empirical Benchmarks)](EVIDENCE.md):** Script-generated empirical telemetry, AST structural measurements, circuit breaker history replays, and gate accuracy audits on production codebases.
 
 ---
@@ -304,6 +304,7 @@ flowchart TD
         GW["Gate W: Secret & PII Sanitizer (sdcs verify --warehouse)"]
         GQ["Gate Q: Test Quality & Anti-Mock (sdcs verify --quality)"]
         GE["Gate E: Environment & Toolchain Lock (sdcs doctor / sdcs verify --env)"]
+        GL["Gate L: Mock Ledger (sdcs verify --mocks)"]
         CB["Circuit Breaker: File Thrashing Prevention (sdcs verify --cycles)"]
     end
 
@@ -364,6 +365,7 @@ Un-scaffolded agents often enter argumentative rationalization loops when encoun
 | **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Leaking API keys, tokens, emails, or IPs to central warehouse. |
 | **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless tests, or swallowed exceptions. |
 | **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime or interpreter drift. |
+| **Epistemic & Reality** | **Gate L** | Mock Ledger Reconciliation | `sdcs verify --mocks` | Undeclared mocks in product code (simulated responses, seeded data, demo-only keys, fake-success fallbacks) and a `MOCKS.md` that drifts from the code. |
 | **Kinetic Circuit** | **Breaker** | The Circuit Breaker | `sdcs verify --cycles` | Alternating period-2 file thrashing ($A \to B \to A \to B$) and infinite token loops. |
 
 #### Kinetic Defenses in Action: Automated Inverted ADR Serialization
@@ -754,6 +756,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 9. **Toolchain & Environment Lock (Gate E & `sdcs doctor`):** Diagnoses interpreter versions, tools, and 7-pillar health to prevent agents from blaming working application code on environment drift (`sdcs doctor`, `sdcs verify --env`).
 10. **The Circuit Breaker:** Static transition-graph analyzer halting alternating period-2 file oscillations ($A \to B \to A \to B$) and infinite token-thrashing loops (`sdcs verify --cycles`).
 11. **KV-Cache Prefix Invariance Guard (Gate C-Cache):** Statically audits system prompts and boot instructions to reject volatile, cache-busting tokens (timestamps, turn counters) in the prefix (`sdcs verify --cache-invariance`).
+12. **Mock Ledger Gate (Gate L):** Requires every product-code mock to carry a `MOCK(M-NNN)` marker and a matching `MOCKS.md` entry, and rejects markers without entries, entries without markers, and ledger paths or symbols that don't exist on disk (`sdcs verify --mocks`).
 12. **Deterministic Pre-Flight Auto-Repair:** Runs local formatting and lint fixers in place with 0 LLM tokens before verification gates or tests execute (`sdcs repair`).
 13. **OS / Container Sandbox:** In automated agent environments, `spine.md` and `wiring.yaml` can be locked via `chmod 444` or mounted as read-only volumes (`:ro`).
 
@@ -763,7 +766,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 | :--- | :--- | :--- | :--- |
 | **Behavioral Prompting (`AGENTS.md`)** *(Recommended)* | Solo developers, rapid prototyping, interactive pair programming. | Embeds hydration order, wiring invariants, and mid-shift checkpoint ("prepare for compact") protocols into agent system rules. | **Zero friction.** Keeps you in flow state without blocking terminal commands. |
 | **Advisory Git Hook (`sdcs.mode advisory`)** | Teams that want gentle reminders when refactors get large. | Emits terminal warnings on commits ≥ 40 lines without aborting. | **Zero blockage.** Visual feedback without interrupting commit flow. |
-| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), AST topology boundaries are breached (Gate T), tests are hollow (Gate Q), cache invariance fails (Gate C-Cache), or secrets are leaked (Gate W). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
+| **Strict Git Hook (`sdcs.mode strict`)** | Unattended autonomous loops, background agents, and CI/CD pipelines. | Rejects commits if `state.md` is missing, cartography drifts (Gate M), constitutional invariants are mutated (Gate C), AST topology boundaries are breached (Gate T), tests are hollow (Gate Q), the mock ledger drifts from the code (Gate L), cache invariance fails (Gate C-Cache), or secrets are leaked (Gate W). | **High rigor.** Guarantees memory synchronization and invariant integrity. |
 
 ### Activating Git Hooks
 
@@ -786,7 +789,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.8.1},
+  version = {v1.9.0},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

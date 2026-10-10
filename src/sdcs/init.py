@@ -1,6 +1,6 @@
 """
 sdcs.init - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
-Conforming to SPEC-001 v1.4.0
+Conforming to SPEC-001 v1.9.0
 
 Scaffolds the complete 7-pillar deterministic cognitive harness:
   1. spine.md        — Constitutional Invariants
@@ -13,6 +13,7 @@ Scaffolds the complete 7-pillar deterministic cognitive harness:
   +  sessions/*.md   — Flight Recorder Shift Logs
   +  prompts/        — Authoring Protocols (/grillme)
   +  AGENTS.md       — Operational Hydration Contract
+  +  MOCKS.md        — Mock Ledger (Gate L)
   +  .githooks/      — Invariant Lock & State Sync Git Hook
 """
 
@@ -23,14 +24,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-SPEC_VERSION = "1.8.1"
+SPEC_VERSION = "1.9.0"
 
 # -----------------------------------------------------------------------------
 # Pillar Templates
 # -----------------------------------------------------------------------------
 
 TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
-<!-- SPEC-001 v1.8.1 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
+<!-- SPEC-001 v1.9.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
 
 ## Non-Negotiable Domain Axioms
 1. Determinism First: No silent fallbacks, unverified mocks, or unhandled exceptions in production pathways.
@@ -49,9 +50,9 @@ TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
 """
 
 TEMPLATE_WIRING = """# Declarative Topology (The Mesh)
-# SPEC-001 v1.8.1 Pillar 2 | Mutability: STATIC (Explicit PR)
+# SPEC-001 v1.9.0 Pillar 2 | Mutability: STATIC (Explicit PR)
 
-version: "1.8.1"
+version: "1.9.0"
 subsystems:
   core:
     path: "src/"
@@ -99,11 +100,11 @@ warehouse:
 """
 
 TEMPLATE_ROADMAP = """# Macro Acceptance Contract (The North Star)
-<!-- SPEC-001 v1.8.1 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
+<!-- SPEC-001 v1.9.0 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
 <!-- Iron Invariant: NO TASK QUEUES. Ephemeral tasks belong exclusively in state.md -->
 
 ## Milestone M-001: Initial Operational Capability
-* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.8.1 invariants. Verify zero test fixture drift.
+* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.9.0 invariants. Verify zero test fixture drift.
 * [MEASURED]: Scaffolding complete; initial evals verified via SHA-256 audit. Status: VERIFIED.
 
 <!--
@@ -115,7 +116,7 @@ Template for New Milestones:
 """
 
 TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
-<!-- SPEC-001 v1.8.1 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
+<!-- SPEC-001 v1.9.0 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
 <!-- Read on Turn 1 boot. Strictly pruned after milestone completion. -->
 
 ## Active Objective
@@ -131,7 +132,7 @@ TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
 """
 
 TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
-<!-- SPEC-001 v1.8.1 Pillar 6 | Mutability: APPEND-ONLY -->
+<!-- SPEC-001 v1.9.0 Pillar 6 | Mutability: APPEND-ONLY -->
 <!-- Mandatory 3-part schema: Claim -> Measurement -> Reopen Condition -->
 
 ## REJ-001: Monolithic Session Diary Ingestion
@@ -141,7 +142,7 @@ TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
 """
 
 TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
-<!-- SPEC-001 v1.8.1 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
+<!-- SPEC-001 v1.9.0 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
 <!-- Corpus Diversity Invariant: Unique SHA-256 digests required across all golden fixtures -->
 
 ## 1. Golden Reference Corpus & Diversity
@@ -155,15 +156,41 @@ TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
 - Coverage Metric: Baseline pending
 """
 
+TEMPLATE_MOCKS = """# MOCKS.md: Mock Inventory (Gate L)
+<!-- SPEC-001 v1.9.0 Mock Ledger | Mutability: IN-STRIDE (same commit as the mock) -->
+
+Every place where product code stands in for real behavior: simulated API responses, seeded or
+hardcoded data, demo-only keys or endpoints, offline stubs, and fallbacks that fake success.
+Test doubles are out of scope (Gate Q audits tests).
+
+**Markers.** Mark each mock where it lives with a comment carrying its ID: `# MOCK(M-NNN): <what it fakes>`
+(`// MOCK(M-NNN): ...` in JS/TS, Go, Rust, Java and similar). `sdcs verify --mocks` fails if a marker has no
+entry, an entry has no marker, an entry and its markers list different files, or a listed `path::symbol`
+does not exist.
+
+**Format.** One `### M-NNN: title` heading per entry (real IDs use digits, e.g. M-001), then four fields:
+
+- **Where:** one or more backticked `path::symbol` (Python: `function`, `Class`, `Class.method` or a
+  module-level name; other languages: a declared function, class, const or method name)
+- **What it fakes:** the real behavior this replaces
+- **Why:** why the mock exists
+- **To make it real:** what replacing it requires
+
+Never reuse an ID. When a mock is removed, delete its markers and its entry together and list the ID
+under "Retired IDs".
+
+**Retired IDs:** none
+"""
+
 TEMPLATE_AGENTS = """# AGENTS.md — Operational Harness Protocol
-<!-- Conforming to SPEC-001 v1.8.1 -->
+<!-- Conforming to SPEC-001 v1.9.0 -->
 
 ## 1. The Operational Ontology
-You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three physical layers governed by a teleological anchor:
+You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three layers that hold the 7 pillars, governed by a teleological anchor:
 
 - **0. Teleological Anchor (The Target):** `roadmap.md` (Pillar 3: The North Star). Macro acceptance contract: `[INTENT]` vs `[MEASURED]`. Your sole task is driving the measured delta to zero.
 - **1. Semantic Layer (What Exists):** `spine.md` (Pillar 1: Constitutional Invariants & Axioms), `wiring.yaml` (Pillar 2: Subsystem Boundaries & Dependency Mesh), and `app_map.md` (Pillar 5: Repository Cartography). You cannot invent entities or subsystems outside this declared schema.
-- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate topological contracts are physically rejected on disk.
+- **2. Kinetic Layer (The Laws of Motion):** Gate T AST boundary audits (`sdcs verify --topology`), Gate M cartography drift checks (`sdcs map --check`), Gate C (Contract Immutability), Gate L mock ledger reconciliation (`sdcs verify --mocks`), and physical pre-commit hooks (`.githooks/pre-commit`). Every code mutation is a kinetic state transition; attempts to violate topological contracts are physically rejected on disk.
 - **3. Dynamic Layer (Memory & Time Evolution):** `decisions.md` (Pillar 6: Negative Episodic Memory / Graveyard), `evals.md` (Pillar 7: Positive Episodic Memory / Empirical Standing & SHA-256 fixture locks), `state.md` (Pillar 4: Active Working Blackboard <= 300 tokens), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
 
 ## 2. Turn 1 Boot Hydration Order (7 Pillars)
@@ -195,11 +222,12 @@ Execute every turn through the 4-phase engine:
 - **Wiring Mutation Invariant (Pillar 2):** When introducing new subsystems, modules, or packages, update `wiring.yaml` in-stride with code modifications. Modifying `wiring.yaml` to relax existing architectural boundaries, add circular dependencies, or bypass Gate T rejections without explicit human authorization (`SDCS_ALLOW_INVARIANT_MUTATION=1`) is strictly forbidden.
 - **Empirical Standing:** Verify changes against the baseline scorecard in `evals.md`. Run `sdcs eval record <Asset-ID>|all` (or `sdcs audit`) when adding, recalibrating, or modifying test fixtures.
 - **Empirical Verification:** Always run existing tests, typechecks, and eval gates before reporting completion.
+- **Mock Ledger Invariant (Gate L):** Any product code that stands in for real behavior (simulated responses, seeded or hardcoded data, demo-only keys or endpoints, offline stubs) gets a `MOCK(M-NNN)` comment marker and a matching entry in `MOCKS.md`, in the same commit. Remove markers and entry together. Never add a fallback that reports a failed call as a success. `sdcs verify --mocks` enforces this.
 
 ## 5. Mid-Shift Checkpoint Protocol ("prepare for compact")
 When instructed to "prepare for compact", or when context window exhaustion nears prior to session compaction:
 1. **Topology & Subsystem Audit:** Run `sdcs verify --topology` to verify that all imports comply with `wiring.yaml`. If new modules or packages were created during the shift, ensure they are declared in `wiring.yaml`.
-2. **Flight Recorder Checkpoint:** Write an immutable checkpoint log to `sessions/YYYY-MM-DD_<topic>.md` capturing work completed, verification status, active blockers, and immediate post-compact next steps. Update `sessions/manifest.jsonl` via `sdcs session --sync`.
+2. **Flight Recorder Checkpoint:** Write an immutable checkpoint log to `sessions/YYYY-MM-DD_<topic>.md` capturing work completed, verification status, active blockers, and immediate post-compact next steps. Update `sessions/manifest.jsonl` via `sdcs session index`.
 3. **Blackboard Pruning (`state.md`):** Aggressively prune and overwrite `state.md` strictly to <= 300 tokens containing only:
    - `## Current Objective`
    - `## Status & Gate Verification`
@@ -217,7 +245,7 @@ Before completing your shift:
 3. If an attempted optimization or architecture failed, log it to `decisions.md`.
 4. Update `app_map.md` and verify cartography matches disk via Gate M (`sdcs map --check` / `sdcs map --sync`).
 5. Verify `wiring.yaml` matches codebase topology (`sdcs verify --topology`).
-6. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md` and sync index (`sdcs session --sync`).
+6. Emit an immutable handoff log to `sessions/YYYY-MM-DD_<topic>.md` and sync index (`sdcs session index`).
 """
 
 TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
@@ -228,7 +256,7 @@ TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
 - Shift Focus: Repository Initial Scaffolding
 
 ## Completed Actions
-- Initialized SPEC-001 v1.8.1 cognitive scaffolding.
+- Initialized SPEC-001 v1.9.0 cognitive scaffolding.
 - Registered pre-commit invariant protection hook.
 
 ## Verification Executed
@@ -453,6 +481,25 @@ if [ -n "$PYTHON_BIN" ]; then
   fi
 fi
 
+# 6b. Mock Ledger Gate (Gate L: MOCKS.md vs MOCK markers in product code)
+if [ -n "$PYTHON_BIN" ]; then
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --mocks; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] GATE L: MOCK LEDGER OUT OF SYNC"
+      echo "===================================================================="
+      echo "MOCKS.md and the MOCK markers in the code disagree (see list above)."
+      echo "Add or remove the ledger entry or marker in this same commit."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Gate L: Mock ledger out of sync with the code."
+      echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
 # 7. Environment Invariant Gate (Gate E: toolchain & runtime checks)
 if [ -n "$PYTHON_BIN" ]; then
   if ! "$PYTHON_BIN" -m sdcs.cli verify --env; then
@@ -609,7 +656,7 @@ def generate_flat_app_map(root: Path) -> str:
     tree = scan_repository_tree(root)
     lines = [
         "# Repository Cartography (The Compass)",
-        "<!-- SPEC-001 v1.8.1 Pillar 5 | Flat Cartography -->",
+        "<!-- SPEC-001 v1.9.0 Pillar 5 | Flat Cartography -->",
         "<!-- Golden Rule: Consult this map FIRST. Read ONLY necessary target files. -->\n",
     ]
     for directory, files in sorted(tree.items()):
@@ -642,7 +689,7 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
     # 1. Root Cartography Index
     root_lines = [
         "# Root Repository Cartography (The Compass Index)",
-        "<!-- SPEC-001 v1.8.1 Pillar 5 | Hierarchical Master Index -->",
+        "<!-- SPEC-001 v1.9.0 Pillar 5 | Hierarchical Master Index -->",
         "<!-- Golden Rule: Page package-level app_map.md ONLY when entering subsystem context. -->\n",
         "## Subsystem Registry\n",
     ]
@@ -905,6 +952,7 @@ def init_scaffold(
     write_pillar_file(scaffold_dir, repo_root, "state.md", TEMPLATE_STATE, force)
     write_pillar_file(scaffold_dir, repo_root, "decisions.md", TEMPLATE_DECISIONS, force)
     write_pillar_file(scaffold_dir, repo_root, "evals.md", TEMPLATE_EVALS, force)
+    write_pillar_file(scaffold_dir, repo_root, "MOCKS.md", TEMPLATE_MOCKS, force)
 
     # 2. Flight Recorder Infrastructure
     sessions_dir = scaffold_dir / "sessions"

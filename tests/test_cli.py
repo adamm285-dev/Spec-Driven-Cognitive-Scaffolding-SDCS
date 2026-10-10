@@ -11,8 +11,8 @@ def test_cli_version():
     cmd = [sys.executable, "-m", "sdcs.cli", "--version"]
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     output = result.stdout + result.stderr
-    assert "sdcs 1.8.1" in output
-    assert "SPEC-001 v1.8.1" in output
+    assert "sdcs 1.9.0" in output
+    assert "SPEC-001 v1.9.0" in output
 
 
 def test_cli_help():
