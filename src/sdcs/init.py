@@ -270,7 +270,7 @@ TEMPLATE_PRE_COMMIT_HOOK = """#!/bin/sh
 
 # 1. Invariant Protection Gate (spine.md & wiring.yaml)
 if [ "$ALLOW_INVARIANT_MUTATION" != "1" ] && [ "$SDCS_ALLOW_INVARIANT_MUTATION" != "1" ] && [ "$SDCS_ALLOW_CONSTITUTIONAL_MUTATION" != "1" ]; then
-  TAMPERED_INVARIANTS=$(git diff --cached --name-only | grep -E '^(spine\\.md|wiring\\.yaml|\\.agent/spine\\.md|\\.agent/wiring\\.yaml)$')
+  TAMPERED_INVARIANTS=$(git diff --cached --name-only | grep -E '^(spine\\.md|wiring\\.yaml|\\.agent/spine\\.md|\\.agent/wiring\\.yaml|docs/spine\\.md|docs/wiring\\.yaml)$')
   if [ -n "$TAMPERED_INVARIANTS" ]; then
     echo "===================================================================="
     echo " [SDCS VIOLATION] CONSTITUTIONAL INVARIANT TAMPERING DETECTED"
@@ -288,7 +288,7 @@ fi
 # 2. Working Memory Synchronization Gate (state.md)
 SDCS_MODE=$(git config sdcs.mode || echo "advisory")
 DIFF_LINES=$(git diff --cached --shortstat | awk '{print $4+$6}')
-STATE_TOUCHED=$(git diff --cached --name-only | grep -E '^(state\\.md|\\.agent/state\\.md)$' || true)
+STATE_TOUCHED=$(git diff --cached --name-only | grep -E '^(state\\.md|\\.agent/state\\.md|docs/state\\.md)$' || true)
 
 if [ "${DIFF_LINES:-0}" -ge 40 ]; then
   if [ -z "$STATE_TOUCHED" ]; then
@@ -336,6 +336,8 @@ if [ -f "state.md" ]; then
   STATE_FILE="state.md"
 elif [ -f ".agent/state.md" ]; then
   STATE_FILE=".agent/state.md"
+elif [ -f "docs/state.md" ]; then
+  STATE_FILE="docs/state.md"
 fi
 
 if [ -n "$STATE_FILE" ] && [ -n "$STATE_TOUCHED" ]; then
@@ -385,6 +387,8 @@ if [ -f "wiring.yaml" ]; then
   WIRING_FILE="wiring.yaml"
 elif [ -f ".agent/wiring.yaml" ]; then
   WIRING_FILE=".agent/wiring.yaml"
+elif [ -f "docs/wiring.yaml" ]; then
+  WIRING_FILE="docs/wiring.yaml"
 fi
 
 if [ -n "$WIRING_FILE" ]; then
@@ -416,6 +420,8 @@ if [ -f "app_map.md" ]; then
   MAP_FILE="app_map.md"
 elif [ -f ".agent/app_map.md" ]; then
   MAP_FILE=".agent/app_map.md"
+elif [ -f "docs/app_map.md" ]; then
+  MAP_FILE="docs/app_map.md"
 fi
 
 if [ -n "$MAP_FILE" ]; then
