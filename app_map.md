@@ -26,6 +26,29 @@
 - `_Footer.md`
 - `_Sidebar.md`
 
+### `experiments/click_benchmark/`
+- `PRE_REGISTRATION.md`
+- `__init__.py`
+- `analyze.py`
+- `author_blinded_pillars.py`
+- `compile_notes.py`
+- `harness.py`
+- `tasks.py`
+- `verify_tasks.py`
+
+### `experiments/click_benchmark/arm_a_notes/`
+- `notes.md`
+
+### `experiments/click_benchmark/arm_b_sdcs/`
+- `AGENTS.md`
+- `app_map.md`
+- `decisions.md`
+- `evals.md`
+- `roadmap.md`
+- `spine.md`
+- `state.md`
+- `wiring.yaml`
+
 ### `media/`
 - `Deterministic_Agent_Architecture_(3) (1).pdf`
 - `pixel_office.jpg`
@@ -113,7 +136,9 @@
 - `wiring.yaml`
 
 ### `scripts/`
+- `generate_evidence.py`
 - `publish_wiki.py`
+- `replay_breaker.py`
 
 ### `src/sdcs/`
 - `__init__.py`
@@ -161,6 +186,15 @@
 - `test_polyglot_topology.py`
 - `test_quality.py`
 - `test_repair.py`
+- `test_reviewer_batch3_cases.py`
+- `test_reviewer_breaker_cases.py`
+- `test_reviewer_cache_cases.py`
+- `test_reviewer_decay_cases.py`
+- `test_reviewer_gate_w_cases.py`
+- `test_reviewer_hollow_corpus.py`
+- `test_reviewer_init_cases.py`
+- `test_reviewer_topology_cases.py`
+- `test_reviewer_watch_cases.py`
 - `test_router.py`
 - `test_sandbox.py`
 - `test_session.py`
@@ -170,3 +204,6 @@
 - `test_topology.py`
 - `test_warehouse.py`
 - `test_watch.py`
+
+### `tests/fixtures/`
+- `reviewer_hollow_corpus.py.txt`

@@ -149,15 +149,29 @@ def query_manifest(
         return records
 
     q = query_str.lower()
-    return [
-        r
-        for r in records
-        if q in r.get("topic", "").lower()
-        or q in r.get("summary", "").lower()
-        or q in r.get("timestamp", "").lower()
-        or q in r.get("file", "").lower()
-        or q in r.get("verdict", "").lower()
-    ]
+    matched: list[dict[str, Any]] = []
+    for r in records:
+        if (
+            q in r.get("topic", "").lower()
+            or q in r.get("summary", "").lower()
+            or q in r.get("timestamp", "").lower()
+            or q in r.get("file", "").lower()
+            or q in r.get("verdict", "").lower()
+        ):
+            matched.append(r)
+            continue
+
+        # Forensic search: scan the handoff markdown body on disk
+        target_file = sessions_dir / Path(r.get("file", "")).name
+        if target_file.is_file():
+            try:
+                body = target_file.read_text(encoding="utf-8", errors="ignore")
+                if q in body.lower():
+                    matched.append(r)
+            except Exception:
+                pass
+
+    return matched
 
 
 def run_session_command(

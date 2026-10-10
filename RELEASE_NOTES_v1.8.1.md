@@ -47,18 +47,18 @@ SDCS v1.8.1 delivers comprehensive empirical hardening across kinetic gates, tes
 ---
 
 ### 3. 🧠 Decisions Decay: Status-Aware Negative Memory Protection
-- **The Blind Spot:** Chronological FIFO decay sliced the oldest rejections once total entries exceeded 15, inadvertently purging foundational architectural dead ends recorded early in a project.
-- **Status-Aware Retention:** Strictly protects entries marked `Status: FOUNDATIONAL`, `Permanent: true`, or having active `Reopen Condition` constraints. Prioritizes `SUPERSEDED`, `RESOLVED`, or `ARCHIVED` entries for archival to `decisions/archive/`.
-- **Result:** Foundational institutional knowledge remains permanently accessible to agents without token bloat.
+- **The Blind Spot:** Fixed-cap FIFO decay sliced rejections once total entries exceeded an arbitrary ceiling, inadvertently purging standing architectural rejections and dead ends recorded early in a project.
+- **Opt-In Archival:** Standing active rejections (both with and without reopen lines) are permanently preserved in `decisions.md`. Archiving is strictly opt-in (`Status: SUPERSEDED`, `RESOLVED`, or `ARCHIVED`).
+- **Result:** Institutional memory remains permanently protected against cyclical regression loops.
 
 ---
 
 ### 4. 📊 Empirical Evidence Suite (`EVIDENCE.md`)
-- Published **[EVIDENCE.md](EVIDENCE.md)** containing end-to-end benchmark telemetry:
-  - Turn-1 boot hydration token reduction: **85% – 92%** via `sdcs hydrate`.
-  - AST interface inspection token reduction: **88.4%** via `sdcs slice`.
-  - Post-compact context recovery: **1 turn (226 tokens)** via `state.md`.
-  - Repeated hypothesis re-attempts: **0%** via `decisions.md`.
+- Published **[EVIDENCE.md](EVIDENCE.md)** containing live-computed benchmark telemetry:
+  - Single-pass turn-1 boot hydration: **3,299 tokens** standard (5 pillars) / **650 tokens** lite (2 pillars) via `sdcs hydrate`.
+  - AST interface inspection token reduction: **78.4% – 98.9%** token compression via `sdcs slice`.
+  - Post-compact context recovery: **1 turn (<= 350 tokens)** via `state.md`.
+  - Repeated hypothesis re-attempts: **0** via `decisions.md` and circuit breaker semantic diff reversal audits.
   - Empty-Band Scorecard formally locked in `evals.md`.
 - Includes reproducible 60-second audit instructions for both agents and human developers.
 

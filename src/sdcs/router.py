@@ -38,6 +38,62 @@ def load_routing_config(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def is_test_file(file_path: Path) -> bool:
+    """Returns True if file_path is a test file or inside a test directory."""
+    parts = [p.lower() for p in file_path.parts]
+    if any(p in ("tests", "test", "fixtures") for p in parts):
+        return True
+    name = file_path.name.lower()
+    return name.startswith("test_") or name.endswith("_test.py")
+
+
+def format_ast_args(args_node: ast.arguments) -> str:
+    """Formats ast.arguments into a canonical argument signature string including defaults and *args/**kwargs."""
+    parts: list[str] = []
+
+    pos_args = list(args_node.posonlyargs) + list(args_node.args)
+    num_pos = len(pos_args)
+    num_defaults = len(args_node.defaults)
+    default_start = num_pos - num_defaults
+
+    pos_parts: list[str] = []
+    for idx, a in enumerate(pos_args):
+        if idx >= default_start:
+            default_expr = args_node.defaults[idx - default_start]
+            try:
+                def_val = ast.unparse(default_expr)
+            except Exception:
+                def_val = "..."
+            pos_parts.append(f"{a.arg}={def_val}")
+        else:
+            pos_parts.append(a.arg)
+
+        if args_node.posonlyargs and idx == len(args_node.posonlyargs) - 1:
+            pos_parts.append("/")
+
+    parts.extend(pos_parts)
+
+    if args_node.vararg:
+        parts.append(f"*{args_node.vararg.arg}")
+    elif args_node.kwonlyargs:
+        parts.append("*")
+
+    for a, kw_d in zip(args_node.kwonlyargs, args_node.kw_defaults):
+        if kw_d is not None:
+            try:
+                def_val = ast.unparse(kw_d)
+            except Exception:
+                def_val = "..."
+            parts.append(f"{a.arg}={def_val}")
+        else:
+            parts.append(a.arg)
+
+    if args_node.kwarg:
+        parts.append(f"**{args_node.kwarg.arg}")
+
+    return ",".join(parts)
+
+
 def extract_public_signatures(source_code: str) -> set[str]:
     """Extracts public classes and function signatures from Python source."""
     signatures = set()
@@ -48,18 +104,24 @@ def extract_public_signatures(source_code: str) -> set[str]:
 
     for node in tree.body:
         if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
+            if node.name.startswith("Test"):
+                continue
             signatures.add(f"class:{node.name}")
             for item in node.body:
                 if isinstance(
                     item, (ast.FunctionDef, ast.AsyncFunctionDef)
                 ) and not item.name.startswith("_"):
-                    args = [a.arg for a in item.args.args]
-                    signatures.add(f"method:{node.name}.{item.name}({','.join(args)})")
+                    if item.name.startswith("test_") or item.name.startswith("test"):
+                        continue
+                    args_str = format_ast_args(item.args)
+                    signatures.add(f"method:{node.name}.{item.name}({args_str})")
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not node.name.startswith(
             "_"
         ):
-            args = [a.arg for a in node.args.args]
-            signatures.add(f"func:{node.name}({','.join(args)})")
+            if node.name.startswith("test_") or node.name.startswith("test"):
+                continue
+            args_str = format_ast_args(node.args)
+            signatures.add(f"func:{node.name}({args_str})")
 
     return signatures
 
@@ -67,6 +129,8 @@ def extract_public_signatures(source_code: str) -> set[str]:
 def detect_ast_signature_mutation(repo_root: Path, file_path: Path) -> bool:
     """Compares git HEAD version of file to working tree to detect public signature changes."""
     if not file_path.is_file() or file_path.suffix.lower() != ".py":
+        return False
+    if is_test_file(file_path):
         return False
 
     try:
@@ -79,15 +143,32 @@ def detect_ast_signature_mutation(repo_root: Path, file_path: Path) -> bool:
             check=False,
         )
         if res.returncode != 0:
-            # New file: if it has public signatures, that's an addition
-            curr_code = file_path.read_text(encoding="utf-8", errors="ignore")
-            return len(extract_public_signatures(curr_code)) > 0
+            # New file: additions break no existing callers
+            return False
 
         head_sigs = extract_public_signatures(res.stdout)
         curr_code = file_path.read_text(encoding="utf-8", errors="ignore")
         curr_sigs = extract_public_signatures(curr_code)
 
-        return head_sigs != curr_sigs
+        # Map symbol identifiers to their declared signatures
+        head_map: dict[str, set[str]] = {}
+        for s in head_sigs:
+            sym = s.split("(", 1)[0]
+            head_map.setdefault(sym, set()).add(s)
+
+        curr_map: dict[str, set[str]] = {}
+        for s in curr_sigs:
+            sym = s.split("(", 1)[0]
+            curr_map.setdefault(sym, set()).add(s)
+
+        # Escalate only if an existing public symbol was altered or removed
+        for sym, head_set in head_map.items():
+            if sym not in curr_map:
+                return True
+            if not head_set.issubset(curr_map[sym]):
+                return True
+
+        return False
     except Exception:
         return False
 

@@ -8,7 +8,6 @@ subsystems:
     path: "src/sdcs/cli.py"
     description: "Main CLI entrypoint orchestrating subcommands and kinetic verifiers."
     allowed_imports:
-      - "sdcs.core"
       - "sdcs.verifier"
       - "sdcs.decay"
       - "sdcs.session"
@@ -20,12 +19,13 @@ subsystems:
       - "sdcs.init"
       - "sdcs.watch"
       - "sdcs.graph"
+      - "sdcs.hydrate"
+      - "sdcs.map"
 
   verifier:
     path: "src/sdcs/verifier"
     description: "Kinetic enforcement gates: topology, quality, cycles, cache, environment, sandbox."
-    allowed_imports:
-      - "sdcs.core"
+    allowed_imports: []
 
   decay:
     path: "src/sdcs/decay.py"
@@ -51,6 +51,53 @@ subsystems:
     path: "src/sdcs/session.py"
     description: "Post-hoc flight recorder and causal lineage logger."
     allowed_imports: []
+
+  warehouse:
+    path: "src/sdcs/warehouse.py"
+    description: "Cognitive warehouse and Gate W secret sanitizer."
+    allowed_imports:
+      - "sdcs.verifier"
+
+  watch:
+    path: "src/sdcs/watch.py"
+    description: "Living Office HUD server and SSE broadcast daemon."
+    allowed_imports:
+      - "sdcs.verifier"
+      - "sdcs.audit"
+      - "sdcs.decay"
+      - "sdcs.session"
+      - "sdcs.warehouse"
+      - "sdcs.map"
+
+  audit:
+    path: "src/sdcs/audit.py"
+    description: "Cryptographic eval fixture integrity and SHA-256 auditor."
+    allowed_imports: []
+
+  init:
+    path: "src/sdcs/init.py"
+    description: "Deterministic 7-pillar scaffolding initializer."
+    allowed_imports: []
+
+  graph:
+    path: "src/sdcs/graph.py"
+    description: "Declarative topology transition visualizer."
+    allowed_imports: []
+
+  hydrate:
+    path: "src/sdcs/hydrate.py"
+    description: "Single-pass Turn-1 context compilation engine."
+    allowed_imports:
+      - "sdcs.map"
+      - "sdcs.verifier"
+      - "sdcs.warehouse"
+      - "sdcs.skeleton"
+
+  map:
+    path: "src/sdcs/map.py"
+    description: "Cartography drift auditor and synchronizer."
+    allowed_imports:
+      - "sdcs.init"
 
 sandbox:
   protected_paths:

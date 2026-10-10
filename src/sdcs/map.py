@@ -117,7 +117,13 @@ def check_cartography(
     actual_files = get_actual_repo_files(repo_root)
 
     # Exclude app_map.md itself and scaffolding sessions from check
-    ignored_patterns = {"app_map.md", ".agent/app_map.md", "sessions/manifest.jsonl"}
+    ignored_patterns = {
+        "app_map.md",
+        "APP_MAP.md",
+        ".agent/app_map.md",
+        ".agent/APP_MAP.md",
+        "sessions/manifest.jsonl",
+    }
     actual_files = {f for f in actual_files if f not in ignored_patterns}
 
     if not map_file.is_file():

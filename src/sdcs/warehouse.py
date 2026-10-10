@@ -26,15 +26,23 @@ from sdcs.verifier.state import count_tokens
 RE_API_KEY_PATTERNS = [
     (r"\bAIza[0-9A-Za-z\-_]{30,40}\b", "Google/Gemini API Key"),
     (r"\bAQ\.[0-9A-Za-z\-_]{20,}\b", "Gemini Fleet API Key"),
+    (r"\bsk-ant-[a-zA-Z0-9_-]{20,}\b", "Anthropic API Key"),
+    (r"\b(?:sk|rk)_(?:live|test)_[0-9a-zA-Z]{20,}\b", "Stripe Secret Key"),
+    (r"\bxox[baprs]-[0-9a-zA-Z-]{20,}\b", "Slack Token"),
+    (r"-----BEGIN [A-Z0-9 _-]*PRIVATE KEY-----", "PEM Private Key"),
+    (r"\bGOCSPX-[0-9a-zA-Z_-]{20,}\b", "Google OAuth Client Secret"),
+    (r"\bgh[opusr]_[a-zA-Z0-9]{30,}\b", "GitHub Token"),
+    (r"\beyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\b", "JSON Web Token"),
     (r"\bsk-[a-zA-Z0-9]{20,}\b", "OpenAI Secret Key"),
-    (r"\bghp_[a-zA-Z0-9]{36}\b", "GitHub Personal Token"),
     (r"\bgithub_pat_[a-zA-Z0-9_]{30,}\b", "GitHub Fine-Grained Token"),
     (r"\bAKIA[0-9A-Z]{16}\b", "AWS Access Key ID"),
     (r"\bBearer\s+[A-Za-z0-9\-\._~\+\/]+=*\b", "Bearer Auth Token"),
 ]
 
 RE_EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
-RE_PHONE = re.compile(r"(?:\+?1[-.\s]?)?\(?[2-9]\d{2}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
+RE_PHONE = re.compile(
+    r"(?<![0-9a-zA-Z_-])(?:\+?1[-.\s]?)?\(?[2-9]\d{2}\)?[-.\s]?\d{3}[-.\s]?\d{4}(?![0-9a-zA-Z_-])"
+)
 # IPv4 regex excluding standard loopback 127.0.0.1 and 0.0.0.0
 RE_IPV4 = re.compile(
     r"\b(?!(?:127\.0\.0\.1|0\.0\.0\.0)\b)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
@@ -217,22 +225,22 @@ def parse_warehouse_record(content: str, source_path: Path | None = None) -> dic
 
     # Extract body sections from body_text (supporting both ### and - **Header:** formats)
     def extract_section(header_pattern: str, text: str) -> str:
-        pattern = rf"(?i)###\s+{header_pattern}\s*\n(.*?)(?=\n###|\Z)"
+        pattern = rf"(?im)^#{{1,4}}\s+{header_pattern}\s*:?\s*\n(.*?)(?=\n#{{1,4}}\s+|\Z)"
         match = re.search(pattern, text, re.DOTALL)
         if match and match.group(1).strip():
             return match.group(1).strip()
-        pattern_bullet = rf"(?i)(?:^|\n)\s*[-*]?\s*\*\*?\s*{header_pattern}\s*:?\s*\*?\*?:?\s*(.*?)(?=\n\s*[-*]?\s*\*\*|\Z)"
+        pattern_bullet = rf"(?im)(?:^|\n)\s*[-*]?\s*\*\*?\s*{header_pattern}\s*:?\s*\*?\*?:?\s*(.*?)(?=\n\s*[-*]?\s*\*\*|\Z)"
         match_b = re.search(pattern_bullet, text, re.DOTALL)
         if match_b and match_b.group(1).strip():
             return match_b.group(1).strip()
         return ""
 
-    trap = extract_section(r"(?:THE\s+TRAP|THE\s+CLAIM)", body_text)
-    proof = extract_section(r"(?:THE\s+EMPIRICAL\s+PROOF|THE\s+MEASUREMENT)", body_text)
+    trap = extract_section(r"(?:THE\s+)?(?:TRAP|CLAIM)", body_text)
+    proof = extract_section(r"(?:THE\s+)?(?:EMPIRICAL\s+PROOF|MEASUREMENT)", body_text)
     mitigation = extract_section(
-        r"(?:THE\s+MITIGATION(?:\s+\(THE\s+INVARIANT\))?|THE\s+INVARIANT)", body_text
+        r"(?:THE\s+)?(?:MITIGATION(?:\s+\(THE\s+INVARIANT\))?|INVARIANT)", body_text
     )
-    reopen = extract_section(r"WHAT\s+WOULD\s+REOPEN\s+IT", body_text)
+    reopen = extract_section(r"(?:WHAT\s+WOULD\s+)?REOPEN(?:\s+IT)?", body_text)
 
     # Fallback: if no recognized section matched, preserve body_text in trap so data is never discarded
     if not trap and not proof and body_text.strip():
@@ -588,6 +596,12 @@ def filter_records(
     return matched
 
 
+def _sanitize_table_cell(text: str) -> str:
+    """Flattens all whitespace, line breaks (including Unicode U+2028/2029/0085), and control characters into single spaces, and escapes pipes."""
+    flattened = re.sub(r"[\s\x00-\x1f\x7f-\x9f]+", " ", str(text))
+    return flattened.replace("|", "\\|").strip()
+
+
 def compile_tier1_index(records: list[dict], max_tokens: int = 250) -> tuple[str, int]:
     """
     Two-Tier Hierarchical Paging (Blindspot 2 Solution):
@@ -606,15 +620,30 @@ def compile_tier1_index(records: list[dict], max_tokens: int = 250) -> tuple[str
         if r.get("expired"):
             title = f"[EXPIRED] {title}"
 
-        # Mitigation summary
-        mitigation = r.get("mitigation", "")
-        if not mitigation:
-            mitigation = r.get("trap", "Consult full record.")
+        # Mitigation summary: extract one-liner from mitigation, never leak trap headers
+        mitigation = r.get("mitigation", "").strip()
+        if (
+            not mitigation
+            or mitigation.lower().startswith("## trap")
+            or mitigation.lower().startswith("### the trap")
+            or mitigation.lower().startswith("## claim")
+        ):
+            mitigation = "Consult full record."
+        else:
+            mitigation = re.sub(r"^#{1,6}\s+.*?(?:\n|$)", "", mitigation).strip()
+            if not mitigation:
+                mitigation = "Consult full record."
+
         mitigation_one_liner = mitigation.split("\n")[0].strip()
         if len(mitigation_one_liner) > 75:
             mitigation_one_liner = mitigation_one_liner[:72] + "..."
 
-        row = f"| `{rec_id}` | {tags} | {title} | {mitigation_one_liner} |"
+        clean_id = _sanitize_table_cell(rec_id)
+        clean_tags = _sanitize_table_cell(tags)
+        clean_title = _sanitize_table_cell(title)
+        clean_mitigation = _sanitize_table_cell(mitigation_one_liner)
+
+        row = f"| `{clean_id}` | {clean_tags} | {clean_title} | {clean_mitigation} |"
         rows.append(row)
 
     # Budget truncation check

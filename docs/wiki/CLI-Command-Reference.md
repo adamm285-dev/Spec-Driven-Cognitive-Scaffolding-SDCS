@@ -37,16 +37,16 @@ sdcs verify --env
 
 ## 3. Context Compiler: `sdcs hydrate`
 
-Compiles and streams a deterministic, pre-budgeted context payload in a single atomic pass, breaking the LLM "Grep Reflex" on boot.
+Compiles and streams a deterministic context payload in a single atomic pass, breaking the LLM "Grep Reflex" on boot without lossy truncation.
 
 ```bash
-# Standard profile (~1,500 tokens)
+# Standard profile (spine, active roadmap, cartography, decisions, state)
 sdcs hydrate --profile standard
 
-# Lite profile for small fixes (~400 tokens)
+# Lite profile for small fixes (spine, state)
 sdcs hydrate -p lite
 
-# Full shift profile (~3,500 tokens)
+# Full shift profile (all 7 pillars)
 sdcs hydrate -p full
 
 # Subsystem-focused context slicing
@@ -249,7 +249,7 @@ sdcs grill --milestone M-001
 
 ## 14. AST Skeletal Compactor: `sdcs slice`
 
-Extracts structural AST skeletons (classes, methods, type hints, docstrings) while replacing execution bodies with `...`, yielding 85%–95% token savings across Python, TypeScript, JavaScript, Go, and Rust.
+Extracts structural AST skeletons (classes, methods, type hints, docstrings) while replacing execution bodies with `...`, yielding 78.0%–98.9% token savings across Python, TypeScript, JavaScript, Go, and Rust.
 
 ```bash
 # Extract skeleton of a specific file
@@ -263,7 +263,7 @@ sdcs slice --skeleton path/to/module.py
 
 ## 15. Deterministic Pre-Flight Auto-Repair: `sdcs repair`
 
-Intercepts code modifications in the sandbox to execute local formatters and linters (`ruff --fix`, `black`, `prettier`, `gofmt`) using 0 LLM inference tokens before kinetic gates or test suites run.
+Intercepts code modifications in place to execute local formatters and linters (`ruff --fix`, `black`, `prettier`, `gofmt`) using 0 LLM inference tokens before kinetic gates or test suites run.
 
 ```bash
 # Auto-repair staged/modified files in place

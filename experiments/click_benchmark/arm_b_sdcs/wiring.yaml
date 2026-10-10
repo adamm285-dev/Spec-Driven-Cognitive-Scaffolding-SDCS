@@ -1,0 +1,78 @@
+# Declarative Topology & Subsystem Mesh (The Wiring)
+# SPEC-001 Pillar 2 | Mutability: READ-ONLY
+
+version: "8.5.0"
+
+subsystems:
+  core:
+    path: "src/click/core.py"
+    description: "Core CLI command execution engine, Context tree, and parameter binding."
+    allowed_imports:
+      - "click.types"
+      - "click.utils"
+      - "click.exceptions"
+      - "click.formatting"
+      - "click.globals"
+      - "click._compat"
+      - "click._termui_impl"
+
+  types:
+    path: "src/click/types.py"
+    description: "Parameter types, type conversion, and input validation hierarchy."
+    allowed_imports:
+      - "click.exceptions"
+      - "click.utils"
+      - "click._compat"
+
+  termui:
+    path: "src/click/termui.py"
+    description: "High-level terminal UI convenience utilities: echo, prompt, confirm, progressbar."
+    allowed_imports:
+      - "click._termui_impl"
+      - "click._compat"
+      - "click.utils"
+      - "click.exceptions"
+
+  _termui_impl:
+    path: "src/click/_termui_impl.py"
+    description: "Low-level cross-platform terminal implementation, pager, and progress rendering."
+    allowed_imports:
+      - "click._compat"
+      - "click.utils"
+      - "click.exceptions"
+
+  formatting:
+    path: "src/click/formatting.py"
+    description: "Help table generation and text wrapping."
+    allowed_imports:
+      - "click._compat"
+      - "click.utils"
+
+  utils:
+    path: "src/click/utils.py"
+    description: "General text utilities, short help formatting, and file opening helpers."
+    allowed_imports:
+      - "click._compat"
+      - "click._utils"
+
+  _utils:
+    path: "src/click/_utils.py"
+    description: "Internal singletons and sentinel helpers."
+    allowed_imports:
+      - "click._compat"
+
+  parser:
+    path: "src/click/parser.py"
+    description: "Command line argument and option parser."
+    allowed_imports:
+      - "click.exceptions"
+      - "click._compat"
+
+sandbox:
+  protected_paths:
+    - "docs/**"
+    - "CHANGES.md"
+  allowed_commands:
+    - "pytest"
+    - "git"
+    - "python"\n

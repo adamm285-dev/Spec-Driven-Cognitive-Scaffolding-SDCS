@@ -12,14 +12,24 @@ from pathlib import Path
 
 
 def locate_roadmap_file(repo_root: Path) -> Path | None:
-    for c in [repo_root / "roadmap.md", repo_root / ".agent" / "roadmap.md"]:
+    for c in [
+        repo_root / "roadmap.md",
+        repo_root / ".agent" / "roadmap.md",
+        repo_root / "docs" / "roadmap.md",
+        repo_root / "docs" / "map" / "roadmap.md",
+    ]:
         if c.is_file():
             return c
     return None
 
 
 def locate_decisions_file(repo_root: Path) -> Path | None:
-    for c in [repo_root / "decisions.md", repo_root / ".agent" / "decisions.md"]:
+    for c in [
+        repo_root / "decisions.md",
+        repo_root / ".agent" / "decisions.md",
+        repo_root / "docs" / "decisions.md",
+        repo_root / "docs" / "map" / "decisions.md",
+    ]:
         if c.is_file():
             return c
     return None
@@ -91,40 +101,112 @@ def audit_roadmap_staleness(
     return stale_count, records
 
 
+def _has_reopen_condition(text: str) -> bool:
+    """Return True if text specifies a condition under which a rejection or decision would reopen."""
+    patterns = [
+        r"reopens?\s+if\b",
+        r"what\s+would\s+reopen\s+it\b",
+        r"reopen\s+condition\b",
+        r"\*reopens?\s+if:\*",
+    ]
+    for pat in patterns:
+        if re.search(pat, text, re.IGNORECASE):
+            return True
+    return False
+
+
 def parse_rejection_entries(content: str) -> list[dict]:
-    """Parses decisions.md into discrete REJ- / ADR- blocks with status metadata."""
+    """Parses decisions.md into discrete rejection/decision blocks with status metadata.
+
+    Supports canonical SDCS header format (## REJ-... / ## ADR-... / ## DEC-... / ## D-...),
+    and paragraph/bold format (**Claim** ... *Reopens if:* ...).
+    """
     entries = []
-    current_entry = None
+    header_pattern = re.compile(
+        r"^##\s+((?:REJ|ADR|DEC|D)-[^\s:]+)(?:[:—\s]+(.+))?$", re.IGNORECASE | re.MULTILINE
+    )
+    has_canonical = bool(header_pattern.search(content))
 
-    for line in content.splitlines():
-        header_match = re.match(r"^##\s+((?:REJ|ADR)-[^\s:]+)(?::\s*(.+))?$", line.strip())
-        if header_match:
-            if current_entry:
-                entries.append(current_entry)
-            current_entry = {
-                "id": header_match.group(1),
-                "title": (header_match.group(2) or "").strip(),
-                "header": line.strip(),
-                "status": "ACTIVE",
-                "permanent": False,
-                "lines": [line],
-            }
-        elif current_entry:
-            current_entry["lines"].append(line)
-            lower_line = line.lower()
-            if "status:" in lower_line:
-                if any(k in lower_line for k in ("superseded", "resolved", "archived")):
-                    current_entry["status"] = "SUPERSEDED"
-                elif any(k in lower_line for k in ("foundational", "permanent", "axiom")):
-                    current_entry["status"] = "FOUNDATIONAL"
+    if has_canonical:
+        current_entry = None
+        for line in content.splitlines():
+            header_match = header_pattern.match(line.strip())
+            if header_match:
+                if current_entry:
+                    if _has_reopen_condition("\n".join(current_entry["lines"])):
+                        current_entry["permanent"] = True
+                    entries.append(current_entry)
+                current_entry = {
+                    "id": header_match.group(1),
+                    "title": (header_match.group(2) or "").strip(),
+                    "header": line.strip(),
+                    "status": "ACTIVE",
+                    "permanent": False,
+                    "lines": [line],
+                }
+            elif current_entry:
+                current_entry["lines"].append(line)
+                lower_line = line.lower()
+                if "status:" in lower_line:
+                    if any(k in lower_line for k in ("superseded", "resolved", "archived")):
+                        current_entry["status"] = "SUPERSEDED"
+                    elif any(k in lower_line for k in ("foundational", "permanent", "axiom")):
+                        current_entry["status"] = "FOUNDATIONAL"
+                        current_entry["permanent"] = True
+                if "permanent:" in lower_line and "true" in lower_line:
                     current_entry["permanent"] = True
-            if "permanent:" in lower_line and "true" in lower_line:
-                current_entry["permanent"] = True
-            if "foundational:" in lower_line and "true" in lower_line:
-                current_entry["permanent"] = True
+                if "foundational:" in lower_line and "true" in lower_line:
+                    current_entry["permanent"] = True
+                if _has_reopen_condition(line):
+                    current_entry["permanent"] = True
 
-    if current_entry:
-        entries.append(current_entry)
+        if current_entry:
+            if _has_reopen_condition("\n".join(current_entry["lines"])):
+                current_entry["permanent"] = True
+            entries.append(current_entry)
+    else:
+        # Paragraph or section-based format (e.g. Floorsmith: **Claim** ... *Reopens if:*)
+        blocks = re.split(r"\n\s*\n", content)
+        entry_idx = 1
+        for block in blocks:
+            stripped = block.strip()
+            if not stripped:
+                continue
+            bold_match = re.match(r"^\*\*([^*]+)\*\*", stripped)
+            if bold_match:
+                title = bold_match.group(1).strip()
+                # Skip top-level instructional metadata
+                if title.lower().startswith(
+                    ("this file exists", "last updated", "rule:", "note:", "how to")
+                ):
+                    continue
+                has_reopen = _has_reopen_condition(stripped)
+                lines = stripped.splitlines()
+                lower_block = stripped.lower()
+                is_superseded = any(
+                    k in lower_block for k in ("superseded", "status: resolved", "status: archived")
+                )
+                is_foundational = any(
+                    k in lower_block
+                    for k in ("status: foundational", "status: permanent", "permanent: true")
+                )
+                is_permanent = (has_reopen or is_foundational) and not is_superseded
+
+                entries.append(
+                    {
+                        "id": f"REJ-{entry_idx:03d}",
+                        "title": title,
+                        "header": lines[0],
+                        "status": (
+                            "SUPERSEDED"
+                            if is_superseded
+                            else ("FOUNDATIONAL" if is_foundational else "ACTIVE")
+                        ),
+                        "permanent": is_permanent,
+                        "lines": lines,
+                    }
+                )
+                entry_idx += 1
 
     return entries
 
@@ -134,41 +216,21 @@ def prune_decisions_archive(
     repo_root: Path,
     max_entries: int = 15,
 ) -> tuple[int, Path | None]:
-    """
-    Archives older rejections when active entries exceed max_entries.
-    Prioritizes superseded/resolved entries and strictly protects foundational/permanent entries.
+    """Archives rejections that have been explicitly marked SUPERSEDED, RESOLVED, or ARCHIVED.
+
+    Standing active rejections (with or without reopen conditions) are never pruned.
+    Archiving is strictly opt-in: marking an entry superseded is what releases it to the archive.
     Moves superseded entries to decisions/archive/YYYY-QX.md and inserts an index table.
     Returns: (pruned_count, archive_path)
     """
     content = decisions_file.read_text(encoding="utf-8", errors="ignore")
     entries = parse_rejection_entries(content)
 
-    if len(entries) <= max_entries:
-        return 0, None
-
-    excess_count = len(entries) - max_entries
-
-    # Classify entries:
-    # 1. Superseded / Resolved / Archived entries are pruned first
-    superseded = [e for e in entries if e.get("status") in ("SUPERSEDED", "RESOLVED", "ARCHIVED")]
-    # 2. Permanent / Foundational entries are immune to automated pruning
-    permanent = [e for e in entries if e.get("permanent") or e.get("status") == "FOUNDATIONAL"]
-    # 3. Regular active non-permanent entries
-    regular_active = [e for e in entries if e not in superseded and e not in permanent]
-
-    to_archive: list[dict] = []
-
-    # First prune explicitly superseded/resolved entries
-    if superseded:
-        to_archive.extend(superseded[:excess_count])
-
-    # If still exceeding ceiling, take oldest regular active entries
-    remaining_needed = excess_count - len(to_archive)
-    if remaining_needed > 0 and regular_active:
-        to_archive.extend(regular_active[:remaining_needed])
+    # Only entries explicitly marked SUPERSEDED, RESOLVED, or ARCHIVED are archived.
+    # Standing active rejections are never pruned regardless of entry count.
+    to_archive = [e for e in entries if e.get("status") in ("SUPERSEDED", "RESOLVED", "ARCHIVED")]
 
     if not to_archive:
-        # All excess entries are foundational/permanent. Do not prune them blindly.
         return 0, None
 
     to_keep = [e for e in entries if e not in to_archive]
@@ -194,13 +256,31 @@ def prune_decisions_archive(
         af.write("\n".join(archive_lines).strip() + "\n\n")
 
     # Reconstruct decisions.md with an archival index table
+    existing_index_rows = []
+    if "## Archived Rejections Index" in content:
+        in_table = False
+        for line in content.splitlines():
+            if "## Archived Rejections Index" in line:
+                in_table = True
+                continue
+            if in_table:
+                if (
+                    line.strip().startswith("|")
+                    and not line.strip().startswith("| Rejection ID")
+                    and not line.strip().startswith("| :---")
+                ):
+                    existing_index_rows.append(line.strip())
+                elif line.startswith("#") or (not line.strip() and existing_index_rows):
+                    in_table = False
+
     new_decisions_lines = [
         "# Negative Episodic Memory (The Graveyard)",
-        "<!-- SPEC-001 Pillar 6 | Mutability: APPEND-ONLY | Working Set: <= 15 Entries -->\n",
+        "<!-- SPEC-001 Pillar 6 | Mutability: APPEND-ONLY -->\n",
         "## Archived Rejections Index",
         "| Rejection ID | Title | Archive Target |",
         "| :--- | :--- | :--- |",
     ]
+    new_decisions_lines.extend(existing_index_rows)
     for entry in to_archive:
         new_decisions_lines.append(
             f"| `{entry['id']}` | {entry['title'] or 'Superseded rejection'} | `{archive_file.name}` |"
@@ -275,8 +355,13 @@ def run_decay_command(
             f"[DECISIONS GRAVEYARD AUDIT] Found {len(entries)} active entries in {decisions_file.name}"
         )
 
-        if len(entries) > max_entries:
-            print(f"⚠️  [BLOAT DETECTED] {len(entries)} entries exceed ceiling of {max_entries}.")
+        superseded = [
+            e for e in entries if e.get("status") in ("SUPERSEDED", "RESOLVED", "ARCHIVED")
+        ]
+        if superseded:
+            print(
+                f"ℹ️  [SUPERSEDED ENTRIES DETECTED] Found {len(superseded)} superseded entries eligible for opt-in archiving."
+            )
             if prune:
                 pruned_count, arch_file = prune_decisions_archive(
                     decisions_file=decisions_file,
@@ -285,11 +370,10 @@ def run_decay_command(
                 )
                 print(f"  ✓ [PRUNED] Moved {pruned_count} superseded rejections to {arch_file}")
             else:
-                print("   Run with '--prune' to automatically archive oldest entries.")
-                exit_code = 1
+                print("   Run with '--prune' to archive superseded entries.")
         else:
             print(
-                f"  ✓ Active rejection count ({len(entries)}) is within disciplined threshold (<= {max_entries})."
+                f"  ✓ All {len(entries)} entries are standing rejections (0 superseded; protected from automated pruning)."
             )
     else:
         print("  · No decisions.md found. Skipping graveyard audit.")

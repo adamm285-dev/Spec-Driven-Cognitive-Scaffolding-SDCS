@@ -3,7 +3,7 @@
 SPEC-001 v1.8.0 Section 7.12.
 Extracts high-fidelity structural skeletons (classes, public method signatures,
 type annotations, docstrings) replacing execution bodies with '...'.
-Compresses observation tokens by 85-95% to eliminate the 'Grep Reflex' during
+Compresses observation tokens by 78.0%–98.9% to eliminate the 'Grep Reflex' during
 autonomous agent orientation turns.
 """
 
@@ -13,8 +13,6 @@ import ast
 import re
 from pathlib import Path
 from typing import Any
-
-from sdcs.verifier.state import count_tokens
 
 
 class PythonSkeletonTransformer(ast.NodeTransformer):
@@ -187,10 +185,30 @@ def extract_file_skeleton(file_path: Path) -> str:
         return "\n".join(lines) + ("\n... [truncated]" if len(content.splitlines()) > 40 else "")
 
 
+def _count_tokens(text: str) -> int:
+    """Deterministically computes token count.
+    Uses tiktoken if installed; otherwise falls back to deterministic heuristic:
+    max(word_count, ceil(char_count / 4)).
+    """
+    clean_text = text.strip()
+    if not clean_text:
+        return 0
+
+    try:
+        import tiktoken
+
+        enc = tiktoken.get_encoding("cl100k_base")
+        return len(enc.encode(clean_text))
+    except (ImportError, AttributeError, ValueError):
+        words = len(clean_text.split())
+        chars = len(clean_text)
+        return max(words, (chars + 3) // 4)
+
+
 def calculate_skeleton_metrics(original_code: str, skeleton_code: str) -> dict[str, Any]:
     """Calculates token counts and compression ratios between original and skeleton."""
-    orig_tokens = count_tokens(original_code)
-    skel_tokens = count_tokens(skeleton_code)
+    orig_tokens = _count_tokens(original_code)
+    skel_tokens = _count_tokens(skeleton_code)
     ratio = (1.0 - (skel_tokens / orig_tokens)) if orig_tokens > 0 else 0.0
 
     return {

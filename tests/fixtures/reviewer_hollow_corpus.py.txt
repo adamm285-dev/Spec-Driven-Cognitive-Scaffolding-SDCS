@@ -1,0 +1,197 @@
+# Reviewer's hollow-test corpus for Gate Q. PARSED, NEVER RUN.
+#
+# Stored as .py.txt on purpose: Gate Q audits every *.py under tests/, so a corpus of
+# deliberately hollow tests saved as .py would fail this repo's own pre-commit the moment
+# the gate learned to catch it. tests/test_reviewer_hollow_corpus.py copies it to a temp
+# file and audits the copy.
+#
+# Three populations:
+#   test_H*  hollow tests Gate Q must flag
+#   test_C*  sound tests Gate Q must NOT flag, so H* cannot be "fixed" by flagging more
+#   test_U*  hollow HERE, but the same syntax is sound in real code. Not asserted either
+#            way: no rule that reads syntax can separate them. See C12/C13.
+#
+# v1.8.1 (e08a789): 4 of 13 hollow tests flagged.
+#
+# REVISED 2026-09-22 (second pass). The first corpus had 13 H and 11 C. Rules fitted to it
+# passed 25/25 and then flagged five sound Floorsmith tests, because H09, H10 and H12 had
+# no sound twin among the controls:
+#   H09/H13 is-not-None as the only check. In Floorsmith it IS the contract three times
+#           (a refusal is returned; a kwarg is supplied). Identical syntax -> moved to U.
+#   H10     assertEqual(x, x) on one NAME is a tautology; assertEqual(f(), f()) is a
+#           determinism test. Separable -> H10 stays, C14 added.
+#   H12     the test calls its own mock; in Floorsmith real code calls the patched
+#           dependency and assert_not_called() IS the behaviour. Separable -> H12 stays,
+#           C15 added.
+# Controls C12-C15 mirror the Floorsmith tests that were flagged.
+
+import unittest
+from unittest import mock
+
+import pytest
+
+
+def compute():
+    return 3
+
+
+def validate_scale(x):  # a production-style function, not an assertion
+    return x
+
+
+def ensure_dir(p):  # a production-style function, not an assertion
+    return p
+
+
+def _assert_area(actual, expected):  # a helper that really asserts
+    assert actual == expected
+
+
+def unverified_join(width_ft, swings):  # returns a complaint, or None when the join is accepted
+    return None if swings else f"a {width_ft} ft width alone must not satisfy the gate"
+
+
+def rules_fingerprint():
+    return "sha256:..."
+
+
+def execute_page_scan(page):
+    return page
+
+
+def process_pending_job(job):  # real code under test; skips jobs already done
+    if job["status"] != "success":
+        execute_page_scan(job["page"])
+
+
+class Baseline(unittest.TestCase):
+    # --- the kinds EVIDENCE.md said it catches ---
+    def test_H01_assertless(self):
+        compute()
+
+    def test_H02_trivial_assert_true(self):
+        self.assertTrue(True)
+
+    def test_H03_swallowed(self):
+        try:
+            self.assertEqual(compute(), 4)
+        except Exception:
+            pass
+
+
+class Evasions(unittest.TestCase):
+    # --- opened by v1.8.1's name/prefix heuristics ---
+    def test_H04_production_function_named_validate(self):
+        validate_scale(compute())
+
+    def test_H05_production_function_named_ensure(self):
+        ensure_dir("/tmp/x")
+
+    def test_H06_name_claims_more_than_it_checks_and_does_not_raise(self):
+        compute()
+
+    def test_H07_docstring_exempts(self):
+        """Must not raise, and returns the right area."""
+        compute()
+
+    def test_H08_unrelated_comment_exempts(self):
+        compute()  # TODO: handle the no-raise path later
+
+    # --- present before v1.8.1 ---
+    def test_U09_is_not_none_unittest_form(self):
+        self.assertIsNotNone(compute())
+
+    def test_H10_self_compare(self):
+        x = compute()
+        self.assertEqual(x, x)
+
+    def test_H11_swallow_assertion_error(self):
+        try:
+            self.assertEqual(compute(), 4)
+        except AssertionError:
+            pass
+
+    @mock.patch(__name__ + ".compute")
+    def test_H12_only_checks_its_own_mock(self, m):
+        compute()
+        m.assert_called()
+
+
+def test_U13_pytest_is_not_none():
+    assert compute() is not None
+
+
+class SoundControls(unittest.TestCase):
+    def test_C01_unittest_real_value(self):
+        self.assertEqual(compute(), 3)
+
+    def test_C02_helper_that_asserts(self):
+        _assert_area(compute(), 3)
+
+    def test_C03_explicit_pragma_smoke(self):
+        compute()  # sdcs: no-raise
+
+    def test_C04_assert_raises(self):
+        with self.assertRaises(ValueError):
+            int("x")
+
+    def test_C05_is_not_none_then_value(self):
+        x = compute()
+        self.assertIsNotNone(x)
+        self.assertEqual(x, 3)
+
+    def test_C06_third_party_assert_helper(self):
+        np.testing.assert_allclose(compute(), 3.0)  # noqa: F821 -- parsed, never run
+
+    @mock.patch(__name__ + ".ensure_dir")
+    def test_C07_mock_plus_real_result(self, m):
+        self.assertEqual(compute(), 3)
+        m.assert_not_called()
+
+    def test_C08_specific_except_then_fail(self):
+        try:
+            int("3")
+        except ValueError:
+            self.fail("a digit string must parse")
+
+    def test_C09_errors_collected_then_asserted(self):
+        # Floorsmith's concurrency tests use this shape: a broad except that RECORDS.
+        errors = []
+        try:
+            compute()
+        except Exception as exc:
+            errors.append(str(exc))
+        self.assertEqual(errors, [])
+
+
+def test_C10_pytest_real_value():
+    assert compute() == 3
+
+
+def test_C11_pytest_raises():
+    with pytest.raises(ValueError):
+        int("x")
+
+
+class FloorsmithShapedControls(unittest.TestCase):
+    # Each mirrors a sound Floorsmith test that v1.8.1's second pass flagged.
+    def test_C12_is_not_none_is_the_contract(self):
+        # tests/test_finish_areas.py:822, test_seed_store_ownership.py:178
+        complaint = unverified_join(3.0, swings=())
+        self.assertIsNotNone(complaint, "a width alone must never satisfy the gate")
+
+    def test_C14_two_calls_is_a_determinism_test(self):
+        # tests/test_scout_purposes.py:548
+        self.assertEqual(rules_fingerprint(), rules_fingerprint())
+
+    def test_C15_real_code_does_not_call_the_patched_dependency(self):
+        # tests/test_scan_worker_progress.py:41
+        job = {"status": "success", "page": 2}
+        with mock.patch(__name__ + ".execute_page_scan") as scan:
+            process_pending_job(job)
+            scan.assert_not_called()
+
+
+def test_C13_pytest_is_not_none_is_the_contract():
+    # pytest spelling of C12
+    assert unverified_join(3.0, swings=()) is not None

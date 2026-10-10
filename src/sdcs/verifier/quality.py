@@ -17,6 +17,11 @@ class QualityViolation:
     message: str
 
 
+def _has_call(node: ast.AST) -> bool:
+    """Return True if AST node contains any function or method call."""
+    return any(isinstance(n, ast.Call) for n in ast.walk(node))
+
+
 class TestASTVisitor(ast.NodeVisitor):
     def __init__(
         self, file_path: str, file_content: str = "", asserting_functions: set[str] | None = None
@@ -48,16 +53,23 @@ class TestASTVisitor(ast.NodeVisitor):
         for child in ast.walk(node):
             if isinstance(child, ast.Try):
                 for handler in child.handlers:
-                    # Check if handler catches Exception, BaseException, or is bare except:
-                    is_broad = False
-                    if (
-                        handler.type is None
-                        or isinstance(handler.type, ast.Name)
-                        and handler.type.id in ("Exception", "BaseException")
-                    ):
-                        is_broad = True
+                    # Check if handler catches Exception, BaseException, AssertionError, or is bare except
+                    is_swallowed_target = False
+                    if handler.type is None:
+                        is_swallowed_target = True
+                    elif isinstance(handler.type, ast.Name):
+                        if handler.type.id in ("Exception", "BaseException", "AssertionError"):
+                            is_swallowed_target = True
+                    elif isinstance(handler.type, ast.Tuple):
+                        for elt in handler.type.elts:
+                            if isinstance(elt, ast.Name) and elt.id in (
+                                "Exception",
+                                "BaseException",
+                                "AssertionError",
+                            ):
+                                is_swallowed_target = True
 
-                    if is_broad:
+                    if is_swallowed_target:
                         # Check if body is just pass or ...
                         if len(handler.body) == 1:
                             stmt = handler.body[0]
@@ -66,13 +78,16 @@ class TestASTVisitor(ast.NodeVisitor):
                                 and isinstance(stmt.value, ast.Constant)
                                 and stmt.value.value is Ellipsis
                             ):
+                                exc_name = "all"
+                                if handler.type:
+                                    exc_name = getattr(handler.type, "id", None) or "exception"
                                 self.violations.append(
                                     QualityViolation(
                                         file_path=self.file_path,
                                         function_name=node.name,
                                         line_number=handler.lineno,
                                         rule="Q3_SWALLOWED_EXCEPTION",
-                                        message=f"Test function '{node.name}' catches and silently swallows '{handler.type.id if handler.type else 'all'}' exceptions with pass.",
+                                        message=f"Test function '{node.name}' catches and silently swallows '{exc_name}' with pass.",
                                     )
                                 )
 
@@ -107,7 +122,6 @@ class TestASTVisitor(ast.NodeVisitor):
                         "assertWarnsRegex",
                         "assertLogs",
                         "warns",
-                        "does_not_raise",
                     ):
                         raises_contexts.append(child)
             elif isinstance(child, ast.Call):
@@ -137,8 +151,19 @@ class TestASTVisitor(ast.NodeVisitor):
             if "patch" in dec_name.lower():
                 mock_calls += 1
 
-        # Check for pragma: # sdcs: no-raise or # pragma: no-raise or docstring intent
+        # Check for explicit pragma: # sdcs: no-raise or # pragma: no-raise
         has_no_raise_pragma = self._has_no_raise_pragma(node)
+
+        # Separate mock assertions (e.g. m.assert_called()) from substantive assertions
+        mock_assertion_calls = [
+            c
+            for c in assert_calls
+            if isinstance(c.func, ast.Attribute)
+            and c.func.attr.startswith(
+                ("assert_called", "assert_not_called", "assert_has_calls", "assert_any_call")
+            )
+        ]
+        real_assertion_calls = [c for c in assert_calls if c not in mock_assertion_calls]
 
         # 3. Check for assertless tests (Rule Q2)
         # Filter out docstrings or single pass
@@ -152,7 +177,7 @@ class TestASTVisitor(ast.NodeVisitor):
             )
         ]
 
-        total_assertions = len(assert_nodes) + len(assert_calls)
+        total_assertions = len(assert_nodes) + len(real_assertion_calls) + len(mock_assertion_calls)
 
         if not total_assertions and not raises_contexts and not has_no_raise_pragma:
             # If function has active logic but no assertions or raises
@@ -192,11 +217,13 @@ class TestASTVisitor(ast.NodeVisitor):
                     function_name=node.name,
                     line_number=node.lineno,
                     rule="Q1_TRIVIAL_ASSERTION",
-                    message=f"Test function '{node.name}' relies entirely on trivial assertions (e.g. 'assert True' or 'self.assertTrue(True)' without value verification).",
+                    message=f"Test function '{node.name}' relies entirely on trivial assertions (e.g. 'assert True' or tautological comparison).",
                 )
             )
+            return
 
         # 5. Check for Mock Abuse / Hollow Mocks (Rule Q4)
+        # Case A: High mock count with minimal substantive logic
         if mock_calls >= 3 and total_assertions == 1 and len(non_doc_statements) <= mock_calls + 2:
             self.violations.append(
                 QualityViolation(
@@ -207,55 +234,138 @@ class TestASTVisitor(ast.NodeVisitor):
                     message=f"Test function '{node.name}' has excessive mocking ({mock_calls} mocks) relative to substantive execution logic.",
                 )
             )
+            return
+
+        # Case B: Test only verifies its own mock assertions with zero assertions on real outputs
+        if (
+            len(mock_assertion_calls) > 0
+            and len(real_assertion_calls) == 0
+            and len(assert_nodes) == 0
+            and not raises_contexts
+            and not has_no_raise_pragma
+        ):
+            # Gather all patched target names and mock parameter/variable names
+            patched_targets: set[str] = set()
+
+            def _extract_target_name(expr: ast.AST) -> str | None:
+                if isinstance(expr, ast.Constant) and isinstance(expr.value, str):
+                    return expr.value.split(".")[-1]
+                if isinstance(expr, ast.BinOp):
+                    for c in ast.walk(expr):
+                        if isinstance(c, ast.Constant) and isinstance(c.value, str):
+                            s = c.value.strip(".")
+                            if s:
+                                return s.split(".")[-1]
+                return None
+
+            for dec in node.decorator_list:
+                if isinstance(dec, ast.Call):
+                    fn = dec.func
+                    fn_name = (
+                        fn.attr
+                        if isinstance(fn, ast.Attribute)
+                        else (fn.id if isinstance(fn, ast.Name) else "")
+                    )
+                    if "patch" in fn_name.lower() and dec.args:
+                        tgt = _extract_target_name(dec.args[0])
+                        if tgt:
+                            patched_targets.add(tgt)
+                        if len(dec.args) >= 2:
+                            tgt2 = _extract_target_name(dec.args[1])
+                            if tgt2:
+                                patched_targets.add(tgt2)
+
+            for arg in node.args.args:
+                if arg.arg not in ("self", "cls"):
+                    patched_targets.add(arg.arg)
+
+            for child in ast.walk(node):
+                if isinstance(child, ast.With):
+                    for item in child.items:
+                        ctx = item.context_expr
+                        if isinstance(ctx, ast.Call):
+                            fn = ctx.func
+                            fn_name = (
+                                fn.attr
+                                if isinstance(fn, ast.Attribute)
+                                else (fn.id if isinstance(fn, ast.Name) else "")
+                            )
+                            if "patch" in fn_name.lower():
+                                if ctx.args:
+                                    tgt = _extract_target_name(ctx.args[0])
+                                    if tgt:
+                                        patched_targets.add(tgt)
+                                    if len(ctx.args) >= 2:
+                                        tgt2 = _extract_target_name(ctx.args[1])
+                                        if tgt2:
+                                            patched_targets.add(tgt2)
+                                if item.optional_vars:
+                                    if isinstance(item.optional_vars, ast.Name):
+                                        patched_targets.add(item.optional_vars.id)
+                                    elif isinstance(item.optional_vars, (ast.Tuple, ast.List)):
+                                        for v in item.optional_vars.elts:
+                                            if isinstance(v, ast.Name):
+                                                patched_targets.add(v.id)
+
+            # Check if ANY non-patch, non-mock substantive call was made
+            substantive_calls: list[ast.Call] = []
+            for child in ast.walk(node):
+                if isinstance(child, ast.Call):
+                    fn = child.func
+                    fn_name = (
+                        fn.attr
+                        if isinstance(fn, ast.Attribute)
+                        else (fn.id if isinstance(fn, ast.Name) else "")
+                    )
+                    if fn_name in ("patch", "object", "MagicMock", "Mock", "PropertyMock"):
+                        continue
+                    if child in assert_calls:
+                        continue
+                    if (
+                        isinstance(fn, ast.Attribute)
+                        and isinstance(fn.value, ast.Name)
+                        and fn.value.id == "self"
+                    ):
+                        if fn.attr in ("setUp", "tearDown", "addCleanup", "skipTest", "subTest"):
+                            continue
+                    substantive_calls.append(child)
+
+            def _is_call_to_patched(call: ast.Call) -> bool:
+                fn = call.func
+                if isinstance(fn, ast.Name):
+                    return fn.id in patched_targets
+                if isinstance(fn, ast.Attribute):
+                    if fn.attr in patched_targets:
+                        return True
+                    if isinstance(fn.value, ast.Name) and fn.value.id in patched_targets:
+                        return True
+                return False
+
+            non_patched_calls = [c for c in substantive_calls if not _is_call_to_patched(c)]
+
+            # Flag only when every call goes to the patched target or mock assertion
+            if not non_patched_calls:
+                self.violations.append(
+                    QualityViolation(
+                        file_path=self.file_path,
+                        function_name=node.name,
+                        line_number=node.lineno,
+                        rule="Q4_MOCK_ABUSE",
+                        message=f"Test function '{node.name}' only checks its own mock call assertions with zero assertions on substantive logic.",
+                    )
+                )
+                return
 
     def _has_no_raise_pragma(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
-        """Check if test function has an explicit no-raise pragma or does-not-raise intent."""
-        # Check function name
-        name_lower = node.name.lower()
-        if "does_not_raise" in name_lower or "no_raise" in name_lower or "not_raise" in name_lower:
-            return True
-
-        # Check docstring
-        docstring = ast.get_docstring(node) or ""
-        doc_lower = docstring.lower()
-        if (
-            "sdcs: no-raise" in doc_lower
-            or "pragma: no-raise" in doc_lower
-            or "does not raise" in doc_lower
-            or "must not raise" in doc_lower
-        ):
-            return True
-
-        # Check decorators
-        for dec in node.decorator_list:
-            dec_id = ""
-            if isinstance(dec, ast.Name):
-                dec_id = dec.id
-            elif isinstance(dec, ast.Attribute):
-                dec_id = dec.attr
-            elif isinstance(dec, ast.Call):
-                if isinstance(dec.func, ast.Name):
-                    dec_id = dec.func.id
-                elif isinstance(dec.func, ast.Attribute):
-                    dec_id = dec.func.attr
-            if "no_raise" in dec_id.lower() or "does_not_raise" in dec_id.lower():
-                return True
-
-        # Check line comments within function definition
+        """Check if test function has an explicit no-raise pragma (# sdcs: no-raise or # pragma: no-raise)."""
         if self.file_lines and hasattr(node, "lineno"):
             start = max(0, node.lineno - 1)
-            end = min(len(self.file_lines), getattr(node, "end_lineno", node.lineno + 15))
+            end = min(len(self.file_lines), getattr(node, "end_lineno", node.lineno + 25))
             for i in range(start, end):
                 line = self.file_lines[i]
                 if "#" in line:
-                    comment = line.split("#", 1)[1].lower()
-                    if (
-                        "sdcs: no-raise" in comment
-                        or "pragma: no-raise" in comment
-                        or "no-raise" in comment
-                    ):
+                    if re.search(r"#\s*(?:sdcs|pragma):\s*no-raise\b", line, re.IGNORECASE):
                         return True
-
         return False
 
     def _is_assertion_call(self, call: ast.Call) -> bool:
@@ -271,56 +381,31 @@ class TestASTVisitor(ast.NodeVisitor):
         name_lower = name.lower()
         attr_lower = attr.lower()
 
-        # Check any call starting with assert or _assert
-        if name_lower.startswith("assert") or name_lower.startswith("_assert"):
-            return True
+        # 1. Standard unittest.TestCase assertion methods (self.assertEqual, self.assertTrue, self.assertIn, etc.)
         if attr_lower.startswith("assert") or attr_lower.startswith("_assert"):
             return True
-
-        # Check assertion helpers (check, verify, expect, ensure, validate)
-        if attr_lower.startswith(
-            (
-                "_check",
-                "check_",
-                "_verify",
-                "verify_",
-                "_expect",
-                "expect_",
-                "_ensure",
-                "ensure_",
-                "_validate",
-                "validate_",
-            )
-        ):
-            return True
-        if name_lower.startswith(
-            (
-                "_check",
-                "check_",
-                "_verify",
-                "verify_",
-                "_expect",
-                "expect_",
-                "_ensure",
-                "ensure_",
-                "_validate",
-                "validate_",
-            )
-        ):
+        if name_lower.startswith("assert_") or name_lower.startswith("_assert_"):
             return True
 
-        # Check fail calls (e.g. self.fail("expected error"), pytest.fail(...))
-        if attr_lower in ("fail", "_fail") or name_lower == "fail":
+        # 2. Failure assertions (self.fail, pytest.fail)
+        if attr_lower == "fail" or name_lower == "fail":
             return True
 
-        # Check if calling an intra-file helper known to contain assertions
+        # 3. Third-party testing library assertions (np.testing.assert_*, etc.)
+        if isinstance(call.func, ast.Attribute):
+            val = call.func.value
+            if isinstance(val, ast.Attribute) and val.attr == "testing":
+                if attr_lower.startswith("assert_"):
+                    return True
+
+        # 4. Intra-file helpers known from Pass 1 to contain assertions
         if name in self.asserting_functions or attr in self.asserting_functions:
             return True
 
         return False
 
     def _is_trivial_call_assertion(self, call: ast.Call) -> bool:
-        """Detect trivial unittest assertion calls like self.assertTrue(True)."""
+        """Detect trivial unittest assertion calls like self.assertTrue(True) or self.assertEqual(1, 1)."""
         if isinstance(call.func, ast.Attribute):
             attr = call.func.attr
             if attr == "assertTrue" and call.args:
@@ -329,13 +414,17 @@ class TestASTVisitor(ast.NodeVisitor):
             elif attr == "assertFalse" and call.args:
                 if isinstance(call.args[0], ast.Constant) and call.args[0].value is False:
                     return True
-            elif attr == "assertEqual" and len(call.args) >= 2:
+            elif attr in ("assertEqual", "assert_equal") and len(call.args) >= 2:
                 if (
                     isinstance(call.args[0], ast.Constant)
                     and isinstance(call.args[1], ast.Constant)
                     and call.args[0].value == call.args[1].value
                 ):
                     return True
+                # Self-compare: self.assertEqual(x, x) only when neither side contains a call
+                if ast.dump(call.args[0]) == ast.dump(call.args[1]):
+                    if not (_has_call(call.args[0]) or _has_call(call.args[1])):
+                        return True
         return False
 
     def _is_trivial_assertion(self, expr: ast.AST) -> bool:
@@ -346,23 +435,19 @@ class TestASTVisitor(ast.NodeVisitor):
         if isinstance(expr, ast.UnaryOp) and isinstance(expr.op, ast.Not):
             if isinstance(expr.operand, ast.Constant) and expr.operand.value is False:
                 return True
-        # assert 1 == 1
+        # assert 1 == 1 or assert x == x
         if isinstance(expr, ast.Compare):
-            if (
-                isinstance(expr.left, ast.Constant)
-                and len(expr.comparators) == 1
-                and isinstance(expr.comparators[0], ast.Constant)
-                and expr.left.value == expr.comparators[0].value
-            ):
-                return True
-            # assert x is not None
-            if len(expr.ops) == 1 and isinstance(expr.ops[0], ast.IsNot):
+            if len(expr.comparators) == 1:
                 if (
-                    len(expr.comparators) == 1
+                    isinstance(expr.left, ast.Constant)
                     and isinstance(expr.comparators[0], ast.Constant)
-                    and expr.comparators[0].value is None
+                    and expr.left.value == expr.comparators[0].value
                 ):
                     return True
+                # Self-compare: assert x == x only when neither side contains a call
+                if ast.dump(expr.left) == ast.dump(expr.comparators[0]):
+                    if not (_has_call(expr.left) or _has_call(expr.comparators[0])):
+                        return True
         return False
 
 

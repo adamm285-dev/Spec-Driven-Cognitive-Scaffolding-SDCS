@@ -33,6 +33,11 @@ def locate_wiring_file(repo_root: Path, custom_path: str | Path | None = None) -
     return None
 
 
+def _get_allowed(spec: dict[str, Any]) -> list[str]:
+    deps = spec.get("allowed_dependencies") or spec.get("allowed_imports") or []
+    return list(deps)
+
+
 def parse_wiring(wiring_file: Path) -> dict[str, Any]:
     """Parses wiring.yaml using pyyaml or fallback parser."""
     content = wiring_file.read_text(encoding="utf-8", errors="ignore")
@@ -49,7 +54,9 @@ def parse_wiring(wiring_file: Path) -> dict[str, Any]:
             if line.startswith("  ") and not line.startswith("    ") and trimmed.endswith(":"):
                 current_sub = trimmed[:-1].strip()
                 data["subsystems"][current_sub] = {"allowed_dependencies": []}
-            elif current_sub and "allowed_dependencies:" in trimmed:
+            elif current_sub and (
+                "allowed_dependencies:" in trimmed or "allowed_imports:" in trimmed
+            ):
                 pass
             elif current_sub and trimmed.startswith("- "):
                 dep = trimmed[2:].strip().strip("\"'")
@@ -78,7 +85,7 @@ def generate_mermaid_graph(subsystems: dict[str, Any]) -> str:
     # Declare edges
     edge_count = 0
     for name, spec in sorted(subsystems.items()):
-        allowed = spec.get("allowed_dependencies") or []
+        allowed = _get_allowed(spec)
         for dep in allowed:
             lines.append(f"  {name} --> {dep}")
             edge_count += 1
@@ -105,21 +112,21 @@ def generate_ascii_graph(subsystems: dict[str, Any]) -> str:
     for name in subsystems:
         in_degree[name] = 0
     for name, spec in subsystems.items():
-        allowed = spec.get("allowed_dependencies") or []
+        allowed = _get_allowed(spec)
         for dep in allowed:
             in_degree[dep] += 1
 
     # Sort: subsystems with in-degree 0 (top consumers) down to leaf nodes
     sorted_nodes = sorted(
         subsystems.keys(),
-        key=lambda n: (in_degree[n], -len(subsystems[n].get("allowed_dependencies") or []), n),
+        key=lambda n: (in_degree[n], -len(_get_allowed(subsystems[n])), n),
     )
 
     for name in sorted_nodes:
         spec = subsystems[name]
         path = spec.get("path", "")
         path_str = f" ({path})" if path else ""
-        allowed = spec.get("allowed_dependencies") or []
+        allowed = _get_allowed(spec)
 
         lines.append(f"[{name}]{path_str}")
         if not allowed:

@@ -15,8 +15,11 @@ from pathlib import Path
 VOLATILE_PREFIX_PATTERNS = [
     (r"\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", "ISO 8601 dynamic timestamp"),
     (r"\b\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}", "Dynamic datetime string"),
-    (r"\b[Tt]urn\s+\d+\s+(of|/)\s+\d+\b", "Dynamic turn counter"),
-    (r"\b[Ss]tep\s+\d+\s+(of|/)\s+\d+\b", "Dynamic step counter"),
+    (r"\b[Tt]urn\s+\d+\s+(?:of|/)\s+\d+\b", "Dynamic turn counter"),
+    (
+        r"\b(?:[Cc]urrent|[Aa]ctive)\s+[Ss]tep:?\s*(?:[Ss]tep\s*)?\d+\s+(?:of|/)\s+\d+\b",
+        "Dynamic step counter",
+    ),
     (r"\b[Pp]rocess\s+[Ii][Dd]:?\s*\d+\b", "Transient process ID"),
 ]
 
@@ -30,9 +33,9 @@ def audit_prefix_invariance(text: str, prefix_char_limit: int = 4000) -> list[st
     violations = []
 
     for pattern, desc in VOLATILE_PREFIX_PATTERNS:
-        matches = re.findall(pattern, prefix_sample)
-        if matches:
-            violations.append(f"Detected {desc} in cache prefix: '{matches[0]}'")
+        for match in re.finditer(pattern, prefix_sample):
+            violations.append(f"Detected {desc} in cache prefix: '{match.group(0)}'")
+            break
 
     return violations
 
@@ -43,7 +46,7 @@ def audit_hydration_file(file_path: Path) -> list[str]:
         return []
 
     content = file_path.read_text(encoding="utf-8", errors="ignore")
-    # For spine.md, wiring.yaml, AGENTS.md, the whole file should be cache-invariant
+    # For spine.md, wiring.yaml, AGENTS.md, CLAUDE.md, the whole file should be cache-invariant
     return audit_prefix_invariance(content, prefix_char_limit=len(content))
 
 
@@ -60,6 +63,9 @@ def run_cache_invariance_audit(repo_root: Path) -> int:
         repo_root / "wiring.yaml",
         repo_root / ".agent" / "wiring.yaml",
         repo_root / "AGENTS.md",
+        repo_root / ".agent" / "AGENTS.md",
+        repo_root / "CLAUDE.md",
+        repo_root / ".agent" / "CLAUDE.md",
     ]
 
     # Include prompt templates if present
@@ -93,6 +99,5 @@ def run_cache_invariance_audit(repo_root: Path) -> int:
         return 1
 
     print(f"✓ [GATE CACHE: PASSED] All {total_checked} prefix templates are 100% cache-invariant.")
-    print("  Server-side KV cache discount (75-90%) is preserved across multi-turn loops.")
     print("====================================================================\n")
     return 0

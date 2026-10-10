@@ -101,13 +101,39 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
     try:
         evals_file = locate_evals_file(repo_root)
         if evals_file and evals_file.is_file():
+            from sdcs.audit import calculate_normalized_sha256
+
             entries = parse_evals_table(evals_file)
-            passing = sum(
-                1 for e in entries if e.status.lower() in ("pass", "verified", "passed", "ok")
-            )
-            pending = sum(1 for e in entries if e.status.lower() == "pending")
+            passing = 0
+            pending = 0
+            failing = 0
+            for e in entries:
+                h = e.recorded_hash.lower().strip()
+                stat = e.status.lower().strip()
+                fixture_path = repo_root / e.path_str
+
+                if h in ("pending", "tbd", "todo", ""):
+                    if stat in ("pass", "passed", "verified", "ok"):
+                        passing += 1
+                    else:
+                        pending += 1
+                else:
+                    if not fixture_path.exists():
+                        failing += 1
+                    else:
+                        try:
+                            computed = calculate_normalized_sha256(fixture_path)
+                            rec_clean = h
+                            matches = (computed == rec_clean) or (
+                                len(rec_clean) in (8, 12, 16) and computed.startswith(rec_clean)
+                            )
+                            if matches:
+                                passing += 1
+                            else:
+                                failing += 1
+                        except Exception:
+                            failing += 1
             total = len(entries)
-            failing = max(0, total - passing - pending)
             telemetry["evals"] = {
                 "total": total,
                 "passing": passing,
@@ -185,20 +211,181 @@ def get_repo_telemetry(repo_root: Path, last_event: dict[str, Any] | None = None
         telemetry["warehouse"] = {"records": 0, "cache_dir": None}
 
     # 7. Kinetic Gates Snapshot
-    state_pass = telemetry["state"]["within_budget"] if telemetry["state"] else True
+    state_file_present = state_file is not None and state_file.is_file()
+    state_tokens = telemetry["state"]["tokens"] if state_file_present else 0
+    gate_s_pass = state_file_present and (state_tokens <= 350)
+    gate_s_status = f"{state_tokens}/350t" if state_file_present else "NO_STATE"
+
+    # Gate C (Contract Lock)
+    spine_file = None
+    for cand in [repo_root / "spine.md", repo_root / ".agent" / "spine.md"]:
+        if cand.is_file():
+            spine_file = cand
+            break
+    gate_c_pass = spine_file is not None and spine_file.is_file()
+    gate_c_status = "LOCKED" if gate_c_pass else "NO_SPINE"
+
+    # Gate T (Topology)
+    wiring_file = None
+    for cand in [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]:
+        if cand.is_file():
+            wiring_file = cand
+            break
+    gate_t_pass = False
+    gate_t_status = "NO_WIRING"
+    if wiring_file:
+        try:
+            from sdcs.verifier.topology import TopologyValidator
+
+            val = TopologyValidator(wiring_file, repo_root)
+            violations = val.audit_tree()
+            if not violations:
+                gate_t_pass = True
+                gate_t_status = "VERIFIED"
+            else:
+                gate_t_pass = False
+                gate_t_status = f"{len(violations)} VIOLATION(S)"
+        except Exception:
+            gate_t_pass = False
+            gate_t_status = "ERROR"
+
+    # Gate M (Cartography)
+    map_file = None
+    for cand in [repo_root / "app_map.md", repo_root / ".agent" / "app_map.md"]:
+        if cand.is_file():
+            map_file = cand
+            break
+    gate_m_pass = False
+    gate_m_status = "NO_MAP"
+    if map_file:
+        try:
+            from sdcs.map import check_cartography
+
+            unmapped, orphans = check_cartography(repo_root, map_file)
+            if not unmapped and not orphans:
+                gate_m_pass = True
+                gate_m_status = "VERIFIED"
+            else:
+                gate_m_pass = False
+                gate_m_status = f"DRIFT ({len(unmapped)} new, {len(orphans)} orphaned)"
+        except Exception:
+            gate_m_pass = False
+            gate_m_status = "ERROR"
+
+    # Gate P (Sandbox Guard)
+    gate_p_pass = False
+    gate_p_status = "NO_SANDBOX"
+    if wiring_file:
+        try:
+            from sdcs.verifier.sandbox import audit_sandbox_staged_files
+
+            p_clean, p_violations = audit_sandbox_staged_files(
+                repo_root=repo_root, wiring_path=wiring_file
+            )
+            if p_clean:
+                gate_p_pass = True
+                gate_p_status = "ACTIVE"
+            else:
+                gate_p_pass = False
+                gate_p_status = f"{len(p_violations)} BLOCKED"
+        except Exception:
+            gate_p_pass = False
+            gate_p_status = "ERROR"
+
+    # Gate W (Secret Sanitizer)
+    gate_w_pass = False
+    gate_w_status = "NO_FILES"
+    files_to_scan = []
+    for cand in [repo_root / "decisions.md", repo_root / ".agent" / "decisions.md"]:
+        if cand.is_file():
+            files_to_scan.append(cand)
+    if state_file_present:
+        files_to_scan.append(state_file)
+
+    if files_to_scan:
+        from sdcs.warehouse import run_gate_w_audit
+
+        total_hits = 0
+        scan_err = False
+        for f in files_to_scan:
+            try:
+                content = f.read_text(encoding="utf-8", errors="ignore")
+                clean, violations = run_gate_w_audit(content)
+                if not clean:
+                    total_hits += len(violations)
+            except Exception:
+                scan_err = True
+        if scan_err:
+            gate_w_pass = False
+            gate_w_status = "ERROR"
+        elif total_hits == 0:
+            gate_w_pass = True
+            gate_w_status = "CLEAN"
+        else:
+            gate_w_pass = False
+            gate_w_status = f"{total_hits} LEAKS"
+
+    # Gate Q (Test Quality)
+    gate_q_pass = False
+    gate_q_status = "NO_TESTS"
+    test_dir = repo_root / "tests"
+    test_files = list(test_dir.glob("test_*.py")) if test_dir.is_dir() else []
+    if test_files:
+        try:
+            from sdcs.verifier.quality import audit_test_quality
+
+            flags = audit_test_quality(repo_root=repo_root, target_paths=test_files)
+            if not flags:
+                gate_q_pass = True
+                gate_q_status = "ARMED (CLEAN)"
+            else:
+                gate_q_pass = False
+                gate_q_status = f"{len(flags)} FLAGS"
+        except Exception:
+            gate_q_pass = False
+            gate_q_status = "ERROR"
+
+    # Gate E (Environment Lock)
+    git_dir = repo_root / ".git"
+    hook_file = repo_root / ".githooks" / "pre-commit"
+    if git_dir.is_dir() and hook_file.is_file():
+        gate_e_pass = True
+        gate_e_status = "PASSED"
+    elif git_dir.is_dir():
+        gate_e_pass = False
+        gate_e_status = "NO_HOOK"
+    else:
+        gate_e_pass = False
+        gate_e_status = "NO_GIT"
+
+    # Circuit Breaker
+    breaker_pass = False
+    breaker_status = "NO_GIT"
+    if git_dir.is_dir() or state_file_present:
+        try:
+            from sdcs.verifier.cycles import detect_oscillations
+
+            b_pass, b_violations = detect_oscillations(repo_root=repo_root)
+            if b_pass:
+                breaker_pass = True
+                breaker_status = "CLEAN"
+            else:
+                breaker_pass = False
+                breaker_status = "TRIPPED"
+        except Exception:
+            breaker_pass = False
+            breaker_status = "ERROR"
+
     telemetry["gates"] = {
-        "Gate C (Contract Lock)": {"passed": True, "status": "ACTIVE"},
-        "Gate T (AST Topology)": {"passed": True, "status": "VERIFIED"},
-        "Gate S (Memory Budget)": {
-            "passed": state_pass,
-            "status": f"{telemetry['state']['tokens']}/350t" if telemetry["state"] else "N/A",
-        },
-        "Gate P (Sandbox Guard)": {"passed": True, "status": "ACTIVE"},
-        "Gate W (Secret Sanitizer)": {"passed": True, "status": "ARMED"},
-        "Gate M (Cartography)": {"passed": True, "status": "MONITORING"},
-        "Gate Q (Test Quality)": {"passed": True, "status": "ARMED"},
-        "Gate E (Environment Lock)": {"passed": True, "status": "PASSED"},
-        "Circuit Breaker": {"passed": True, "status": "MONITORING"},
+        "Gate C (Contract Lock)": {"passed": gate_c_pass, "status": gate_c_status},
+        "Gate T (AST Topology)": {"passed": gate_t_pass, "status": gate_t_status},
+        "Gate S (Memory Budget)": {"passed": gate_s_pass, "status": gate_s_status},
+        "Gate P (Sandbox Guard)": {"passed": gate_p_pass, "status": gate_p_status},
+        "Gate W (Secret Sanitizer)": {"passed": gate_w_pass, "status": gate_w_status},
+        "Gate M (Cartography)": {"passed": gate_m_pass, "status": gate_m_status},
+        "Gate Q (Test Quality)": {"passed": gate_q_pass, "status": gate_q_status},
+        "Gate E (Environment Lock)": {"passed": gate_e_pass, "status": gate_e_status},
+        "Circuit Breaker": {"passed": breaker_pass, "status": breaker_status},
     }
 
     return telemetry
@@ -262,7 +449,6 @@ class SDCSWatchHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         self.wfile.write(body)
@@ -272,7 +458,6 @@ class SDCSWatchHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Connection", "keep-alive")
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
         client_q: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=100)

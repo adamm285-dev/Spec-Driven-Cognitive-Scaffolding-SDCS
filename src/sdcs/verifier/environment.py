@@ -196,8 +196,36 @@ def verify_environment(repo_root: Path = Path(".")) -> tuple[bool, list[str]]:
     return len(errors) == 0, errors
 
 
+def has_environment_declaration(repo_root: Path) -> bool:
+    """Returns True if the repository declares environment or toolchain invariants."""
+    for cand in [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]:
+        if cand.is_file():
+            try:
+                with open(cand, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f) or {}
+                    if "environment" in data and isinstance(data["environment"], dict):
+                        return True
+                    if "tool_boundaries" in data:
+                        return True
+            except Exception:
+                pass
+    pyproject_path = repo_root / "pyproject.toml"
+    if pyproject_path.is_file():
+        try:
+            content = pyproject_path.read_text(encoding="utf-8", errors="ignore")
+            if "requires-python" in content:
+                return True
+        except Exception:
+            pass
+    return False
+
+
 def run_env_audit(repo_root: Path = Path(".")) -> int:
     """CLI entrypoint for Gate E environment verification."""
+    if not has_environment_declaration(repo_root):
+        print("[SDCS::GATE_E] SKIPPED: No toolchain or environment invariants declared.")
+        return 0
+
     passed, errors = verify_environment(repo_root)
     if passed:
         print("[SDCS::GATE_E] OK: Toolchain and environment invariants verified.")

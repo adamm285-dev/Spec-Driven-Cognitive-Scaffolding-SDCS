@@ -49,6 +49,17 @@ def count_tokens(text: str) -> int:
         return max(words, (chars + 3) // 4)
 
 
+def get_tokenizer_info() -> str:
+    """Returns the name and encoding of the active tokenizer implementation."""
+    try:
+        import tiktoken
+
+        tiktoken.get_encoding("cl100k_base")
+        return "tiktoken (`cl100k_base`)"
+    except (ImportError, AttributeError, ValueError):
+        return "character heuristic (`max(words, ceil(chars/4))`)"
+
+
 def parse_state_sections(content: str) -> dict[str, str]:
     """
     Parses state.md into sections delineated by markdown level-2 headers (##).
@@ -132,6 +143,7 @@ def run_state_audit(
     print(" SDCS :: Working Memory Token Budget Linter (SPEC-001 v1.4.0 Pillar 4)")
     print(f" Target State: {target_state}")
     print(f" Token Budget: <= {max_tokens} tokens")
+    print(f" Tokenizer:    {get_tokenizer_info()}")
     print("====================================================================\n")
 
     if target_state is None:
@@ -142,7 +154,7 @@ def run_state_audit(
         target_state, max_tokens=max_tokens
     )
 
-    print(f"Total Working Memory Tokens: {total_tokens} / {max_tokens}")
+    print(f"Total Working Memory Tokens: {total_tokens} / {max_tokens} ({get_tokenizer_info()})")
     print("Section Breakdown:")
     for header, count in section_tokens.items():
         if header == "__preamble__":

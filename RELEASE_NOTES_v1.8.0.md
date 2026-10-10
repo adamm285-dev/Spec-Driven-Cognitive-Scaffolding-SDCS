@@ -18,7 +18,7 @@ Transitioning from single-turn chat to autonomous multi-turn loops creates an ec
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    SDCS v1.8.0 SUB-DIME LOOP HARNESS                        │
 ├───────────────────────────────────┬─────────────────────────────────────────┤
-│ 1. AST Skeletal Compactor         │ 85%–95% token compression on file views │
+│ 1. AST Skeletal Compactor         │ 78.0%–98.9% token compression on views  │
 │ 2. Pre-Flight Auto-Repair         │ 0 LLM tokens burned on style & lints    │
 │ 3. Gate C-Cache (Prefix Pinning)  │ 100% KV-cache hit rate on static prefix │
 │ 4. Governed Model Tier Router     │ Workhorse by default, Frontier on demand│
@@ -30,7 +30,7 @@ Transitioning from single-turn chat to autonomous multi-turn loops creates an ec
 ## 🚀 Key Highlights in v1.8.0
 
 ### 1. 🧬 Structural AST Skeletal Compactor (`sdcs slice`)
-- **85%–95% Observation Token Compression:** Replaces raw file dumping with clean structural signatures. Extracts classes, method definitions, parameter types, return types, and docstrings while collapsing implementation bodies to `...`.
+- **78.0%–98.9% Observation Token Compression (Measured):** Replaces raw file dumping with clean structural signatures. Extracts classes, method definitions, parameter types, return types, and docstrings while collapsing implementation bodies to `...`.
 - **Polyglot Signature Engine:** Native Python AST NodeTransformer plus regex signature extractors for TypeScript, JavaScript, Go, and Rust.
 - **Boot Hydration Integration:** `sdcs hydrate --skeletal` injects structural outlines during Turn 1 boot hydration, giving agents full architectural awareness without burning context.
 

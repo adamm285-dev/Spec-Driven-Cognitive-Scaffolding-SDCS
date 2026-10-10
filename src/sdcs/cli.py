@@ -349,14 +349,14 @@ def main():
     # Subcommand: hydrate
     hydrate_parser = subparsers.add_parser(
         "hydrate",
-        help="Deterministic context compiler: stream pre-budgeted single-pass payload to stdout",
+        help="Deterministic context compiler: stream single-pass payload to stdout",
     )
     hydrate_parser.add_argument(
         "--profile",
         "-p",
         choices=["lite", "standard", "full"],
         default="standard",
-        help="Operational scale profile (lite ~400t, standard ~1500t, full ~3500t)",
+        help="Operational scale profile (lite, standard, full)",
     )
     hydrate_parser.add_argument(
         "--subsystem",
@@ -983,7 +983,7 @@ def main():
         )
 
         cfg = locate_warehouse_config(repo_root)
-        cache_dir = locate_warehouse_cache(repo_root, cfg, args.cache_dir)
+        cache_dir = locate_warehouse_cache(repo_root, cfg, getattr(args, "cache_dir", None))
 
         if getattr(args, "warehouse_action", None) == "sync":
             source = args.source or cfg.get("source")

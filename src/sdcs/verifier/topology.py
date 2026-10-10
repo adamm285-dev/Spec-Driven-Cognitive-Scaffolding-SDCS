@@ -30,6 +30,20 @@ class SubsystemConfig(NamedTuple):
     allowed_dependencies: set[str]
 
 
+POLYGLOT_EXTENSIONS = {
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".kts",
+    ".java",
+    ".go",
+    ".rs",
+}
+
+
 class ImportExtractor(ast.NodeVisitor):
     """Extracts absolute and relative imports with source line coordinates."""
 
@@ -37,6 +51,33 @@ class ImportExtractor(ast.NodeVisitor):
         self.current_file = current_file
         self.repo_root = repo_root
         self.imports: list[tuple[str, int]] = []
+
+    def _is_module(self, dotted_name: str) -> bool:
+        if not dotted_name:
+            return False
+        mod_parts = dotted_name.split(".")
+        candidate_roots = [self.repo_root, self.current_file.parent]
+        for src_dir in ("src", "lib"):
+            cand = self.repo_root / src_dir
+            if cand.is_dir():
+                candidate_roots.append(cand)
+
+        for sroot in candidate_roots:
+            cand_path = sroot.joinpath(*mod_parts)
+            if cand_path.is_file():
+                return True
+            for ext in POLYGLOT_EXTENSIONS:
+                if cand_path.with_suffix(ext).is_file():
+                    return True
+            if cand_path.is_dir():
+                if (cand_path / "__init__.py").is_file():
+                    return True
+                try:
+                    if any(cand_path.glob("*.py")):
+                        return True
+                except OSError:
+                    pass
+        return False
 
     def visit_Import(self, node: ast.Import):
         for alias in node.names:
@@ -50,32 +91,28 @@ class ImportExtractor(ast.NodeVisitor):
                 current_dir = current_dir.parent
             try:
                 rel_base = current_dir.relative_to(self.repo_root)
-                base_parts = list(rel_base.parts)
+                base_parts = [p for p in rel_base.parts if p and p != "."]
                 if node.module:
-                    base_parts.append(node.module)
+                    base_parts.extend(node.module.split("."))
                 module_name = ".".join(base_parts)
             except ValueError:
                 module_name = node.module or ""
         else:
             module_name = node.module or ""
 
-        if module_name:
-            self.imports.append((module_name, node.lineno))
+        recorded: set[tuple[str, int]] = set()
+        for alias in node.names:
+            candidate = f"{module_name}.{alias.name}" if module_name else alias.name
+            if self._is_module(candidate):
+                if (candidate, node.lineno) not in recorded:
+                    self.imports.append((candidate, node.lineno))
+                    recorded.add((candidate, node.lineno))
+            else:
+                if module_name and (module_name, node.lineno) not in recorded:
+                    self.imports.append((module_name, node.lineno))
+                    recorded.add((module_name, node.lineno))
+
         self.generic_visit(node)
-
-
-POLYGLOT_EXTENSIONS = {
-    ".py",
-    ".ts",
-    ".tsx",
-    ".js",
-    ".jsx",
-    ".kt",
-    ".kts",
-    ".java",
-    ".go",
-    ".rs",
-}
 
 
 def extract_polyglot_imports(file_path: Path, repo_root: Path) -> list[tuple[str, int, bool]]:
@@ -187,10 +224,35 @@ class TopologyValidator:
         raw_subsystems = data.get("subsystems", {})
         for name, cfg in raw_subsystems.items():
             subsys_path = (self.repo_root / cfg["path"]).resolve()
-            allowed = set(cfg.get("allowed_dependencies", []))
+            allowed = set(cfg.get("allowed_dependencies") or []) | set(
+                cfg.get("allowed_imports") or []
+            )
             self.subsystems[name] = SubsystemConfig(
                 name=name, path=subsys_path, allowed_dependencies=allowed
             )
+
+    def _get_subsystem_prefixes(self, name: str, cfg: SubsystemConfig) -> list[str]:
+        prefixes = [name]
+        try:
+            rel = cfg.path.relative_to(self.repo_root)
+        except ValueError:
+            rel = cfg.path
+
+        if cfg.path.is_file() or rel.suffix in POLYGLOT_EXTENSIONS:
+            rel_clean = rel.with_suffix("")
+        else:
+            rel_clean = rel
+
+        dotted_full = ".".join(rel_clean.parts)
+        if dotted_full:
+            prefixes.append(dotted_full)
+
+        if rel_clean.parts and rel_clean.parts[0] in ("src", "lib"):
+            stripped = ".".join(rel_clean.parts[1:])
+            if stripped:
+                prefixes.append(stripped)
+
+        return sorted(set(prefixes), key=len, reverse=True)
 
     def resolve_subsystem_for_file(self, file_path: Path) -> str | None:
         resolved = file_path.resolve()
@@ -207,21 +269,42 @@ class TopologyValidator:
         return matched_name
 
     def resolve_subsystem_for_module(self, module_str: str) -> str | None:
-        mod_path_relative = Path(*module_str.split("."))
-        for name, cfg in self.subsystems.items():
-            try:
-                rel_subsys_path = cfg.path.relative_to(self.repo_root)
-            except ValueError:
-                rel_subsys_path = cfg.path
+        # 1. Disk resolution across candidate source roots
+        mod_parts = module_str.split(".")
+        candidate_roots = [self.repo_root]
+        for src_dir in ("src", "lib"):
+            cand = self.repo_root / src_dir
+            if cand.is_dir():
+                candidate_roots.append(cand)
 
-            if (
-                mod_path_relative == rel_subsys_path
-                or rel_subsys_path in mod_path_relative.parents
-                or module_str.startswith(f"{name}.")
-                or module_str == name
-            ):
-                return name
-        return None
+        for sroot in candidate_roots:
+            cand_path = sroot.joinpath(*mod_parts)
+            for ext in ("", ".py", ".ts", ".js", ".go", ".rs", ".java", ".kt"):
+                p = cand_path.with_suffix(ext) if ext else cand_path
+                if p.exists():
+                    sub = self.resolve_subsystem_for_file(p)
+                    if sub:
+                        return sub
+            if len(mod_parts) > 1:
+                parent_path = sroot.joinpath(*mod_parts[:-1])
+                for ext in (".py", ".ts", ".js", ".go", ".rs", ".java", ".kt"):
+                    p = parent_path.with_suffix(ext)
+                    if p.is_file():
+                        sub = self.resolve_subsystem_for_file(p)
+                        if sub:
+                            return sub
+
+        # 2. Candidate prefix matching against declared subsystem paths
+        best_match, best_len = None, -1
+        for name, cfg in self.subsystems.items():
+            prefixes = self._get_subsystem_prefixes(name, cfg)
+            for prefix in prefixes:
+                if module_str == prefix or module_str.startswith(f"{prefix}."):
+                    if len(prefix) > best_len:
+                        best_len = len(prefix)
+                        best_match = name
+
+        return best_match
 
     def audit_file(self, file_path: Path) -> list[ImportViolation]:
         source_subsystem = self.resolve_subsystem_for_file(file_path)
@@ -243,7 +326,20 @@ class TopologyValidator:
 
             if not target_subsystem or target_subsystem == source_subsystem:
                 continue
-            if target_subsystem not in cfg.allowed_dependencies:
+
+            # Verify against allowlist (matching subsystem name or imported module identifier)
+            is_allowed = (
+                target_subsystem in cfg.allowed_dependencies
+                or module_name in cfg.allowed_dependencies
+                or any(
+                    module_name == a
+                    or module_name.startswith(f"{a}.")
+                    or self.resolve_subsystem_for_module(a) == target_subsystem
+                    for a in cfg.allowed_dependencies
+                )
+            )
+
+            if not is_allowed:
                 violations.append(
                     ImportViolation(
                         source_file=file_path.relative_to(self.repo_root),

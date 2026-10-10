@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 sdcs.init - Spec-Driven Cognitive Scaffolding (SDCS) Initializer
-Conforming to SPEC-001 v1.4.0
+Conforming to SPEC-001 v1.8.1
 
 Scaffolds the complete 7-pillar deterministic cognitive harness:
   1. spine.md        — Constitutional Invariants
@@ -24,14 +24,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-SPEC_VERSION = "1.4.0"
+SPEC_VERSION = "1.8.1"
 
 # -----------------------------------------------------------------------------
 # Pillar Templates
 # -----------------------------------------------------------------------------
 
 TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
-<!-- SPEC-001 v1.4.0 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
+<!-- SPEC-001 v1.8.1 Pillar 1 | Mutability: IMMUTABLE (Human-Only) -->
 
 ## Non-Negotiable Domain Axioms
 1. Determinism First: No silent fallbacks, unverified mocks, or unhandled exceptions in production pathways.
@@ -45,14 +45,14 @@ TEMPLATE_SPINE = """# Constitutional Invariants (The Law)
 
 ## Absolute Forbidden Operations
 - Destructive git operations (`git push --force`, `git reset --hard` on tracked remote branches).
-- Bypassing pre-commit hooks via `--no-verify`.
+- Bypassing pre-commit hooks via `--no-verify` (enforced via agent harness permission boundary).
 - Reading `sessions/*.md` flight recorder archives during Turn 1 boot hydration.
 """
 
 TEMPLATE_WIRING = """# Declarative Topology (The Mesh)
-# SPEC-001 v1.3.0 Pillar 2 | Mutability: STATIC (Explicit PR)
+# SPEC-001 v1.8.1 Pillar 2 | Mutability: STATIC (Explicit PR)
 
-version: "1.3"
+version: "1.8.1"
 subsystems:
   core:
     path: "src/"
@@ -100,11 +100,11 @@ warehouse:
 """
 
 TEMPLATE_ROADMAP = """# Macro Acceptance Contract (The North Star)
-<!-- SPEC-001 v1.3.0 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
+<!-- SPEC-001 v1.8.1 Pillar 3 | Mutability: BIMODAL ([INTENT] vs [MEASURED]) -->
 <!-- Iron Invariant: NO TASK QUEUES. Ephemeral tasks belong exclusively in state.md -->
 
 ## Milestone M-001: Initial Operational Capability
-* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.3.0 invariants. Verify zero test fixture drift.
+* [INTENT]: Scaffold and bootstrap the repository under SPEC-001 v1.8.1 invariants. Verify zero test fixture drift.
 * [MEASURED]: Scaffolding complete; initial evals verified via SHA-256 audit. Status: VERIFIED.
 
 <!--
@@ -116,7 +116,7 @@ Template for New Milestones:
 """
 
 TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
-<!-- SPEC-001 v1.3.0 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
+<!-- SPEC-001 v1.8.1 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: ~300 Tokens -->
 <!-- Read on Turn 1 boot. Strictly pruned after milestone completion. -->
 
 ## Active Objective
@@ -132,7 +132,7 @@ TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
 """
 
 TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
-<!-- SPEC-001 v1.3.0 Pillar 6 | Mutability: APPEND-ONLY -->
+<!-- SPEC-001 v1.8.1 Pillar 6 | Mutability: APPEND-ONLY -->
 <!-- Mandatory 3-part schema: Claim -> Measurement -> Reopen Condition -->
 
 ## REJ-001: Monolithic Session Diary Ingestion
@@ -142,7 +142,7 @@ TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
 """
 
 TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
-<!-- SPEC-001 v1.3.0 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
+<!-- SPEC-001 v1.8.1 Pillar 7 | Mutability: CRYPTOGRAPHIC -->
 <!-- Corpus Diversity Invariant: Unique SHA-256 digests required across all golden fixtures -->
 
 ## 1. Golden Reference Corpus & Diversity
@@ -157,7 +157,7 @@ TEMPLATE_EVALS = """# Empirical Standing & Ground Truth (Evals)
 """
 
 TEMPLATE_AGENTS = """# AGENTS.md — Operational Harness Protocol
-<!-- Conforming to SPEC-001 v1.4.1 -->
+<!-- Conforming to SPEC-001 v1.8.1 -->
 
 ## 1. The Operational Ontology
 You are operating inside a deterministic cybernetic control system, not an unconstrained environment. The codebase is organized across three physical layers governed by a teleological anchor:
@@ -229,7 +229,7 @@ TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
 - Shift Focus: Repository Initial Scaffolding
 
 ## Completed Actions
-- Initialized SPEC-001 v1.3.0 cognitive scaffolding.
+- Initialized SPEC-001 v1.8.1 cognitive scaffolding.
 - Registered pre-commit invariant protection hook.
 
 ## Verification Executed
@@ -474,6 +474,25 @@ if [ -n "$PYTHON_BIN" ]; then
   fi
 fi
 
+# 8. Secret & PII Sanitization Gate (Gate W: decisions.md and staged files)
+if [ -n "$PYTHON_BIN" ]; then
+  if ! "$PYTHON_BIN" -m sdcs.cli verify --warehouse; then
+    if [ "$SDCS_MODE" = "strict" ]; then
+      echo "===================================================================="
+      echo " [SDCS VIOLATION] GATE W: SENSITIVE CREDENTIAL OR SECRET DETECTED"
+      echo "===================================================================="
+      echo "Unscrubbed credentials or secrets detected in negative memory or staged files."
+      echo "Scrub sensitive tokens before committing."
+      echo "===================================================================="
+      exit 1
+    else
+      echo "--------------------------------------------------------------------"
+      echo " [SDCS ADVISORY] Gate W: Sensitive credential pattern detected."
+      echo "--------------------------------------------------------------------"
+    fi
+  fi
+fi
+
 exit 0
 """
 
@@ -591,7 +610,7 @@ def generate_flat_app_map(root: Path) -> str:
     tree = scan_repository_tree(root)
     lines = [
         "# Repository Cartography (The Compass)",
-        "<!-- SPEC-001 v1.3.0 Pillar 5 | Flat Cartography -->",
+        "<!-- SPEC-001 v1.8.1 Pillar 5 | Flat Cartography -->",
         "<!-- Golden Rule: Consult this map FIRST. Read ONLY necessary target files. -->\n",
     ]
     for directory, files in sorted(tree.items()):
@@ -624,7 +643,7 @@ def generate_hierarchical_cartography(root: Path, target_dir: Path, force: bool)
     # 1. Root Cartography Index
     root_lines = [
         "# Root Repository Cartography (The Compass Index)",
-        "<!-- SPEC-001 v1.3.0 Pillar 5 | Hierarchical Master Index -->",
+        "<!-- SPEC-001 v1.8.1 Pillar 5 | Hierarchical Master Index -->",
         "<!-- Golden Rule: Page package-level app_map.md ONLY when entering subsystem context. -->\n",
         "## Subsystem Registry\n",
     ]
@@ -761,11 +780,71 @@ def write_file(path: Path, content: str, force: bool = False):
     print(f"  + Created: {path}")
 
 
-def install_githook(root: Path):
+def find_existing_pillar(repo_root: Path, filename: str) -> Path | None:
+    """Finds if a pillar file already exists anywhere in the repository outside test/transient dirs."""
+    name_lower = filename.lower()
+    priority_subdirs = [
+        Path("."),
+        Path(".agent"),
+        Path("docs"),
+        Path("docs/map"),
+        Path("docs/architecture"),
+        Path("docs/spec"),
+        Path("docs/specs"),
+    ]
+    for pdir in priority_subdirs:
+        cand = repo_root / pdir / filename
+        if cand.is_file():
+            return cand
+        cand_dir = repo_root / pdir
+        if cand_dir.is_dir():
+            for child in cand_dir.iterdir():
+                if child.is_file() and child.name.lower() == name_lower:
+                    return child
+
+    for dirpath, dirnames, filenames_in_dir in os.walk(repo_root):
+        dirnames[:] = [
+            d for d in dirnames if d not in EXCLUDE_DIRS and d not in ("tests", "fixtures", "test")
+        ]
+        for f in filenames_in_dir:
+            if f.lower() == name_lower:
+                return Path(dirpath) / f
+
+    return None
+
+
+def write_pillar_file(
+    scaffold_dir: Path,
+    repo_root: Path,
+    filename: str,
+    content: str,
+    force: bool = False,
+):
+    target = scaffold_dir / filename
+    if not force:
+        existing = find_existing_pillar(repo_root, filename)
+        if existing:
+            if existing.resolve() == target.resolve():
+                print(f"  · Exists:  {existing} (skipping)")
+            else:
+                try:
+                    rel = existing.relative_to(repo_root)
+                except ValueError:
+                    rel = existing
+                print(f"  · Exists elsewhere: {rel} (skipping root {filename})")
+            return
+    write_file(target, content, force=force)
+
+
+def install_githook(root: Path, force: bool = False) -> bool:
     """Installs the invariant protection pre-commit hook into .githooks/."""
     hook_dir = root / ".githooks"
     hook_dir.mkdir(parents=True, exist_ok=True)
     hook_file = hook_dir / "pre-commit"
+
+    if hook_file.exists() and not force:
+        print(f"  · Exists:  {hook_file} (skipped; use --force to overwrite)")
+        return False
 
     hook_file.write_text(TEMPLATE_PRE_COMMIT_HOOK, encoding="utf-8")
     try:
@@ -774,6 +853,22 @@ def install_githook(root: Path):
     except OSError:
         pass
     print(f"  + Hook:    {hook_file} (executable set)")
+    return True
+
+
+def is_hooks_path_set(repo_root: Path) -> bool:
+    """Checks if git core.hooksPath is already configured to .githooks."""
+    try:
+        res = subprocess.run(
+            ["git", "config", "core.hooksPath"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return res.returncode == 0 and res.stdout.strip() in (".githooks", ".githooks/")
+    except Exception:
+        return False
 
 
 def init_scaffold(
@@ -804,13 +899,13 @@ def init_scaffold(
     if use_agent_dir:
         normalize_legacy_casing(repo_root)
 
-    # 1. Primary Pillars
-    write_file(scaffold_dir / "spine.md", TEMPLATE_SPINE, force)
-    write_file(scaffold_dir / "wiring.yaml", TEMPLATE_WIRING, force)
-    write_file(scaffold_dir / "roadmap.md", TEMPLATE_ROADMAP, force)
-    write_file(scaffold_dir / "state.md", TEMPLATE_STATE, force)
-    write_file(scaffold_dir / "decisions.md", TEMPLATE_DECISIONS, force)
-    write_file(scaffold_dir / "evals.md", TEMPLATE_EVALS, force)
+    # 1. Primary Pillars (preserve files if already existing elsewhere in repo)
+    write_pillar_file(scaffold_dir, repo_root, "spine.md", TEMPLATE_SPINE, force)
+    write_pillar_file(scaffold_dir, repo_root, "wiring.yaml", TEMPLATE_WIRING, force)
+    write_pillar_file(scaffold_dir, repo_root, "roadmap.md", TEMPLATE_ROADMAP, force)
+    write_pillar_file(scaffold_dir, repo_root, "state.md", TEMPLATE_STATE, force)
+    write_pillar_file(scaffold_dir, repo_root, "decisions.md", TEMPLATE_DECISIONS, force)
+    write_pillar_file(scaffold_dir, repo_root, "evals.md", TEMPLATE_EVALS, force)
 
     # 2. Flight Recorder Infrastructure
     sessions_dir = scaffold_dir / "sessions"
@@ -828,8 +923,9 @@ def init_scaffold(
         write_file(repo_root / "AGENTS.md", TEMPLATE_AGENTS, force)
 
     # 5. Git Invariant Protection Hook
+    hook_installed = False
     if not skip_hooks:
-        install_githook(repo_root)
+        hook_installed = install_githook(repo_root, force=force)
 
     # Ensure a basic fixture file exists so audit doesn't break
     fixture_dir = repo_root / "tests" / "fixtures"
@@ -844,13 +940,16 @@ def init_scaffold(
         generate_hierarchical_cartography(repo_root, scaffold_dir, force)
     else:
         flat_map = generate_flat_app_map(repo_root)
-        write_file(scaffold_dir / "app_map.md", flat_map, force)
+        write_pillar_file(scaffold_dir, repo_root, "app_map.md", flat_map, force)
 
     print("\n[OK] Scaffolding complete.")
-    if not skip_hooks:
-        print("\nTo activate invariant enforcement in your local repository, run:")
-        print("  git config core.hooksPath .githooks")
-        print("  git config sdcs.mode advisory   # or 'strict'")
+    if not skip_hooks and hook_installed:
+        if not is_hooks_path_set(repo_root):
+            print("\nTo activate invariant enforcement in your local repository, run:")
+            print("  git config core.hooksPath .githooks")
+            print("  git config sdcs.mode advisory   # or 'strict'")
+        else:
+            print("\nInvariant enforcement pre-commit hook active (core.hooksPath = .githooks).")
     print()
 
 

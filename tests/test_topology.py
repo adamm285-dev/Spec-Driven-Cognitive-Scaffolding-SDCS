@@ -56,7 +56,8 @@ def repo_env(tmp_path: Path):
 def test_clean_import_passes(repo_env: Path):
     """Verifies that allowed import edges do not produce violations."""
     domain_user = repo_env / "src" / "domain" / "user.py"
-    domain_user.write_text("import src.core.utils\n", encoding="utf-8")
+    # Real code in src/ layout imports by package name without src. prefix
+    domain_user.write_text("from core.utils import helper\n", encoding="utf-8")
 
     validator = TopologyValidator(repo_env / "wiring.yaml", repo_env)
     violations = validator.audit_tree()
@@ -67,7 +68,7 @@ def test_prohibited_boundary_flagged(repo_env: Path):
     """Verifies that unauthorized import edges trigger an ImportViolation."""
     domain_user = repo_env / "src" / "domain" / "user.py"
     # domain is only permitted to import core, not infrastructure
-    domain_user.write_text("from src.infrastructure import database\n", encoding="utf-8")
+    domain_user.write_text("from infrastructure import database\n", encoding="utf-8")
 
     validator = TopologyValidator(repo_env / "wiring.yaml", repo_env)
     violations = validator.audit_tree()

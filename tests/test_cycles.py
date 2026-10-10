@@ -109,8 +109,8 @@ def test_progressive_same_file_commits_pass():
     assert len(violations) == 0
 
 
-def test_inverse_diff_reversal_trips_breaker():
-    """Verify that a commit reversing the diff of an earlier commit trips the circuit breaker."""
+def test_inverse_diff_reversal_emits_advisory_notice():
+    """Verify that a single commit reversing the diff of an earlier commit emits an advisory notice without blocking."""
     from sdcs.verifier.cycles import GitCommitDiff
 
     # c002 adds line X and removes line Y. c003 removes line X and restores line Y (inversion).
@@ -132,9 +132,11 @@ def test_inverse_diff_reversal_trips_breaker():
     ]
 
     passed, violations = detect_oscillations(diff_history=diff_history, threshold=3)
-    assert passed is False
+    # Advisory reversals do not block forward progress
+    assert passed is True
     assert len(violations) >= 1
-    assert "Commit reversal detected" in violations[0].message
+    assert violations[0].advisory is True
+    assert "Commit reversal detected (advisory)" in violations[0].message
     assert "c003" in violations[0].message
 
 

@@ -32,3 +32,20 @@ Permanent: true
 * **THE MEASUREMENT:** When underlying files, branches, or environments mutated across compaction boundaries, blind execution led to hallucinated tool calls and compounding regressions.
 * **WHY REJECTED:** Execution without spatial awareness produces brittle agent behavior. Fast-resume must quickly verify prerequisites before mutating files.
 * **WHAT WOULD REOPEN IT:** A formal deterministic environment guarantee that disk state cannot mutate externally.
+
+## REJ-005: Flagging Sole is-not-None as Trivial Assertion in Gate Q
+Status: FOUNDATIONAL
+Permanent: true
+* **THE CLAIM:** Assertions testing only `assert x is not None` or `self.assertIsNotNone(x)` carry no substantive verification value and should be flagged as hollow tests (`Q1_TRIVIAL_ASSERTION`).
+* **THE MEASUREMENT:** On Floorsmith's test suite, this rule flagged 3 sound tests (`test_finish_areas.py:822`, `test_qto_pipeline.py:685`, `test_seed_store_ownership.py:178`) where non-None return is the explicit contract, versus 0 hollow tests caught (0% precision).
+* **WHY REJECTED:** In contract-driven software design, verifying that an API returns an object rather than None (e.g. complaint object, spec path, fallback structure) is an intentional and sound contract test. Flagging it produces a 100% false-positive rate on sound contract tests.
+* **WHAT WOULD REOPEN IT:** An empirical corpus demonstrating hollow tests that use `is not None` to evade quality gates without being caught by assertless (Q2) or mock (Q4) rules, alongside an AST heuristic that distinguishes contract returns from hollow checks.
+
+## REJ-006: Hard Circuit Breaker Block on File-Set Alternation
+Status: FOUNDATIONAL
+Permanent: true
+* **THE CLAIM:** Commits alternating between two files (e.g. A -> B -> A -> B) represent an unproductive ping-pong oscillation and should be hard blocked.
+* **THE MEASUREMENT:** On synthetic commit sequences modeling TDD rhythms (`test_reviewer_breaker_cases.py`), alternating code and test commits (e.g. extending `area.py` then `test_area.py`) tripped the hard block despite 100% forward progress with zero undone lines.
+* **WHY REJECTED:** File-set alternation without diff reversals is the healthy, canonical cadence of Test-Driven Development (TDD). Hard blocks must be reserved for repeated identical diff reversals where the same code diff is repeatedly undone and redone.
+* **WHAT WOULD REOPEN IT:** None. When git diffs are available, circuit breaker blocking must inspect semantic diff reversals rather than file touch alternation.
+

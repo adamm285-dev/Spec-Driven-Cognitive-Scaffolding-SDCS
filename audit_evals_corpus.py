@@ -13,11 +13,26 @@ Verifies:
 """
 
 import argparse
+import ast
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
 from typing import NamedTuple
+
+try:
+    import tomllib
+except ImportError:
+    try:
+        import tomli as tomllib
+    except ImportError:
+        tomllib = None
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 
 class FixtureEntry(NamedTuple):
@@ -37,10 +52,40 @@ def calculate_sha256(filepath: Path) -> str:
     return hasher.hexdigest()
 
 
+def _strip_line_comment(line: str, comment_char: str) -> str:
+    """Strips comments starting with comment_char ('#' or '//') outside string quotes."""
+    in_quote: str | None = None
+    escaped = False
+    idx = 0
+    while idx < len(line):
+        ch = line[idx]
+        if escaped:
+            escaped = False
+            idx += 1
+            continue
+        if ch == "\\":
+            escaped = True
+            idx += 1
+            continue
+        if in_quote:
+            if ch == in_quote:
+                in_quote = None
+        else:
+            if ch in ("'", '"', "`"):
+                in_quote = ch
+            elif comment_char == "#" and ch == "#":
+                return line[:idx].rstrip()
+            elif comment_char == "//" and line[idx : idx + 2] == "//":
+                return line[:idx].rstrip()
+        idx += 1
+    return line.rstrip()
+
+
 def strip_comments_and_whitespace(content: str, extension: str) -> str:
     """
     Normalizes text fixtures to defeat trivial hashing evasion (SPEC-001 §7.4).
-    Strips comments, removes leading/trailing line padding, and drops empty lines.
+    Strips comments outside strings, removes trailing whitespace, and drops empty lines
+    while strictly preserving block indentation and string contents.
     """
     lines = content.splitlines()
     normalized_lines: list[str] = []
@@ -50,34 +95,119 @@ def strip_comments_and_whitespace(content: str, extension: str) -> str:
     is_c_comment = ext in {".js", ".ts", ".c", ".cpp", ".h", ".java", ".go", ".rs"}
     is_markup_comment = ext in {".html", ".xml", ".md"}
 
+    in_multiline_quote: str | None = None
+
     for raw_line in lines:
-        line = raw_line.strip()
-        if not line:
+        stripped = raw_line.strip()
+        if not stripped and not in_multiline_quote:
             continue
 
-        # Strip full-line and inline '#' comments
         if is_hash_comment:
-            if line.startswith("#"):
-                continue
-            if " #" in line:
-                line = line.split(" #", 1)[0].rstrip()
-
-        # Strip full-line and inline '//' comments
+            line = _strip_line_comment(raw_line, "#")
         elif is_c_comment:
-            if line.startswith("//"):
-                continue
-            if " //" in line:
-                line = line.split(" //", 1)[0].rstrip()
+            if in_multiline_quote == "`":
+                idx = 0
+                escaped = False
+                closed = False
+                while idx < len(raw_line):
+                    ch = raw_line[idx]
+                    if escaped:
+                        escaped = False
+                        idx += 1
+                        continue
+                    if ch == "\\":
+                        escaped = True
+                        idx += 1
+                        continue
+                    if ch == "`":
+                        in_multiline_quote = None
+                        closed = True
+                        line = raw_line[: idx + 1] + _strip_line_comment(raw_line[idx + 1 :], "//")
+                        break
+                    idx += 1
+                if not closed:
+                    line = raw_line.rstrip()
+            else:
+                in_quote: str | None = None
+                escaped = False
+                idx = 0
+                cut_idx = None
+                while idx < len(raw_line):
+                    ch = raw_line[idx]
+                    if escaped:
+                        escaped = False
+                        idx += 1
+                        continue
+                    if ch == "\\":
+                        escaped = True
+                        idx += 1
+                        continue
+                    if in_quote:
+                        if ch == in_quote:
+                            in_quote = None
+                    else:
+                        if ch in ("'", '"', "`"):
+                            in_quote = ch
+                        elif raw_line[idx : idx + 2] == "//":
+                            cut_idx = idx
+                            break
+                    idx += 1
 
-        # Strip single-line HTML/Markdown comments
+                if cut_idx is not None:
+                    line = raw_line[:cut_idx].rstrip()
+                else:
+                    line = raw_line.rstrip()
+                    if in_quote == "`":
+                        in_multiline_quote = "`"
         elif is_markup_comment:
-            if line.startswith("<!--") and line.endswith("-->"):
+            if stripped.startswith("<!--") and stripped.endswith("-->"):
                 continue
+            line = raw_line.rstrip()
+        else:
+            line = raw_line.rstrip()
 
-        if line:
-            normalized_lines.append(line)
+        if line.strip():
+            normalized_lines.append(line.rstrip())
 
     return "\n".join(normalized_lines)
+
+
+def normalize_fixture_content(content: str, extension: str) -> bytes:
+    """Normalizes fixture content based on format (SPEC-001 §7.4):
+    - Python (.py): AST dump (ignores comments and formatting; captures semantic structure)
+    - YAML (.yaml, .yml): parse + canonical dump (sort_keys=True, canonical=True)
+    - JSON (.json): parse + canonical dump (sort_keys=True, separators=(',', ':'))
+    - TOML (.toml): parse + canonical JSON dump
+    - Other text: comments stripped and whitespace normalized
+    """
+    ext = extension.lower()
+    if ext == ".py":
+        try:
+            tree = ast.parse(content)
+            return ast.dump(tree).encode("utf-8")
+        except SyntaxError:
+            pass
+    elif ext in {".yaml", ".yml"} and yaml is not None:
+        try:
+            data = yaml.safe_load(content)
+            return yaml.dump(data, sort_keys=True, canonical=True).encode("utf-8")
+        except Exception:
+            pass
+    elif ext == ".json":
+        try:
+            data = json.loads(content)
+            return json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        except Exception:
+            pass
+    elif ext == ".toml" and tomllib is not None:
+        try:
+            data = tomllib.loads(content)
+            return json.dumps(data, sort_keys=True, default=str).encode("utf-8")
+        except Exception:
+            pass
+
+    normalized = strip_comments_and_whitespace(content, extension)
+    return normalized.encode("utf-8")
 
 
 def calculate_normalized_sha256(file_path: Path) -> str:
@@ -88,8 +218,8 @@ def calculate_normalized_sha256(file_path: Path) -> str:
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        normalized = strip_comments_and_whitespace(content, file_path.suffix)
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        normalized_bytes = normalize_fixture_content(content, file_path.suffix)
+        return hashlib.sha256(normalized_bytes).hexdigest()
     except (UnicodeDecodeError, PermissionError, OSError):
         # Binary fixture fallback (PDF, PNG, etc.): hash raw bytes directly
         return calculate_sha256(file_path)

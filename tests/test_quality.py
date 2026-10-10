@@ -29,15 +29,15 @@ def test_exception():
 
 
 def test_q1_trivial_assertions_rejected(tmp_path: Path):
-    """Trivial assertions like 'assert True' or 'assert x is not None' are rejected."""
+    """Trivial assertions like 'assert True' or 'assert x == x' are rejected."""
     test_code = """
 def test_trivial_true():
     result = "something"
     assert True
 
-def test_trivial_not_none():
-    data = {"key": "val"}
-    assert data is not None
+def test_trivial_self_compare():
+    x = 42
+    assert x == x
 """
     test_file = tmp_path / "test_trivial.py"
     test_file.write_text(test_code, encoding="utf-8")
@@ -46,6 +46,20 @@ def test_trivial_not_none():
     rules = [v.rule for v in violations]
     assert "Q1_TRIVIAL_ASSERTION" in rules
     assert len(violations) == 2
+
+
+def test_is_not_none_contract_assertion_passes(tmp_path: Path):
+    """Assertions checking 'is not None' are valid contract tests and must pass Gate Q."""
+    test_code = """
+def test_contract():
+    data = {"key": "val"}
+    assert data is not None
+"""
+    test_file = tmp_path / "test_contract.py"
+    test_file.write_text(test_code, encoding="utf-8")
+
+    violations = audit_test_quality_file(test_file)
+    assert len(violations) == 0
 
 
 def test_q2_assertless_test_rejected(tmp_path: Path):
@@ -138,6 +152,10 @@ def test_unittest_testcase_assertions_pass(tmp_path: Path):
     test_code = """
 import unittest
 
+def check_all_positive(data):
+    for x in data:
+        assert x > 0
+
 class MyTestCase(unittest.TestCase):
     def test_equality(self):
         result = 20 * 2
@@ -199,13 +217,14 @@ def test_via_helper():
 
 
 def test_no_raise_pragma_passes(tmp_path: Path):
-    """Verify that tests explicitly declaring no-raise intent pass Gate Q."""
+    """Verify that tests explicitly declaring no-raise pragma pass Gate Q."""
     test_code = """
 def test_operation_runs_cleanly():
     # sdcs: no-raise
     result = sum(range(100))
 
-def test_handler_does_not_raise():
+def test_handler_runs_cleanly():
+    # pragma: no-raise
     x = 10 * 5
 """
     test_file = tmp_path / "test_norise.py"

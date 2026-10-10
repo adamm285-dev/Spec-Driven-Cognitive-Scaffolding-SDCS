@@ -121,7 +121,7 @@ Autonomous coding agents cannot operate reliably within an unstructured software
 ### 3.4 Pillar 4: Dynamic Working Memory (`state.md`)
 
 * **Role:** Serves as the ephemeral whiteboard recording active sub-objectives, blockers, and pending validation gates.
-* **Budget Constraint:** MUST be hard-pruned to a ceiling of approximately 300 tokens (Gate S enforces a strict 350-token commit ceiling).
+* **Budget Constraint:** MUST be hard-pruned to a ceiling of approximately 300 tokens (Gate S enforces a strict 350-token commit ceiling using canonical `tiktoken (cl100k_base)` tokenization; environments without tiktoken fall back to `max(words, ceil(chars/4))` with a diagnostic notification).
 * **Invariant:** Completed tasks MUST be pruned immediately upon verification; task logs MUST NOT accumulate across turns.
 * **Subagent Blackboard Forking & Rollup Protocol:**
   When executing parallel tasks or spawning autonomous subagents, workers MUST NOT mutate root `state.md` concurrently.
@@ -149,10 +149,10 @@ THE MEASUREMENT: [Empirical failure metric or broken invariant]
 WHAT WOULD REOPEN IT: [Concrete, falsifiable condition required to re-evaluate]
 ```
 
-* **Compaction & Pruning Lifecycle:** To prevent negative memory bloat over multi-month lifecycles:
-  1. *Active Working Set:* `decisions.md` SHOULD carry no more than 10–15 active, high-relevance rejections (~1,000 token budget).
-  2. *Archival Protocol:* When subsystems are completely decommissioned, refactored, or replaced, superseded rejections MUST be compacted into `decisions/archive/` or `decisions.archive.md`.
-  3. *Automated Temporal Decay (`sdcs decay`):* Automated kinetic routines inspect git commit distance for `roadmap.md` (`>50` commits tagged `[STALE]`) and archive active rejections exceeding 15 entries into `decisions/archive/YYYY-QX.md` with an inline index table.
+* **Compaction & Pruning Lifecycle:** To maintain disciplined negative memory over multi-month lifecycles:
+  1. *Standing vs. Superseded Rejections:* Standing architectural rejections and dead ends (including permanent constraints without reopen lines) remain active in `decisions.md` to prevent cyclical regression loops.
+  2. *Archival Protocol:* When an architectural decision or rejection is explicitly replaced, decommissioned, or overturned, it is marked `Status: SUPERSEDED` (or `RESOLVED` / `ARCHIVED`). Archiving is strictly opt-in; standing rejections are never blindly pruned.
+  3. *Automated Temporal Decay (`sdcs decay`):* Automated kinetic routines inspect entries for explicit archival status. Only entries marked `SUPERSEDED`, `RESOLVED`, or `ARCHIVED` are decayed into `decisions/archive/YYYY-QX.md` with an inline index table. Standing active rejections remain permanently preserved.
 
 ### 3.7 Pillar 7: Positive Episodic Memory (`evals.md`)
 
@@ -178,21 +178,21 @@ Working memory and historical auditing MUST be physically separated across the f
 
 To eliminate ceremony overhead on lightweight tasks while providing full cognitive guardrails during unattended shifts, SDCS defines three operational profiles:
 
-| Profile | Hydration Set | Token Budget | Target Workload |
+| Profile | Hydration Set | Context Scope | Target Workload |
 | :--- | :--- | :--- | :--- |
-| **Lite** | `spine.md` + `state.md` | ~400 tokens | Interactive pair-programming, single-file bug fixes, UI/CSS tweaks, rapid iterations. |
-| **Standard** | `spine.md` + `roadmap.md` + `app_map.md` + `state.md` | ~1,500 tokens | Single-subsystem feature development, localized refactors, unit test expansions. |
-| **Full Shift** | All 7 Pillars + `sessions/template.md` on close-out | ~2,500–3,500 tokens | Multi-turn unattended autonomous agent runs, overnight refactors, cross-subsystem migrations. |
+| **Lite** | `spine.md` + `state.md` | Minimal fast-boot working set | Interactive pair-programming, single-file bug fixes, UI/CSS tweaks, rapid iterations. |
+| **Standard** | `spine.md` + `roadmap.md` + `app_map.md` + `state.md` | Standard working set | Single-subsystem feature development, localized refactors, unit test expansions. |
+| **Full Shift** | All 7 Pillars + `sessions/template.md` on close-out | Complete grounding | Multi-turn unattended autonomous agent runs, overnight refactors, cross-subsystem migrations. |
 
 ### 5.1 The Deterministic Context Compiler (`sdcs hydrate`)
 
-To guarantee profile compliance and eliminate multi-tool token burn, the `sdcs hydrate` command compiles and streams a pre-budgeted, single-pass markdown payload directly to stdout:
+To guarantee profile compliance and eliminate multi-tool token burn, the `sdcs hydrate` command compiles and streams a single-pass markdown payload directly to stdout without lossy truncation:
 
 ```bash
 sdcs hydrate [--profile lite|standard|full] [-s <subsystem>]
 ```
 
-This condenses 5–7 separate Turn 1 tool calls into 1 atomic CLI invocation, reducing boot latency and preventing context conflation.
+This condenses 5–7 separate Turn 1 tool calls into 1 atomic CLI invocation, reducing boot latency and preventing context conflation. While `state.md` is strictly capped at $\le 350$ tokens by Gate S, `sdcs hydrate` preserves repository context in full, scaling with project size without enforcing an arbitrary artificial cap.
 
 ---
 
@@ -521,7 +521,7 @@ When test suites fail due to mismatched local interpreters (e.g. Python 3.10 vs 
 
 ### 7.17 AST Skeletal Observation Compaction (`sdcs slice`)
 
-Autonomous agents exploring unmapped codebases frequently ingest entire multi-thousand-line source files, wasting up to 95% of observation tokens on internal method execution bodies that are irrelevant during the navigation and orientation phase.
+Autonomous agents exploring unmapped codebases frequently ingest entire multi-thousand-line source files, wasting 78.0%–98.9% of observation tokens on internal method execution bodies that are irrelevant during the navigation and orientation phase.
 
 * **REQ-SKELETON-01 (AST Body Truncation):** Conforming tooling (`sdcs slice --skeleton <path>`) MUST parse source files into Abstract Syntax Trees, replacing function, async function, and method bodies with Ellipsis (`...`) while strictly retaining class names, docstrings, parameter signatures, and return type annotations.
 * **REQ-SKELETON-02 (Polyglot Skeletal Support):** In non-Python environments (TypeScript, JavaScript, Go, Rust), structural signature extractors MUST emit interface definitions and function signatures with stripped bodies to conserve context.
@@ -539,7 +539,7 @@ Server-side prompt caching mechanisms (e.g. Google Gemini Context Caching, Anthr
 
 Invoking Frontier-tier LLM inference to repair code formatting, indentation errors, or unused import ordering is an anti-pattern that burns latency and expensive completion tokens.
 
-* **REQ-REPAIR-01 (Zero-Token Formatting Interception):** Prior to evaluating kinetic verification gates or staging code mutations, conforming harnesses MUST execute local deterministic formatters (`ruff --fix`, `black`, `prettier`, `gofmt`) directly inside the execution sandbox.
+* **REQ-REPAIR-01 (Zero-Token Formatting Interception):** Prior to evaluating kinetic verification gates or staging code mutations, conforming harnesses MUST execute local deterministic formatters (`ruff --fix`, `black`, `prettier`, `gofmt`) directly in place on disk.
 * **REQ-REPAIR-02 (Pre-Commit Zero Friction):** When trivial formatting or lint defects are resolved by deterministic tools, the repair MUST conclude with zero LLM inference tokens spent.
 
 ### 7.20 Governed Model Tier Routing & Sticky Escalation Lock (`sdcs route`)
@@ -571,7 +571,7 @@ Conformity with SPEC-001 v1.8.1 is validated via reference CLI tools:
 * `sdcs warehouse` (`sdcs warehouse [sync|publish|list]`): Hub-and-spoke federation engine synchronizing global vendor rejections with Gate W sanitization.
 * `sdcs session` (`sdcs session [index|list]`): Indexes and forensically queries flight recorder shift handoffs via `sessions/manifest.jsonl`.
 * `sdcs graph` (`sdcs graph [--format mermaid|ascii]`): Visualizes subsystem architecture and dependency flow as Mermaid diagrams or ASCII terminal DAGs.
-* `sdcs slice` (`sdcs slice [--skeleton <path>]`): Extracts structural AST skeletons (classes, signatures, type hints, docstrings) replacing bodies with `...` for 95% token savings.
+* `sdcs slice` (`sdcs slice [--skeleton <path>]`): Extracts structural AST skeletons (classes, signatures, type hints, docstrings) replacing bodies with `...` for 78.0%–98.9% token savings.
 * `sdcs repair` (`sdcs repair [--staged] [--check-only]`): Deterministically auto-repairs code formatting and trivial lints locally with zero LLM inference tokens.
 * `sdcs route` (`sdcs route [--file <path>] [--failures <int>] [--planning]`): Evaluates governed model tier routing across 4 deterministic escalation triggers with sticky lock.
 

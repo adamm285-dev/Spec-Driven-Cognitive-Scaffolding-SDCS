@@ -38,6 +38,7 @@ classifiers = [
 ]
 dependencies = [
     "PyYAML>=6.0",
+    "tiktoken>=0.5.0",
 ]
 
 [project.optional-dependencies]
