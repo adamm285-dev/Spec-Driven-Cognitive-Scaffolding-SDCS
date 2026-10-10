@@ -235,14 +235,19 @@ def locate_evals_file(base_dir: Path, explicit_path: str | None = None) -> Path:
     candidates = [
         base_dir / "evals.md",
         base_dir / ".agent" / "evals.md",
+        base_dir / "docs" / "evals.md",
+        base_dir / "docs" / "map" / "evals.md",
         base_dir / "EVALS.md",
         base_dir / ".agent" / "EVALS.md",
-        base_dir / "docs" / "evals.md",
+        base_dir / "docs" / "EVALS.md",
+        base_dir / "docs" / "map" / "EVALS.md",
     ]
     for c in candidates:
         if c.is_file():
             return c
 
+    if (base_dir / "docs").is_dir() and not (base_dir / "evals.md").is_file():
+        return base_dir / "docs" / "evals.md"
     return base_dir / "evals.md"
 
 

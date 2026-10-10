@@ -92,3 +92,39 @@ def test_init_finds_existing_pillars_whatever_their_case(repo: Path):
     assert not (
         repo / "decisions.md"
     ).exists(), "init created a root decisions.md beside docs/map/decisions.md"
+
+
+def test_all_locators_resolve_pillars_in_docs_dir(tmp_path: Path):
+    from sdcs.audit import locate_evals_file
+    from sdcs.decay import locate_decisions_file, locate_roadmap_file
+    from sdcs.graph import locate_wiring_file
+    from sdcs.hydrate import locate_pillar_file
+    from sdcs.map import locate_map_file
+    from sdcs.session import locate_sessions_dir
+    from sdcs.verifier.environment import run_diagnostics
+    from sdcs.verifier.state import locate_state_file
+
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    (docs_dir / "spine.md").write_text("# Spine\n", encoding="utf-8")
+    (docs_dir / "wiring.yaml").write_text("subsystems: {}\n", encoding="utf-8")
+    (docs_dir / "roadmap.md").write_text("# Roadmap\n", encoding="utf-8")
+    (docs_dir / "state.md").write_text("## Active Objective\nObjective\n", encoding="utf-8")
+    (docs_dir / "app_map.md").write_text("# Cartography\n", encoding="utf-8")
+    (docs_dir / "decisions.md").write_text("# Decisions\n", encoding="utf-8")
+    (docs_dir / "evals.md").write_text("# Evals\n", encoding="utf-8")
+    (docs_dir / "sessions").mkdir()
+
+    assert locate_pillar_file(tmp_path, "spine.md") == docs_dir / "spine.md"
+    assert locate_wiring_file(tmp_path) == docs_dir / "wiring.yaml"
+    assert locate_roadmap_file(tmp_path) == docs_dir / "roadmap.md"
+    assert locate_state_file(tmp_path) == docs_dir / "state.md"
+    assert locate_map_file(tmp_path) == docs_dir / "app_map.md"
+    assert locate_decisions_file(tmp_path) == docs_dir / "decisions.md"
+    assert locate_evals_file(tmp_path) == docs_dir / "evals.md"
+    assert locate_sessions_dir(tmp_path) == docs_dir / "sessions"
+
+    items = run_diagnostics(tmp_path)
+    pillar_items = [it for it in items if it.category == "Cognitive Pillars"]
+    assert len(pillar_items) == 7
+    assert all(it.passed for it in pillar_items)

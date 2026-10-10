@@ -20,10 +20,14 @@ def locate_sessions_dir(repo_root: Path, custom_path: str | Path | None = None) 
     candidates = [
         repo_root / "sessions",
         repo_root / ".agent" / "sessions",
+        repo_root / "docs" / "sessions",
+        repo_root / "docs" / "map" / "sessions",
     ]
     for c in candidates:
         if c.is_dir():
             return c
+    if (repo_root / "docs").is_dir() and not (repo_root / "sessions").is_dir():
+        return repo_root / "docs" / "sessions"
     return repo_root / "sessions"
 
 

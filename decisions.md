@@ -56,3 +56,99 @@ Permanent: false
 * **THE MEASUREMENT:** Gate Q's `TestASTVisitor` (`src/sdcs/verifier/quality.py`) inspects Python test functions only. In the downstream ap2-commerce repository all 19 declared mocks live in non-test product code, and 5 of them are partly or wholly in TypeScript, which Gate Q never parses.
 * **WHY REJECTED:** Different targets and failure modes: Gate Q rejects hollow tests; the ledger reconciles declared stand-ins in shipping code across languages. Merging them would widen Gate Q's scan to product code and blur its precision guarantees.
 * **WHAT WOULD REOPEN IT:** Gate Q gaining a polyglot product-code scan for an unrelated reason, making a shared scanner cheaper than two gates.
+
+
+## REJ-008: Prohibited Import Boundary (`warehouse` -> `graph`)
+- **Date**: 2026-10-10T19:54:13Z
+- **Target**: `src/sdcs/warehouse.py:315`
+- **Status**: REJECTED (AST Topology Invariant Gate T)
+
+**Claim**:
+Subsystem `warehouse` can import `sdcs.graph` directly from `graph`.
+
+**Measurement**:
+- **Tool**: `sdcs verify --topology` (AST Static Analysis)
+- **Violation**: `src/sdcs/warehouse.py:315` imports prohibited module `sdcs.graph`.
+- **Declared Contract**: Allowed dependencies for `warehouse`: ['sdcs.verifier'].
+- **Result**: Automated Gate T pre-commit rejection.
+
+**Reopen Condition**:
+1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
+2. Or request human architectural approval to mutate `wiring.yaml` under `warehouse.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+
+
+## REJ-009: Prohibited Import Boundary (`verifier` -> `graph`)
+- **Date**: 2026-10-10T19:54:13Z
+- **Target**: `src/sdcs/verifier/environment.py:61`
+- **Status**: REJECTED (AST Topology Invariant Gate T)
+
+**Claim**:
+Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
+
+**Measurement**:
+- **Tool**: `sdcs verify --topology` (AST Static Analysis)
+- **Violation**: `src/sdcs/verifier/environment.py:61` imports prohibited module `sdcs.graph`.
+- **Declared Contract**: Allowed dependencies for `verifier`: [].
+- **Result**: Automated Gate T pre-commit rejection.
+
+**Reopen Condition**:
+1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
+2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+
+
+## REJ-010: Prohibited Import Boundary (`verifier` -> `graph`)
+- **Date**: 2026-10-10T19:54:13Z
+- **Target**: `src/sdcs/verifier/sandbox.py:20`
+- **Status**: REJECTED (AST Topology Invariant Gate T)
+
+**Claim**:
+Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
+
+**Measurement**:
+- **Tool**: `sdcs verify --topology` (AST Static Analysis)
+- **Violation**: `src/sdcs/verifier/sandbox.py:20` imports prohibited module `sdcs.graph`.
+- **Declared Contract**: Allowed dependencies for `verifier`: [].
+- **Result**: Automated Gate T pre-commit rejection.
+
+**Reopen Condition**:
+1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
+2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+
+
+## REJ-011: Prohibited Import Boundary (`verifier` -> `decay`)
+- **Date**: 2026-10-10T19:54:13Z
+- **Target**: `src/sdcs/verifier/topology.py:435`
+- **Status**: REJECTED (AST Topology Invariant Gate T)
+
+**Claim**:
+Subsystem `verifier` can import `sdcs.decay` directly from `decay`.
+
+**Measurement**:
+- **Tool**: `sdcs verify --topology` (AST Static Analysis)
+- **Violation**: `src/sdcs/verifier/topology.py:435` imports prohibited module `sdcs.decay`.
+- **Declared Contract**: Allowed dependencies for `verifier`: [].
+- **Result**: Automated Gate T pre-commit rejection.
+
+**Reopen Condition**:
+1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
+2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+
+
+## REJ-012: Prohibited Import Boundary (`verifier` -> `graph`)
+- **Date**: 2026-10-10T19:54:13Z
+- **Target**: `src/sdcs/verifier/topology.py:474`
+- **Status**: REJECTED (AST Topology Invariant Gate T)
+
+**Claim**:
+Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
+
+**Measurement**:
+- **Tool**: `sdcs verify --topology` (AST Static Analysis)
+- **Violation**: `src/sdcs/verifier/topology.py:474` imports prohibited module `sdcs.graph`.
+- **Declared Contract**: Allowed dependencies for `verifier`: [].
+- **Result**: Automated Gate T pre-commit rejection.
+
+**Reopen Condition**:
+1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
+2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
+

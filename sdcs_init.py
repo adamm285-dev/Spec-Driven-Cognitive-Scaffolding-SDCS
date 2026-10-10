@@ -921,6 +921,7 @@ def is_hooks_path_set(repo_root: Path) -> bool:
 def init_scaffold(
     target_dir: Path = Path("."),
     use_agent_dir: bool = False,
+    use_docs_dir: bool = False,
     hierarchical: bool = False,
     skip_agents_md: bool = False,
     skip_hooks: bool = False,
@@ -931,7 +932,12 @@ def init_scaffold(
         print(f"Error: Target directory '{repo_root}' does not exist.", file=sys.stderr)
         sys.exit(1)
 
-    scaffold_dir = (repo_root / ".agent") if use_agent_dir else repo_root
+    if use_docs_dir:
+        scaffold_dir = repo_root / "docs"
+    elif use_agent_dir:
+        scaffold_dir = repo_root / ".agent"
+    else:
+        scaffold_dir = repo_root
     scaffold_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n====================================================================")
@@ -1014,6 +1020,11 @@ def main():
         help="Place SDCS pillars inside .agent/ control directory",
     )
     parser.add_argument(
+        "--use-docs-dir",
+        action="store_true",
+        help="Place SDCS pillars inside docs/ directory",
+    )
+    parser.add_argument(
         "--hierarchical",
         action="store_true",
         help="Generate hierarchical multi-tiered cartography maps",
@@ -1046,6 +1057,7 @@ def main():
     init_scaffold(
         target_dir=Path(args.target_dir),
         use_agent_dir=args.use_agent_dir,
+        use_docs_dir=args.use_docs_dir,
         hierarchical=args.hierarchical,
         skip_agents_md=args.skip_agents_md,
         skip_hooks=args.skip_hooks,

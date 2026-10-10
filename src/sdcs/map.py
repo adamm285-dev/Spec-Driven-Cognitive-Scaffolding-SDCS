@@ -19,12 +19,19 @@ def locate_map_file(repo_root: Path, custom_path: str | Path | None = None) -> P
     candidates = [
         repo_root / "app_map.md",
         repo_root / ".agent" / "app_map.md",
+        repo_root / "docs" / "app_map.md",
+        repo_root / "docs" / "map" / "app_map.md",
         repo_root / "APP_MAP.md",
         repo_root / ".agent" / "APP_MAP.md",
+        repo_root / "docs" / "APP_MAP.md",
+        repo_root / "docs" / "map" / "APP_MAP.md",
     ]
     for c in candidates:
         if c.is_file():
             return c
+    # Default fallback: if docs/ exists, prefer docs/app_map.md else root
+    if (repo_root / "docs").is_dir() and not (repo_root / "app_map.md").is_file():
+        return repo_root / "docs" / "app_map.md"
     return repo_root / "app_map.md"
 
 

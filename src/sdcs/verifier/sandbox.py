@@ -19,7 +19,16 @@ except ImportError:  # pragma: no cover
 def locate_wiring_file(repo_root: Path, custom_path: Path | None = None) -> Path | None:
     if custom_path and custom_path.is_file():
         return custom_path
-    for c in [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]:
+    for c in [
+        repo_root / "wiring.yaml",
+        repo_root / ".agent" / "wiring.yaml",
+        repo_root / "docs" / "wiring.yaml",
+        repo_root / "docs" / "map" / "wiring.yaml",
+        repo_root / "wiring.yml",
+        repo_root / ".agent" / "wiring.yml",
+        repo_root / "docs" / "wiring.yml",
+        repo_root / "docs" / "map" / "wiring.yml",
+    ]:
         if c.is_file():
             return c
     return None

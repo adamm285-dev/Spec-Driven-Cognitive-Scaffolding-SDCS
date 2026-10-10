@@ -432,17 +432,24 @@ def sync_violations_to_decisions(
     repo_root: Path,
 ) -> int:
     """Persists unique violations to decisions.md without duplicating entries."""
-    decisions_file = repo_root / "decisions.md"
-    if not decisions_file.exists():
-        # Check .agent/decisions.md fallback
-        agent_decisions = repo_root / ".agent" / "decisions.md"
-        if agent_decisions.exists():
-            decisions_file = agent_decisions
-        else:
-            print(
-                "[SDCS::DECISIONS] decisions.md not found. Skipping negative memory serialization."
-            )
-            return 0
+    decisions_file = None
+    for c in [
+        repo_root / "decisions.md",
+        repo_root / ".agent" / "decisions.md",
+        repo_root / "docs" / "decisions.md",
+        repo_root / "docs" / "map" / "decisions.md",
+        repo_root / "DECISIONS.md",
+        repo_root / ".agent" / "DECISIONS.md",
+        repo_root / "docs" / "DECISIONS.md",
+        repo_root / "docs" / "map" / "DECISIONS.md",
+    ]:
+        if c.is_file():
+            decisions_file = c
+            break
+
+    if not decisions_file:
+        print("[SDCS::DECISIONS] decisions.md not found. Skipping negative memory serialization.")
+        return 0
 
     content = decisions_file.read_text(encoding="utf-8")
     appended_count = 0
@@ -476,13 +483,26 @@ def run_topology_audit(
     append_rejections: bool = False,
 ) -> int:
     """CLI orchestrator for Gate T boundary auditing."""
-    target_wiring = wiring_path or (repo_root / "wiring.yaml")
-    if not target_wiring.is_file():
-        agent_wiring = repo_root / ".agent" / "wiring.yaml"
-        if agent_wiring.is_file():
-            target_wiring = agent_wiring
-        else:
-            print(f"[SDCS::ERROR] wiring.yaml not found at {target_wiring}")
+    target_wiring = wiring_path
+    if not target_wiring or not Path(target_wiring).is_file():
+        target_wiring = None
+        for c in [
+            repo_root / "wiring.yaml",
+            repo_root / ".agent" / "wiring.yaml",
+            repo_root / "docs" / "wiring.yaml",
+            repo_root / "docs" / "map" / "wiring.yaml",
+            repo_root / "wiring.yml",
+            repo_root / ".agent" / "wiring.yml",
+            repo_root / "docs" / "wiring.yml",
+            repo_root / "docs" / "map" / "wiring.yml",
+        ]:
+            if c.is_file():
+                target_wiring = c
+                break
+        if not target_wiring:
+            print(
+                f"[SDCS::ERROR] wiring.yaml not found at {wiring_path or (repo_root / 'wiring.yaml')}"
+            )
             return 1
 
     validator = TopologyValidator(target_wiring, repo_root)

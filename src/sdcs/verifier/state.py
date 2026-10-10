@@ -17,8 +17,12 @@ def locate_state_file(repo_root: Path, custom_path: str | Path | None = None) ->
     candidates = [
         repo_root / "state.md",
         repo_root / ".agent" / "state.md",
+        repo_root / "docs" / "state.md",
+        repo_root / "docs" / "map" / "state.md",
         repo_root / "STATE.md",
         repo_root / ".agent" / "STATE.md",
+        repo_root / "docs" / "STATE.md",
+        repo_root / "docs" / "map" / "STATE.md",
     ]
     for c in candidates:
         if c.is_file():

@@ -13,12 +13,16 @@ from sdcs.verifier.state import count_tokens, locate_state_file
 
 
 def locate_pillar_file(repo_root: Path, filename: str) -> Path | None:
-    """Locates a pillar file in repo root or .agent/."""
+    """Locates a pillar file in repo root, .agent/, or docs/."""
     candidates = [
         repo_root / filename,
         repo_root / ".agent" / filename,
+        repo_root / "docs" / filename,
+        repo_root / "docs" / "map" / filename,
         repo_root / filename.upper(),
         repo_root / ".agent" / filename.upper(),
+        repo_root / "docs" / filename.upper(),
+        repo_root / "docs" / "map" / filename.upper(),
     ]
     for c in candidates:
         if c.is_file():

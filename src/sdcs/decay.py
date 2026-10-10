@@ -17,6 +17,10 @@ def locate_roadmap_file(repo_root: Path) -> Path | None:
         repo_root / ".agent" / "roadmap.md",
         repo_root / "docs" / "roadmap.md",
         repo_root / "docs" / "map" / "roadmap.md",
+        repo_root / "ROADMAP.md",
+        repo_root / ".agent" / "ROADMAP.md",
+        repo_root / "docs" / "ROADMAP.md",
+        repo_root / "docs" / "map" / "ROADMAP.md",
     ]:
         if c.is_file():
             return c
@@ -29,6 +33,10 @@ def locate_decisions_file(repo_root: Path) -> Path | None:
         repo_root / ".agent" / "decisions.md",
         repo_root / "docs" / "decisions.md",
         repo_root / "docs" / "map" / "decisions.md",
+        repo_root / "DECISIONS.md",
+        repo_root / ".agent" / "DECISIONS.md",
+        repo_root / "docs" / "DECISIONS.md",
+        repo_root / "docs" / "map" / "DECISIONS.md",
     ]:
         if c.is_file():
             return c

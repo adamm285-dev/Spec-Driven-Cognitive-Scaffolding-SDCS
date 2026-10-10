@@ -41,6 +41,11 @@ def main():
         help="Store scaffolding files inside .agent/ directory instead of repo root",
     )
     init_parser.add_argument(
+        "--use-docs-dir",
+        action="store_true",
+        help="Store scaffolding files inside docs/ directory instead of repo root",
+    )
+    init_parser.add_argument(
         "--hierarchical",
         action="store_true",
         help="Initialize hierarchical scaffolding across detected subpackages/modules",
@@ -707,6 +712,7 @@ def main():
         init_scaffold(
             target_dir=args.target_dir,
             use_agent_dir=args.use_agent_dir,
+            use_docs_dir=getattr(args, "use_docs_dir", False),
             hierarchical=args.hierarchical,
             skip_agents_md=args.skip_agents_md,
             skip_hooks=args.skip_hooks,
@@ -862,9 +868,11 @@ def main():
             print("====================================================================")
             has_violations = False
             files_to_check = []
-            for dec in [repo_root / "decisions.md", repo_root / ".agent" / "decisions.md"]:
-                if dec.is_file():
-                    files_to_check.append(dec)
+            from sdcs.decay import locate_decisions_file
+
+            dec = locate_decisions_file(repo_root)
+            if dec and dec.is_file():
+                files_to_check.append(dec)
             wh_cfg = locate_warehouse_config(repo_root)
             wh_cache = locate_warehouse_cache(repo_root, wh_cfg)
             if wh_cache.is_dir():

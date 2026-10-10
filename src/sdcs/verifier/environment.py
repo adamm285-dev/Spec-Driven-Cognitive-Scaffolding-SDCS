@@ -50,6 +50,22 @@ def _check_python_version(required_spec: str) -> bool:
     return True
 
 
+def _locate_wiring_file(repo_root: Path) -> Path | None:
+    for c in [
+        repo_root / "wiring.yaml",
+        repo_root / ".agent" / "wiring.yaml",
+        repo_root / "docs" / "wiring.yaml",
+        repo_root / "docs" / "map" / "wiring.yaml",
+        repo_root / "wiring.yml",
+        repo_root / ".agent" / "wiring.yml",
+        repo_root / "docs" / "wiring.yml",
+        repo_root / "docs" / "map" / "wiring.yml",
+    ]:
+        if c.is_file():
+            return c
+    return None
+
+
 def get_environment_config(repo_root: Path) -> dict[str, Any]:
     """Load environment configuration from wiring.yaml or fallback pyproject.toml."""
     config: dict[str, Any] = {
@@ -58,8 +74,8 @@ def get_environment_config(repo_root: Path) -> dict[str, Any]:
         "required_env_vars": [],
     }
 
-    wiring_path = repo_root / "wiring.yaml"
-    if wiring_path.exists():
+    wiring_path = _locate_wiring_file(repo_root)
+    if wiring_path and wiring_path.exists():
         try:
             with open(wiring_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
@@ -146,8 +162,21 @@ def run_diagnostics(repo_root: Path = Path(".")) -> list[DiagnosticItem]:
     ]
 
     for filename, label in pillars:
-        p = repo_root / filename
-        exists = p.exists()
+        p = None
+        for cand in [
+            repo_root / filename,
+            repo_root / ".agent" / filename,
+            repo_root / "docs" / filename,
+            repo_root / "docs" / "map" / filename,
+            repo_root / filename.upper(),
+            repo_root / ".agent" / filename.upper(),
+            repo_root / "docs" / filename.upper(),
+            repo_root / "docs" / "map" / filename.upper(),
+        ]:
+            if cand.is_file():
+                p = cand
+                break
+        exists = p is not None
         items.append(
             DiagnosticItem(
                 category="Cognitive Pillars",
@@ -198,17 +227,17 @@ def verify_environment(repo_root: Path = Path(".")) -> tuple[bool, list[str]]:
 
 def has_environment_declaration(repo_root: Path) -> bool:
     """Returns True if the repository declares environment or toolchain invariants."""
-    for cand in [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]:
-        if cand.is_file():
-            try:
-                with open(cand, "r", encoding="utf-8") as f:
-                    data = yaml.safe_load(f) or {}
-                    if "environment" in data and isinstance(data["environment"], dict):
-                        return True
-                    if "tool_boundaries" in data:
-                        return True
-            except Exception:
-                pass
+    cand = _locate_wiring_file(repo_root)
+    if cand and cand.is_file():
+        try:
+            with open(cand, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                if "environment" in data and isinstance(data["environment"], dict):
+                    return True
+                if "tool_boundaries" in data:
+                    return True
+        except Exception:
+            pass
     pyproject_path = repo_root / "pyproject.toml"
     if pyproject_path.is_file():
         try:

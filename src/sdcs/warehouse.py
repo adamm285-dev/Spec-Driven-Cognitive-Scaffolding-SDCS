@@ -315,7 +315,16 @@ def locate_warehouse_config(repo_root: Path, custom_wiring: Path | None = None) 
     candidates = (
         [custom_wiring]
         if custom_wiring
-        else [repo_root / "wiring.yaml", repo_root / ".agent" / "wiring.yaml"]
+        else [
+            repo_root / "wiring.yaml",
+            repo_root / ".agent" / "wiring.yaml",
+            repo_root / "docs" / "wiring.yaml",
+            repo_root / "docs" / "map" / "wiring.yaml",
+            repo_root / "wiring.yml",
+            repo_root / ".agent" / "wiring.yml",
+            repo_root / "docs" / "wiring.yml",
+            repo_root / "docs" / "map" / "wiring.yml",
+        ]
     )
     for c in candidates:
         if c and c.is_file() and yaml is not None:

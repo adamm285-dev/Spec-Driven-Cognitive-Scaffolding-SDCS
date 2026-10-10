@@ -24,8 +24,12 @@ def locate_wiring_file(repo_root: Path, custom_path: str | Path | None = None) -
     candidates = [
         repo_root / "wiring.yaml",
         repo_root / ".agent" / "wiring.yaml",
+        repo_root / "docs" / "wiring.yaml",
+        repo_root / "docs" / "map" / "wiring.yaml",
         repo_root / "wiring.yml",
         repo_root / ".agent" / "wiring.yml",
+        repo_root / "docs" / "wiring.yml",
+        repo_root / "docs" / "map" / "wiring.yml",
     ]
     for c in candidates:
         if c.is_file():
