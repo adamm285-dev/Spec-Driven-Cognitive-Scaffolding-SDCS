@@ -1,6 +1,6 @@
 """
 Spec-Driven Cognitive Scaffolding (SDCS) Framework
-Conforms to SPEC-001 v1.8.1.
+Conforms to SPEC-001 v1.9.0.
 """
 
 __version__ = "1.9.0"
