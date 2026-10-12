@@ -17,7 +17,7 @@ sys.path.insert(0, str(SDCS_ROOT / "src"))
 
 from sdcs.skeleton import extract_file_skeleton, calculate_skeleton_metrics
 from sdcs.verifier.state import count_tokens, get_tokenizer_info
-from sdcs import decay
+from sdcs import decay, __version__
 from sdcs.verifier import cycles, quality
 
 
@@ -193,10 +193,6 @@ def measure_floorsmith_replay() -> dict | None:
     env_path = os.environ.get("FLOORSMITH_PATH")
     if env_path and Path(env_path).is_dir():
         floorsmith_path = Path(env_path)
-    elif (SDCS_ROOT.parent / "Floorsmith_Estimator").is_dir():
-        floorsmith_path = SDCS_ROOT.parent / "Floorsmith_Estimator"
-    elif (Path.home() / "Desktop" / "Floorsmith_Estimator").is_dir():
-        floorsmith_path = Path.home() / "Desktop" / "Floorsmith_Estimator"
     else:
         floorsmith_path = None
 
@@ -329,7 +325,7 @@ def generate_evidence_md() -> str:
     )
 
     lines = [
-        "# Empirical Evidence & Benchmark Telemetry (SDCS v1.8.1)",
+        f"# Empirical Evidence & Benchmark Telemetry (SDCS v{__version__})",
         "<!-- SPEC-001 Verification Standard | Status: EMPIRICALLY MEASURED -->",
         "",
         "This document records physical telemetry, AST structural measurements, and reproducible gate audits gathered directly from executing commands across the SDCS codebase and reference production codebases.",

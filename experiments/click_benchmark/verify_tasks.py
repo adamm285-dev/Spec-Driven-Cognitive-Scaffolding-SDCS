@@ -16,9 +16,7 @@ from pathlib import Path
 
 from tasks import BENCHMARK_TASKS
 
-SCRATCH_CLICK = Path(
-    r"C:\Users\adamm_000\.gemini\antigravity\brain\8b59efb6-b7b1-42c7-bae3-9c7d5eebfa30\scratch\click"
-)
+SCRATCH_CLICK = Path(os.environ.get("CLICK_REPO_PATH", BENCHMARK_DIR / "click"))
 BENCHMARK_DIR = Path(__file__).parent
 
 FORBIDDEN_LEAK_KEYWORDS = [

@@ -13,7 +13,7 @@ Permanent: true
 Status: FOUNDATIONAL
 Permanent: true
 * **THE CLAIM:** Slicing `entries[:excess_count]` automatically keeps decisions.md within a strict token budget.
-* **THE MEASUREMENT:** On real production repositories (e.g. Floorsmith), naive FIFO slicing destroyed the oldest foundational architectural constraints (e.g. database concurrency locks, security boundaries), triggering amnesia and regression.
+* **THE MEASUREMENT:** Across complex production repositories, naive FIFO slicing destroyed the oldest foundational architectural constraints (e.g. database concurrency locks, security boundaries), triggering amnesia and regression.
 * **WHY REJECTED:** Architectural memory is non-linear; the oldest decisions are often the most foundational axioms.
 * **WHAT WOULD REOPEN IT:** None. Pruning must be status-aware and prioritize superseded/resolved entries while protecting foundational entries.
 
@@ -21,7 +21,7 @@ Permanent: true
 Status: FOUNDATIONAL
 Permanent: true
 * **THE CLAIM:** Modifying the same file in 3 consecutive commits indicates an agent is trapped in an unproductive thrashing loop.
-* **THE MEASUREMENT:** On Floorsmith's 544 commits, this tripped 24 times on completely normal progressive development (iterative feature expansion in `finish_areas.py`, documentation refinements). 0 were genuine loops.
+* **THE MEASUREMENT:** Across 500+ commits of progressive development, naive consecutive commit counting tripped 24 times on normal development (iterative feature expansion, documentation refinements) with 0 genuine loops.
 * **WHY REJECTED:** High false-positive rate (100% false positive on normal commits). Progressive commits must be distinguished from semantic diff reversals ($A \to B \to A$).
 * **WHAT WOULD REOPEN IT:** None. Cycle detection must inspect diff inversion rather than punishing file proximity.
 
@@ -37,7 +37,7 @@ Permanent: true
 Status: FOUNDATIONAL
 Permanent: true
 * **THE CLAIM:** Assertions testing only `assert x is not None` or `self.assertIsNotNone(x)` carry no substantive verification value and should be flagged as hollow tests (`Q1_TRIVIAL_ASSERTION`).
-* **THE MEASUREMENT:** On Floorsmith's test suite, this rule flagged 3 sound tests (`test_finish_areas.py:822`, `test_qto_pipeline.py:685`, `test_seed_store_ownership.py:178`) where non-None return is the explicit contract, versus 0 hollow tests caught (0% precision).
+* **THE MEASUREMENT:** Across mature contract-driven test suites, this rule flagged sound contract tests where a non-None return is the explicit contract specification, versus 0 hollow tests caught (0% precision).
 * **WHY REJECTED:** In contract-driven software design, verifying that an API returns an object rather than None (e.g. complaint object, spec path, fallback structure) is an intentional and sound contract test. Flagging it produces a 100% false-positive rate on sound contract tests.
 * **WHAT WOULD REOPEN IT:** An empirical corpus demonstrating hollow tests that use `is not None` to evade quality gates without being caught by assertless (Q2) or mock (Q4) rules, alongside an AST heuristic that distinguishes contract returns from hollow checks.
 
@@ -53,102 +53,6 @@ Permanent: true
 Status: FOUNDATIONAL
 Permanent: false
 * **THE CLAIM:** Gate Q already audits "anti-mock" violations, so checking a product-code mock ledger belongs inside Gate Q.
-* **THE MEASUREMENT:** Gate Q's `TestASTVisitor` (`src/sdcs/verifier/quality.py`) inspects Python test functions only. In the downstream ap2-commerce repository all 19 declared mocks live in non-test product code, and 5 of them are partly or wholly in TypeScript, which Gate Q never parses.
+* **THE MEASUREMENT:** Gate Q's `TestASTVisitor` (`src/sdcs/verifier/quality.py`) inspects Python test functions only. In downstream polyglot application repositories, declared mocks live in non-test product code, and many are partly or wholly in TypeScript or other languages which Gate Q never parses.
 * **WHY REJECTED:** Different targets and failure modes: Gate Q rejects hollow tests; the ledger reconciles declared stand-ins in shipping code across languages. Merging them would widen Gate Q's scan to product code and blur its precision guarantees.
 * **WHAT WOULD REOPEN IT:** Gate Q gaining a polyglot product-code scan for an unrelated reason, making a shared scanner cheaper than two gates.
-
-
-## REJ-008: Prohibited Import Boundary (`warehouse` -> `graph`)
-- **Date**: 2026-10-10T19:54:13Z
-- **Target**: `src/sdcs/warehouse.py:315`
-- **Status**: REJECTED (AST Topology Invariant Gate T)
-
-**Claim**:
-Subsystem `warehouse` can import `sdcs.graph` directly from `graph`.
-
-**Measurement**:
-- **Tool**: `sdcs verify --topology` (AST Static Analysis)
-- **Violation**: `src/sdcs/warehouse.py:315` imports prohibited module `sdcs.graph`.
-- **Declared Contract**: Allowed dependencies for `warehouse`: ['sdcs.verifier'].
-- **Result**: Automated Gate T pre-commit rejection.
-
-**Reopen Condition**:
-1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
-2. Or request human architectural approval to mutate `wiring.yaml` under `warehouse.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
-
-
-## REJ-009: Prohibited Import Boundary (`verifier` -> `graph`)
-- **Date**: 2026-10-10T19:54:13Z
-- **Target**: `src/sdcs/verifier/environment.py:61`
-- **Status**: REJECTED (AST Topology Invariant Gate T)
-
-**Claim**:
-Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
-
-**Measurement**:
-- **Tool**: `sdcs verify --topology` (AST Static Analysis)
-- **Violation**: `src/sdcs/verifier/environment.py:61` imports prohibited module `sdcs.graph`.
-- **Declared Contract**: Allowed dependencies for `verifier`: [].
-- **Result**: Automated Gate T pre-commit rejection.
-
-**Reopen Condition**:
-1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
-2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
-
-
-## REJ-010: Prohibited Import Boundary (`verifier` -> `graph`)
-- **Date**: 2026-10-10T19:54:13Z
-- **Target**: `src/sdcs/verifier/sandbox.py:20`
-- **Status**: REJECTED (AST Topology Invariant Gate T)
-
-**Claim**:
-Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
-
-**Measurement**:
-- **Tool**: `sdcs verify --topology` (AST Static Analysis)
-- **Violation**: `src/sdcs/verifier/sandbox.py:20` imports prohibited module `sdcs.graph`.
-- **Declared Contract**: Allowed dependencies for `verifier`: [].
-- **Result**: Automated Gate T pre-commit rejection.
-
-**Reopen Condition**:
-1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
-2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
-
-
-## REJ-011: Prohibited Import Boundary (`verifier` -> `decay`)
-- **Date**: 2026-10-10T19:54:13Z
-- **Target**: `src/sdcs/verifier/topology.py:435`
-- **Status**: REJECTED (AST Topology Invariant Gate T)
-
-**Claim**:
-Subsystem `verifier` can import `sdcs.decay` directly from `decay`.
-
-**Measurement**:
-- **Tool**: `sdcs verify --topology` (AST Static Analysis)
-- **Violation**: `src/sdcs/verifier/topology.py:435` imports prohibited module `sdcs.decay`.
-- **Declared Contract**: Allowed dependencies for `verifier`: [].
-- **Result**: Automated Gate T pre-commit rejection.
-
-**Reopen Condition**:
-1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
-2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
-
-
-## REJ-012: Prohibited Import Boundary (`verifier` -> `graph`)
-- **Date**: 2026-10-10T19:54:13Z
-- **Target**: `src/sdcs/verifier/topology.py:474`
-- **Status**: REJECTED (AST Topology Invariant Gate T)
-
-**Claim**:
-Subsystem `verifier` can import `sdcs.graph` directly from `graph`.
-
-**Measurement**:
-- **Tool**: `sdcs verify --topology` (AST Static Analysis)
-- **Violation**: `src/sdcs/verifier/topology.py:474` imports prohibited module `sdcs.graph`.
-- **Declared Contract**: Allowed dependencies for `verifier`: [].
-- **Result**: Automated Gate T pre-commit rejection.
-
-**Reopen Condition**:
-1. Decouple via dependency inversion (extract interface/protocol into an allowed layer).
-2. Or request human architectural approval to mutate `wiring.yaml` under `verifier.allowed_dependencies` via `SDCS_ALLOW_INVARIANT_MUTATION=1`.
-

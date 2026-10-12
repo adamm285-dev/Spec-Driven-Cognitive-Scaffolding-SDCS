@@ -31,7 +31,7 @@ A formal, file-based cognitive harness for autonomous agentic software engineeri
 | **AST Skeletal Compactor** | 78.4% – 98.9% token reduction | `sdcs slice` on codebase files | AST outline preserving signatures, types, docstrings |
 | **Working Memory Blackboard** | 338 tokens | `sdcs verify --state` | Hard-capped within $\le 350$ token working memory budget |
 | **Gate Q Precision & Recall** | 100% hollow caught (11/11), 100% sound passed (15/15) | Reviewer hollow corpus (`pytest`) | 0 false flags on sound tests across 2,161 production tests |
-| **Circuit Breaker Accuracy** | 0/538 blocking trips on Floorsmith; blocks $\ge 3$ reversals | Whole-history replay (`cycles.py`) | Allows TDD rhythms & relands; blocks cyclic thrashing |
+| **Circuit Breaker Accuracy** | 0/538 blocking trips on mature production repository replays; blocks $\ge 3$ reversals | Whole-history replay (`cycles.py`) | Allows TDD rhythms & relands; blocks cyclic thrashing |
 | **Decisions Decay Engine** | 34/34 standing rejections preserved (100%) | `docs/map/decisions.md` audit | Opt-in archiving preserves standing negative constraints |
 | **Static Prefix Invariance** | 100% cache-invariant prefix | `sdcs verify --cache-invariance` | Zero dynamic timestamps/PIDs in static prompt prefix |
 

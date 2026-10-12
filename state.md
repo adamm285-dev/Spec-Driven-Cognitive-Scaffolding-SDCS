@@ -2,13 +2,13 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 350 Tokens -->
 
 ## Current Objective
-- v1.9.0 (Gate L Mock Ledger + docs/ pillar support) released and pushed to origin/main.
+- Framework Sanitization & Release v1.9.0 Public Readiness.
 
 ## Status & Gate Verification
-- 236/236 tests passed; `sdcs verify --all` PASS (Gate T, L, Q, E, Cache, cycles).
-- wiring.yaml bumped to 1.9.0 with owner authorization (2026-10-10).
-- ap2-commerce: SDCS initialized in docs/; Gate L OK (19 mocks).
+- Clean Scaffolding: Removed private project references from evals.md, decisions.md, and roadmap.md.
+- Full Suite & Gates: 236/236 tests PASSED in 34.33s; all 7 kinetic gates, sdcs doctor, Gate M, and Gate S 100% PASS.
+- Mock Ledger (Gate L): Active and verified; clean empty MOCKS.md in framework root.
+- Benchmark Protocol: Pallets/Click comparative experiment pre-registered in experiments/click_benchmark/; awaiting live pilot execution.
 
-## Immediate Next Action
-- M-182 Click benchmark still NOT YET RUN; hand off to reviewer/live pilot runner.
-- Version strings in experiments/ and scripts/generate_evidence.py still say v1.8.1 (historical/benchmark text; review before changing).
+## Immediate Next Action (Post-Compact)
+- Complete git history contributor remediation (remove Claude Co-Authored-By trailers) and push clean branch.

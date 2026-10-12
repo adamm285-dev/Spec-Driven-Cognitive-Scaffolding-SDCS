@@ -173,7 +173,7 @@ def parse_rejection_entries(content: str) -> list[dict]:
                 current_entry["permanent"] = True
             entries.append(current_entry)
     else:
-        # Paragraph or section-based format (e.g. Floorsmith: **Claim** ... *Reopens if:*)
+        # Paragraph or section-based format (e.g. **Claim** ... *Reopens if:*)
         blocks = re.split(r"\n\s*\n", content)
         entry_idx = 1
         for block in blocks:

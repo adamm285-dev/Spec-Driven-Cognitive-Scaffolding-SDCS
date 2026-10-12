@@ -24,9 +24,7 @@ from typing import Callable, Optional
 from tasks import BenchmarkTask
 
 BENCHMARK_DIR = Path(__file__).parent
-SCRATCH_CLICK = Path(
-    r"C:\Users\adamm_000\.gemini\antigravity\brain\8b59efb6-b7b1-42c7-bae3-9c7d5eebfa30\scratch\click"
-)
+SCRATCH_CLICK = Path(os.environ.get("CLICK_REPO_PATH", BENCHMARK_DIR / "click"))
 WORKSPACES_DIR = BENCHMARK_DIR / "workspaces"
 RESULTS_DIR = BENCHMARK_DIR / "results"
 TRANSCRIPTS_DIR = RESULTS_DIR / "transcripts"

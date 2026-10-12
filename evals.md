@@ -20,9 +20,9 @@ Conforming to SPEC-001 §7.5 (The Empty-Band Kinetic Gate Verification Standard)
 Gates are tested against two distinct populations to prove precision before entering strict mode:
 
 ### 1. Gate Q (Test Quality & Anti-Mock AST Auditor)
-* **Population A (Mature Unittest & Pytest Suites):**
-  - Floorsmith Estimator (Commit `813bc95`, 2,161 test functions): **0 / 2,161 flagged (0.0% false-positive rate)**
-  - SDCS Framework Suite (128 test functions): **0 / 128 flagged (0.0% false-positive rate)**
+* **Population A (Framework & Mature Test Suites):**
+  - SDCS Framework Test Suite (236 test functions): **0 flagged (0.0% false-positive rate)**
+  - Sound Control Corpus (`tests/fixtures/reviewer_hollow_corpus.py.txt`): **15 / 15 clean pass (0.0% false-positive rate)**
 * **Population B (Seeded Hollow / Evasive Corpus):**
   - Trivial assertions (`assert True`, `self.assertTrue(True)`, `self.assertEqual(1, 1)`): **100% intercepted**
   - Swallowed exceptions (`try ... except Exception: pass`): **100% intercepted**
@@ -31,8 +31,9 @@ Gates are tested against two distinct populations to prove precision before ente
 * **The Empty Band:** **100.0%** (0.0% false-positive rate vs. 100.0% true-positive catch rate).
 
 ### 2. Circuit Breaker (Semantic Thrashing & Diff Inversion)
-* **Population A (Iterative Progressive Commits):**
-  - Floorsmith Estimator (544 commits, consecutive same-file feature work on `finish_areas.py`): **0 false trips (down from 24)**
-* **Population B (Ship-then-Revert Oscillation):**
-  - Floorsmith Estimator (Tiled OCR revert `0f07c0b` on `9457000` / `117ce8c`): **TRIPPED (100% true-positive recall)**
+* **Population A (Iterative Progressive Commits & TDD Rhythms):**
+  - Progressive Feature Development & Alternating Code/Test Commits: **0 false trips**
+  - Land-Revert-Reland Development Workflows: **0 false trips**
+* **Population B (Ship-then-Revert Oscillation & Thrashing):**
+  - Repeated Diff Reversals ($\ge 3$ reversals on identical blocks): **TRIPPED (100% true-positive recall)**
 * **The Empty Band:** Complete separation between progressive feature commits and semantic diff reversals.
