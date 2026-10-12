@@ -1,6 +1,6 @@
 """Gate C-Cache: which files it reads, and what it calls volatile.
 
-Written by the reviewing agent, 2026-09-22 (gate audit, batch 1). On Floorsmith the gate
+Written by the reviewing agent, 2026-09-22 (gate audit, batch 1). On early audits the gate
 read one file, AGENTS.md, and printed "Server-side KV cache discount (75-90%) is
 preserved". It never reads CLAUDE.md, the instruction file Claude Code loads into every
 session. And it judges text by its SHAPE: a static instruction "step 2 of 6" is flagged as

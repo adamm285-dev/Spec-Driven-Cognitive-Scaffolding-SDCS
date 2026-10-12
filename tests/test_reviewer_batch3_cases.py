@@ -47,7 +47,7 @@ def _sdcs(repo: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 # --- repair -----------------------------------------------------------------------------
-# On a scratch copy of Floorsmith's finish_areas.py -- a repo with no black or ruff config --
+# On a scratch copy of a mature production file -- a repo with no black or ruff config --
 # a 3-line edit came back from `sdcs repair` as +156 / -115: black's style imposed on the
 # whole file. And `repair --staged` re-stages every file it formats, so a hunk the user left
 # unstaged on purpose (git add -p) went into the index. Both need a formatter on PATH.
@@ -241,7 +241,7 @@ def test_graph_draws_edges_declared_as_allowed_imports(tmp_path: Path):
 
 # --- router ------------------------------------------------------------------------------
 # Trigger 3 escalates to the frontier tier whenever a file's public signatures change.
-# Replayed over Floorsmith's last 200 commits, 276 of 464 .py file edits (59%) would
+# Replayed over a mature production repository's last 200 commits, 276 of 464 .py file edits (59%) would
 # escalate -- adding a test function counts as a "signature mutation". "Workhorse by
 # default" does not hold on an active codebase.
 
@@ -290,8 +290,8 @@ def test_a_record_with_newlines_stays_on_one_table_row(warehouse_repo: Path):
     ), f"the planted heading left its table row: {planted}"
 
 
-# Router, re-measured with test files excluded: 188 of 321 non-test .py edits in Floorsmith's
-# last 200 commits still escalate (59%). Of those, 139 are new files, 43 only ADD public
+# Router, re-measured with test files excluded: 188 of 321 non-test .py edits in a mature production
+# repo's last 200 commits still escalate (59%). Of those, 139 are new files, 43 only ADD public
 # functions, and 6 change or remove an existing signature -- 2% of edits. Adding a function
 # breaks no caller; changing one can.
 

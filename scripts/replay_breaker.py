@@ -7,11 +7,11 @@ nothing about the other five hundred. This slides the same window across every p
 history and counts the trips. It prints the SDCS commit and the replayed repo's HEAD beside
 the numbers: a measurement without the code version that produced it is not a measurement.
 
-Reviewer's figures, Floorsmith_Estimator at 437cc0a (544 commits, window 6):
+Reviewer's figures, production reference repository at 437cc0a (544 commits, window 6):
     v1.8.0  file-touch rule       24 of 538 windows tripped
     v1.8.1  diff-reversal rule    71 of 538 windows tripped, 18 distinct commit pairs
 
-What Floorsmith can and cannot measure. Every reversal in its history is a measured
+What a mature production repo can and cannot measure. Every reversal in its history is a measured
 withdrawal or a correct restore -- see KNOWN_CHAINS. It contains no example of thrashing,
 so it measures false trips only. A catch rate needs a second corpus with real ping-pong in
 it; until one exists the breaker has no band, and a gate with no band should not block.
@@ -29,7 +29,7 @@ sys.path.insert(0, str(SDCS_ROOT / "src"))
 
 from sdcs.verifier import cycles  # noqa: E402
 
-# Reversal chains in Floorsmith_Estimator, oldest first. Every link carried a reason.
+# Reversal chains in production reference repository, oldest first. Every link carried a reason.
 KNOWN_CHAINS = {
     "stated-wall envelope": [
         ("c410d7a", "shipped: the extent the drawing states"),

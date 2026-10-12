@@ -66,7 +66,7 @@ def test_prune_decisions_archive(tmp_path):
 
 
 def test_prune_decisions_archive_protects_reopen_conditions(tmp_path):
-    """Verify that entries containing *Reopens if:* (Floorsmith format or canonical) are never pruned."""
+    """Verify that entries containing *Reopens if:* (alternative format or canonical) are never pruned."""
     decisions_file = tmp_path / "decisions.md"
     entries = []
     # 10 entries with active reopen conditions

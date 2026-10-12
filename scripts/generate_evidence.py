@@ -189,18 +189,18 @@ def measure_breaker_cases() -> dict:
     }
 
 
-def measure_floorsmith_replay() -> dict | None:
-    env_path = os.environ.get("FLOORSMITH_PATH")
+def measure_production_replay() -> dict | None:
+    env_path = os.environ.get("SDCS_PRODUCTION_REPLAY_PATH")
     if env_path and Path(env_path).is_dir():
-        floorsmith_path = Path(env_path)
+        repo_path = Path(env_path)
     else:
-        floorsmith_path = None
+        repo_path = None
 
-    if not floorsmith_path or not floorsmith_path.is_dir():
+    if not repo_path or not repo_path.is_dir():
         return None
 
     try:
-        h = cycles.get_git_commit_diff_history(floorsmith_path, limit=600)
+        h = cycles.get_git_commit_diff_history(repo_path, limit=600)
         window = 6
         positions = len(h) - window
         tripped = 0
@@ -234,7 +234,7 @@ def measure_floorsmith_replay() -> dict | None:
                         chains_detected += 1
 
         # Decisions file check
-        dec_file = floorsmith_path / "docs" / "map" / "decisions.md"
+        dec_file = repo_path / "docs" / "map" / "decisions.md"
         dec_total = 0
         dec_permanent = 0
         dec_superseded = 0
@@ -251,11 +251,11 @@ def measure_floorsmith_replay() -> dict | None:
             ((dec_total - dec_superseded) / dec_total * 100) if dec_total else 0.0
         )
 
-        # Gate Q on Floorsmith: dynamically count test functions across files
+        # Gate Q on reference production repo: dynamically count test functions across files
         gate_q_violations = []
         total_test_functions = 0
         test_files_count = 0
-        for p in sorted(floorsmith_path.glob("tests/**/*.py")):
+        for p in sorted(repo_path.glob("tests/**/*.py")):
             test_files_count += 1
             v = quality.audit_test_quality_file(p)
             if v:
@@ -270,7 +270,7 @@ def measure_floorsmith_replay() -> dict | None:
                 pass
 
         return {
-            "stamp": get_git_stamp(floorsmith_path),
+            "stamp": get_git_stamp(repo_path),
             "commits": len(h),
             "windows": positions,
             "blocking_trips": tripped,
@@ -292,7 +292,7 @@ def measure_floorsmith_replay() -> dict | None:
             ],
         }
     except Exception as e:
-        print(f"Floorsmith replay failed: {e}")
+        print(f"Production replay failed: {e}")
         return None
 
 
@@ -315,7 +315,7 @@ def generate_evidence_md() -> str:
     hydration = measure_hydration_payloads()
     hollow = measure_hollow_corpus()
     breaker = measure_breaker_cases()
-    floorsmith = measure_floorsmith_replay()
+    prod_replay = measure_production_replay()
     click_bench = measure_click_benchmark()
     tokenizer_info = get_tokenizer_info()
 
@@ -347,13 +347,13 @@ def generate_evidence_md() -> str:
         "- **Circuit Breaker Thrash Detection:** Hard block fired on repeated identical diff reversals (>= 3 reversals)",
     ]
 
-    if floorsmith:
+    if prod_replay:
         lines.extend(
             [
-                f"- **Floorsmith History Replay ({floorsmith['commits']} commits):** {floorsmith['blocking_trips']} of {floorsmith['windows']} windows tripped ({floorsmith['false_block_rate']:.1f}% false block rate)",
-                f"- **Floorsmith Reversal Chain Reach:** {floorsmith['chains_detected']}/{floorsmith['chains_total']} known reversal links detected across 6-commit sliding window",
-                f"- **Floorsmith Decisions Reopen Protection:** {floorsmith['decisions_permanent']}/{floorsmith['decisions_total']} ({floorsmith['decisions_permanent_pct']:.1f}%) rejections carrying active reopen conditions preserved",
-                f"- **Floorsmith Decisions Opt-In Archiving:** {floorsmith['decisions_superseded']} superseded entries eligible for archiving ({floorsmith['decisions_preservation_pct']:.1f}% standing rejection preservation)",
+                f"- **Production History Replay ({prod_replay['commits']} commits):** {prod_replay['blocking_trips']} of {prod_replay['windows']} windows tripped ({prod_replay['false_block_rate']:.1f}% false block rate)",
+                f"- **Production Reversal Chain Reach:** {prod_replay['chains_detected']}/{prod_replay['chains_total']} known reversal links detected across 6-commit sliding window",
+                f"- **Production Decisions Reopen Protection:** {prod_replay['decisions_permanent']}/{prod_replay['decisions_total']} ({prod_replay['decisions_permanent_pct']:.1f}%) rejections carrying active reopen conditions preserved",
+                f"- **Production Decisions Opt-In Archiving:** {prod_replay['decisions_superseded']} superseded entries eligible for archiving ({prod_replay['decisions_preservation_pct']:.1f}% standing rejection preservation)",
             ]
         )
 
@@ -446,14 +446,14 @@ def generate_evidence_md() -> str:
         ]
     )
 
-    if floorsmith:
+    if prod_replay:
         lines.extend(
             [
-                f"### 2. Production Suite Audit (Floorsmith Estimator: {floorsmith['test_functions']:,} test functions across {floorsmith['test_suites']} test files)",
+                f"### 2. Production Suite Audit (Reference Production Repository: {prod_replay['test_functions']:,} test functions across {prod_replay['test_suites']} test files)",
                 "",
-                f"- Total Test Functions Evaluated: **{floorsmith['test_functions']:,}** across {floorsmith['test_suites']} test files",
-                f"- Sound Tests Falsely Flagged: **{max(0, floorsmith['gate_q_violations'] - 1)}**",
-                f"- Assertless Tests Flagged: **{floorsmith['gate_q_violations']}** (`{floorsmith['gate_q_details'][0] if floorsmith['gate_q_details'] else 'none'}` - assertless smoke test lacking `# sdcs: no-raise` pragma)",
+                f"- Total Test Functions Evaluated: **{prod_replay['test_functions']:,}** across {prod_replay['test_suites']} test files",
+                f"- Sound Tests Falsely Flagged: **{max(0, prod_replay['gate_q_violations'] - 1)}**",
+                f"- Assertless Tests Flagged: **{prod_replay['gate_q_violations']}** (`{prod_replay['gate_q_details'][0] if prod_replay['gate_q_details'] else 'none'}` - assertless smoke test lacking `# sdcs: no-raise` pragma)",
                 "- Contract-based assertions testing non-None returns (`assertIsNotNone`), determinism tests comparing identical calls (`assertEqual(f(), f())`), and mock tests where real code executes without calling the mocked dependency pass clean without false flags.",
             ]
         )
@@ -478,15 +478,15 @@ def generate_evidence_md() -> str:
         ]
     )
 
-    if floorsmith:
+    if prod_replay:
         lines.extend(
             [
-                f"### 2. Whole-History Replay on Floorsmith ({floorsmith['commits']} commits, window 6)",
+                f"### 2. Whole-History Replay on Reference Production Repository ({prod_replay['commits']} commits, window 6)",
                 "",
-                f"- Total Sliding Windows Replayed: **{floorsmith['windows']}**",
-                f"- Blocking Windows Tripped: **{floorsmith['blocking_trips']} of {floorsmith['windows']}** ({floorsmith['false_block_rate']:.1f}% false block rate)",
-                f"- Distinct Advisory Reversals Detected: **{floorsmith['distinct_trips']}** (all intentional withdrawals or refined restores documented in git commit history)",
-                f"- Known Reversal Chain Reach: **{floorsmith['chains_detected']} of {floorsmith['chains_total']} links detected** across sliding window reach",
+                f"- Total Sliding Windows Replayed: **{prod_replay['windows']}**",
+                f"- Blocking Windows Tripped: **{prod_replay['blocking_trips']} of {prod_replay['windows']}** ({prod_replay['false_block_rate']:.1f}% false block rate)",
+                f"- Distinct Advisory Reversals Detected: **{prod_replay['distinct_trips']}** (all intentional withdrawals or refined restores documented in git commit history)",
+                f"- Known Reversal Chain Reach: **{prod_replay['chains_detected']} of {prod_replay['chains_total']} links detected** across sliding window reach",
                 "  - `c410d7a -> 7429698` (stated-wall envelope withdrawal, 3 commits apart): Detected (`is_diff_reversal=True`)",
                 "  - `7429698 -> cd3eabb` (stated-wall envelope restoration with guards, 2 commits apart): Detected (`is_diff_reversal=True`)",
                 "  - `19f0ac2 -> e406648` (leaf rule withdrawal, 1 commit apart): Detected (`is_diff_reversal=True`)",
@@ -509,15 +509,15 @@ def generate_evidence_md() -> str:
         ]
     )
 
-    if floorsmith:
+    if prod_replay:
         lines.extend(
             [
                 "",
-                "- **Floorsmith Decisions Ledger (`docs/map/decisions.md`):**",
-                f"  - Total Rejection Entries Parsed: **{floorsmith['decisions_total']}**",
-                f"  - Entries Protected by Reopen Conditions: **{floorsmith['decisions_permanent']} of {floorsmith['decisions_total']} ({floorsmith['decisions_permanent_pct']:.1f}%)**",
-                f"  - Superseded Entries Eligible for Archiving: **{floorsmith['decisions_superseded']}**",
-                f"  - Standing Entries Preserved on Audit: **{floorsmith['decisions_total'] - floorsmith['decisions_superseded']} of {floorsmith['decisions_total']} ({floorsmith['decisions_preservation_pct']:.1f}%)**",
+                "- **Reference Decisions Ledger (`docs/map/decisions.md`):**",
+                f"  - Total Rejection Entries Parsed: **{prod_replay['decisions_total']}**",
+                f"  - Entries Protected by Reopen Conditions: **{prod_replay['decisions_permanent']} of {prod_replay['decisions_total']} ({prod_replay['decisions_permanent_pct']:.1f}%)**",
+                f"  - Superseded Entries Eligible for Archiving: **{prod_replay['decisions_superseded']}**",
+                f"  - Standing Entries Preserved on Audit: **{prod_replay['decisions_total'] - prod_replay['decisions_superseded']} of {prod_replay['decisions_total']} ({prod_replay['decisions_preservation_pct']:.1f}%)**",
             ]
         )
 

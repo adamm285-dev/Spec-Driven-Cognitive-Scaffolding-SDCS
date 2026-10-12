@@ -10,7 +10,7 @@
 
 ## 🎯 Empirical Grounding & The Empty-Band Verification Standard
 
-SDCS v1.8.1 delivers comprehensive empirical hardening across kinetic gates, test harnesses, and behavioral scaffolding. Motivated by rigorous external agent evaluation against production codebases (Floorsmith Estimator: 544 commits, 2,161 test functions), v1.8.1 introduces the **Empty-Band Method**: enforcing that every kinetic enforcement gate maintains complete separation between 0.0% false positives on mature suites and 100.0% true positive catch rates on hollow or oscillating anti-patterns.
+SDCS v1.8.1 delivers comprehensive empirical hardening across kinetic gates, test harnesses, and behavioral scaffolding. Motivated by rigorous external agent evaluation against mature production codebases (544 commits, 2,161 test functions), v1.8.1 introduces the **Empty-Band Method**: enforcing that every kinetic enforcement gate maintains complete separation between 0.0% false positives on mature suites and 100.0% true positive catch rates on hollow or oscillating anti-patterns.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -35,7 +35,7 @@ SDCS v1.8.1 delivers comprehensive empirical hardening across kinetic gates, tes
   - Pass 2: Evaluates tests recognizing `self.assert*`, third-party assertions (`np.testing.assert_*`, `mock.assert_called_*`), custom helper calls, and context managers (`self.assertRaises`, `pytest.raises`).
 - **Pragma & Intent Handling:** Recognizes `# sdcs: no-raise` / `# pragma: no-raise` and `does_not_raise` context managers for tests designed to verify lack of exceptions.
 - **Trivial Assertion Logic:** A test is now flagged as trivial only if *all* its assertions are trivial (mixed assertions with `assert x is not None` plus `self.assertEqual(...)` are recognized as substantive).
-- **Result:** **0 / 2,161 false positives (0.0%)** on Floorsmith.
+- **Result:** **0 / 2,161 false positives (0.0%)** on mature production reference suites.
 
 ---
 

@@ -14,16 +14,16 @@
 # v1.8.1 (e08a789): 4 of 13 hollow tests flagged.
 #
 # REVISED 2026-09-22 (second pass). The first corpus had 13 H and 11 C. Rules fitted to it
-# passed 25/25 and then flagged five sound Floorsmith tests, because H09, H10 and H12 had
+# passed 25/25 and then flagged five sound production tests, because H09, H10 and H12 had
 # no sound twin among the controls:
-#   H09/H13 is-not-None as the only check. In Floorsmith it IS the contract three times
+#   H09/H13 is-not-None as the only check. In production code it IS the contract three times
 #           (a refusal is returned; a kwarg is supplied). Identical syntax -> moved to U.
 #   H10     assertEqual(x, x) on one NAME is a tautology; assertEqual(f(), f()) is a
 #           determinism test. Separable -> H10 stays, C14 added.
-#   H12     the test calls its own mock; in Floorsmith real code calls the patched
+#   H12     the test calls its own mock; in production code real code calls the patched
 #           dependency and assert_not_called() IS the behaviour. Separable -> H12 stays,
 #           C15 added.
-# Controls C12-C15 mirror the Floorsmith tests that were flagged.
+# Controls C12-C15 mirror the production tests that were flagged.
 
 import unittest
 from unittest import mock
@@ -155,7 +155,7 @@ class SoundControls(unittest.TestCase):
             self.fail("a digit string must parse")
 
     def test_C09_errors_collected_then_asserted(self):
-        # Floorsmith's concurrency tests use this shape: a broad except that RECORDS.
+        # Production concurrency tests often use this shape: a broad except that RECORDS.
         errors = []
         try:
             compute()
@@ -173,19 +173,19 @@ def test_C11_pytest_raises():
         int("x")
 
 
-class FloorsmithShapedControls(unittest.TestCase):
-    # Each mirrors a sound Floorsmith test that v1.8.1's second pass flagged.
+class ProductionShapedControls(unittest.TestCase):
+    # Each mirrors a sound production test that v1.8.1's second pass flagged.
     def test_C12_is_not_none_is_the_contract(self):
-        # tests/test_finish_areas.py:822, test_seed_store_ownership.py:178
+        # e.g. tests/test_domain_rules.py:822, test_ownership.py:178
         complaint = unverified_join(3.0, swings=())
         self.assertIsNotNone(complaint, "a width alone must never satisfy the gate")
 
     def test_C14_two_calls_is_a_determinism_test(self):
-        # tests/test_scout_purposes.py:548
+        # e.g. tests/test_engine.py:548
         self.assertEqual(rules_fingerprint(), rules_fingerprint())
 
     def test_C15_real_code_does_not_call_the_patched_dependency(self):
-        # tests/test_scan_worker_progress.py:41
+        # e.g. tests/test_worker_progress.py:41
         job = {"status": "success", "page": 2}
         with mock.patch(__name__ + ".execute_page_scan") as scan:
             process_pending_job(job)

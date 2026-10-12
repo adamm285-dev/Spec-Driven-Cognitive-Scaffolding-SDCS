@@ -4,7 +4,7 @@ Written by the reviewing agent, 2026-09-22 (gate audit, batch 2).
 
 1. Eight of the nine gates on the HUD are literals in get_repo_telemetry -- Gate T
    "passed: True, VERIFIED", Gate W "ARMED", Gate Q "ARMED", and so on. Only Gate S is
-   computed, and it too reads passed when there is no state.md at all. On Floorsmith --
+   computed, and it too reads passed when there is no state.md at all. On non-scaffolded repos --
    no root wiring.yaml, no app_map.md, one Gate Q flag -- every gate but S showed green.
    A display that cannot fail is not a status.
 

@@ -7,7 +7,7 @@
 | :--- | :--- | :--- | :--- |
 | `EVAL-QUAL-001` | `tests/test_quality.py` | `030e1aa4025eb7d9d534fb0871a180060d30890e1799ab55aca2db598895f0ee` | active |
 | `EVAL-CYCL-001` | `tests/test_cycles.py` | `a99a241bd3cb33fe586860d4aaaf4ec57f8191296730242ebe5d26477d50c1c8` | active |
-| `EVAL-DECA-001` | `tests/test_decay.py` | `6dfe3e51a898d8510b0f0afdab021386a48a816d60ade9f8c564f1508ad96136` | active |
+| `EVAL-DECA-001` | `tests/test_decay.py` | `4e751b357ab32e7339266741266f4c2e307987667a86b850af92aa49d2a2fec5` | active |
 | `EVAL-TOPO-001` | `tests/test_topology.py` | `78ac900e29d9785b7ae1de0c8c7c67ca4f2acd1a2dcb89ece301416412217c44` | active |
 | `EVAL-CACH-001` | `tests/test_cache.py` | `0d0ae7a4ec6bdb76eb63330fd36833de05cd7db149fc13bccb904fdb2f1fbc3e` | active |
 | `EVAL-AUDT-001` | `tests/test_audit.py` | `17b79de0d095561cda570b246d2cb8912bbe12be0c66aca0771aa8ece9773b92` | active |

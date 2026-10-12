@@ -10,7 +10,7 @@ a .py file, and for the second-pass revision. Every test_H* must be flagged; eve
 must not be. test_U* are not asserted: syntax cannot separate them from sound tests.
 
 The controls are what stop H* from being fixed by flagging more. The first pass had too
-few, and a gate fitted to it passed 25/25 while flagging five sound Floorsmith tests.
+few, and a gate fitted to it passed 25/25 while flagging five sound production tests.
 """
 
 from __future__ import annotations

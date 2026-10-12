@@ -1,13 +1,13 @@
 """Decay may move a rejection out of the ledger only when someone marked it superseded.
 
 Written by the reviewing agent, 2026-09-22 (second pass). Run on a temporary copy of
-Floorsmith's docs/map/decisions.md, decay parsed 34 entries, protected the 20 that carry
+a mature production decisions.md, decay parsed 34 entries, protected the 20 that carry
 `*Reopens if:*`, and archived the other 14. Those 14 have no reopen line mostly BECAUSE
 they are permanent: "Dash-train periodicity as an OFFSET exclusion -- never", "The
-page-global vote on whether walls exist", "Viewport clustering by plateau". The rule
+page-global vote on whether components exist", "Viewport clustering by plateau". The rule
 "protect what has a reopen condition" prunes the strongest rejections first.
 
-The ledgers below reproduce that shape. The ratio is Floorsmith's, 20 marked to 14 not.
+The ledgers below reproduce that shape. The ratio is derived from production ledgers, 20 marked to 14 not.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from pathlib import Path
 from sdcs.decay import prune_decisions_archive
 
 
-def _floorsmith_shaped_ledger(marked: int, unmarked: int) -> str:
-    lines = ["# Decisions", "", "---", "", "## Wall crawl", ""]
+def _production_shaped_ledger(marked: int, unmarked: int) -> str:
+    lines = ["# Decisions", "", "---", "", "## Core rules", ""]
     for k in range(marked):
         lines += [
             f"**Reopenable rule {k}.** Measured {k}.{k}% on one sheet. "
@@ -35,7 +35,7 @@ def _floorsmith_shaped_ledger(marked: int, unmarked: int) -> str:
 
 def test_a_rejection_without_a_reopen_line_is_not_pruned(tmp_path: Path):
     ledger = tmp_path / "decisions.md"
-    ledger.write_text(_floorsmith_shaped_ledger(marked=20, unmarked=14), encoding="utf-8")
+    ledger.write_text(_production_shaped_ledger(marked=20, unmarked=14), encoding="utf-8")
 
     prune_decisions_archive(ledger, tmp_path, max_entries=15)
 

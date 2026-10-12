@@ -1,7 +1,7 @@
 """`sdcs init` on a repository that already has its own machinery.
 
 Written by the reviewing agent, 2026-09-22 (gate audit, batch 1). Run on a scratch copy of
-Floorsmith's agent files, a plain `sdcs init` -- no --force -- replaced the repo's existing
+an existing project's agent files, a plain `sdcs init` -- no --force -- replaced the repo's existing
 .githooks/pre-commit and printed "+ Hook: ... (executable set)" with no warning. It checked
 AGENTS.md and skipped it, so the existence check exists; the hook just does not get one.
 
@@ -76,7 +76,7 @@ def test_init_does_not_create_duplicate_root_pillars_when_existing_elsewhere(rep
 
 
 def test_init_finds_existing_pillars_whatever_their_case(repo: Path):
-    """Added pass 4 by the reviewer. Floorsmith keeps docs/map/SPINE.md -- uppercase.
+    """Added pass 4 by the reviewer. Some projects keep docs/map/SPINE.md -- uppercase.
 
     On Windows this passes whatever the lookup does, because the filesystem ignores case. CI
     runs on ubuntu-latest, where it does not, so that is the run that can tell.

@@ -6,7 +6,7 @@ reversal of content is only ever advisory. So it blocked five commits of forward
 that alternated code and test, and waved through one block of code added and removed five
 times. Both are measured below; the second is the thing a circuit breaker exists for.
 
-Floorsmith's history contains no thrashing at all -- every reversal in it carried a
+A mature production history often contains no thrashing at all -- every reversal in it carried a
 measurement -- so it can only show false blocks. These two cases are the smallest
 population that shows both directions.
 """
@@ -111,7 +111,7 @@ def test_land_revert_reland_is_a_workflow_not_thrash(repo):
     """Added second pass, 2026-09-22. Two identical reversals, ending where it started.
 
     This is how teams back a change out and put it back: `git revert`, then a reland once
-    the unrelated failure is fixed. Floorsmith never uses git revert, so its history cannot
+    the unrelated failure is fixed. Some reference histories never use git revert, so their history cannot
     show this. The thrash case above reverses the same lines four times; this one twice.
     """
     base = "def base():\n    return 0\n"

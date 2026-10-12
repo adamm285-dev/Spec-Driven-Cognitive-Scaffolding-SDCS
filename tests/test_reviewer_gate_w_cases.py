@@ -4,7 +4,7 @@ Written by the reviewing agent, 2026-09-22 (gate audit, batch 1). Of eight commo
 formats, v1.8.1's working copy caught one by rule (OpenAI `sk-`). A Slack token was also
 "caught" -- as a PHONE NUMBER, because its digits happen to fit that pattern. Missed: the
 Anthropic API key, Stripe, PEM private keys, Google OAuth client secrets, GitHub OAuth
-tokens, JWTs. On three real ledgers (Floorsmith's decisions.md and CLAUDE.md, SDCS's own
+tokens, JWTs. On three real ledgers (production decisions.md and CLAUDE.md, SDCS's own
 decisions.md) it raised 0 false alarms, so the prose side is the population to protect.
 
 Every secret below is FAKE and assembled at runtime from fragments, so no file in this
