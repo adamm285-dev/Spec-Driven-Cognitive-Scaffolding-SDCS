@@ -5,7 +5,7 @@
       "name": "Murphy, Adam"
     }
   ],
-  "description": "Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.8.0) is a formal, file-based cognitive harness for autonomous agentic software engineering. It decouples agent cognition into 7 version-controlled physical artifacts and enforces 9 kinetic pre-commit gates, AST boundary verification, and a Sub-Dime Loop Engineering Suite (AST skeletal compaction, pre-flight auto-repair, KV-cache prefix invariance, and governed tier routing).",
+  "description": "Spec-Driven Cognitive Scaffolding (SDCS / SPEC-001 v1.9.0) is a formal, file-based cognitive harness for autonomous agentic software engineering. It decouples agent cognition into 7 version-controlled physical artifacts and enforces 10 kinetic pre-commit gates (including Gate L Mock Ledger), AST boundary verification, and a Sub-Dime Loop Engineering Suite (AST skeletal compaction, pre-flight auto-repair, KV-cache prefix invariance, and governed tier routing).",
   "access_right": "open",
   "license": "MIT",
   "keywords": [
@@ -16,7 +16,8 @@
     "deterministic AI",
     "AST verification",
     "loop engineering",
-    "sub-dime agents"
+    "sub-dime agents",
+    "mock ledger"
   ],
   "version": "1.9.0"
 }

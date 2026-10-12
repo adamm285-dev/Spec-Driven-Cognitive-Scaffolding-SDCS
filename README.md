@@ -52,7 +52,7 @@ Without the furnished office, an autonomous agent worker is dropped into an empt
 2. **The Whiteboard (`state.md`)**: Volatile turn-by-turn memory strictly capped $\le 350$ tokens.
 3. **The Rejection Graveyard (`decisions.md`)**: Negative episodic memory stopping the agent from retrying rejected dead ends.
 4. **The Scorecard (`evals.md`)**: Cryptographic ground truth anchored to physical test fixtures and SHA-256 hashes.
-5. **The Kinetic Bouncer (8 Gates & Circuit Breaker)**: Physical pre-commit guards blocking broken imports, hollow tests, and file oscillations.
+5. **The Kinetic Bouncer (10 Gates & Circuit Breaker)**: Physical pre-commit guards blocking broken imports, hollow tests, mock drift, and file oscillations.
 6. **The Central Warehouse (`sdcs warehouse`)**: Fleet-wide cognitive federation sharing verified traps without leaking proprietary IP.
 
 ---

@@ -1,6 +1,6 @@
 # Release Notes: Spec-Driven Cognitive Scaffolding (SDCS) v1.9.0
 
-**Released:** 2026-10-10 · **Spec:** SPEC-001 v1.9.0 · **Replaces:** v1.8.1
+**Released:** 2026-10-12 · **Spec:** SPEC-001 v1.9.0 · **Replaces:** v1.8.1
 
 v1.9.0 adds **Gate L, the Mock Ledger**: a kinetic gate that makes agents declare every mock they put into product code, in the code and in one ledger, and fails when the two disagree.
 
@@ -27,12 +27,16 @@ Agents working fast stand in simulated API responses, seeded data, demo-only key
 ### 3. 🩹 Fix: session index command
 - `AGENTS.md` and its template told agents to run `sdcs session --sync`, which the CLI rejects. They now say `sdcs session index`.
 
-### 4. 📐 SPEC-001 v1.9.0
+### 4. 🔒 Cross-Python AST Hash Normalization & CI Hardening
+- Python standard library AST dumps across minor versions (Python 3.10 through 3.13) normalized via recursive canonical filtering, guaranteeing invariant SHA-256 fixture checksums under Gate E and Gate 4.
+- CI pipeline hardened across Ruff, Black, and Mypy on Python 3.10–3.13.
+
+### 5. 📐 SPEC-001 v1.9.0
 - New Section 7.21, Gate L (REQ-GATE-L-01 to 06).
 
 ## ✅ Verification
-- Framework suite: 235 passed (225 existing plus 10 new Gate L tests).
-- `sdcs verify --all` passes on the framework repository, including Gate L.
+- Framework suite: 236 passed (225 existing, 10 Gate L tests, 1 polyglot topology test).
+- `sdcs verify --all` passes all 10 kinetic gates on the framework repository.
 - Validated against a downstream application repository with 19 declared mocks across Python and TypeScript.
 
 ## 📦 Also in this release

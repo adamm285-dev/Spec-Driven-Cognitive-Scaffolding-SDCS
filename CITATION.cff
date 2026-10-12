@@ -5,7 +5,7 @@ authors:
     given-names: "Adam"
 title: "Spec-Driven Cognitive Scaffolding (SDCS): Deterministic AI Engineering & Cybernetic Control"
 version: "1.9.0"
-date-released: "2026-10-10"
+date-released: "2026-10-12"
 url: "https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS"
 license: "MIT"
 keywords:
@@ -15,3 +15,4 @@ keywords:
   - "cybernetic ontology"
   - "deterministic AI"
   - "AST verification"
+  - "mock ledger"
