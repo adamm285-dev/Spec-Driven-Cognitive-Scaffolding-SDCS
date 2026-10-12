@@ -5,12 +5,12 @@
 
 | Fixture ID | Path | SHA-256 Hash | Status |
 | :--- | :--- | :--- | :--- |
-| `EVAL-QUAL-001` | `tests/test_quality.py` | `030e1aa4025eb7d9d534fb0871a180060d30890e1799ab55aca2db598895f0ee` | active |
-| `EVAL-CYCL-001` | `tests/test_cycles.py` | `a99a241bd3cb33fe586860d4aaaf4ec57f8191296730242ebe5d26477d50c1c8` | active |
-| `EVAL-DECA-001` | `tests/test_decay.py` | `4e751b357ab32e7339266741266f4c2e307987667a86b850af92aa49d2a2fec5` | active |
-| `EVAL-TOPO-001` | `tests/test_topology.py` | `78ac900e29d9785b7ae1de0c8c7c67ca4f2acd1a2dcb89ece301416412217c44` | active |
-| `EVAL-CACH-001` | `tests/test_cache.py` | `0d0ae7a4ec6bdb76eb63330fd36833de05cd7db149fc13bccb904fdb2f1fbc3e` | active |
-| `EVAL-AUDT-001` | `tests/test_audit.py` | `17b79de0d095561cda570b246d2cb8912bbe12be0c66aca0771aa8ece9773b92` | active |
+| `EVAL-QUAL-001` | `tests/test_quality.py` | `8b905e5a90868cf692db03c518c403f04e64e8ac42fd6585e230edc634908458` | active |
+| `EVAL-CYCL-001` | `tests/test_cycles.py` | `d4b737c0c77e449bf04a1a8fbf32e9277005054761a02bf683c7f930f2b93278` | active |
+| `EVAL-DECA-001` | `tests/test_decay.py` | `322fd2b729b770a8a31aade87ba33dc79dcce866ab659fd6a11df6ee79c6a18b` | active |
+| `EVAL-TOPO-001` | `tests/test_topology.py` | `5ab967d4dc39efcad92e2212c2426bc3e903aaa2b6d9d25b6ad620cc5dcdc57d` | active |
+| `EVAL-CACH-001` | `tests/test_cache.py` | `80be1f11522173bd756e94da9fee1e2a4e4ce83504779f2cbcab0b43a8061e7e` | active |
+| `EVAL-AUDT-001` | `tests/test_audit.py` | `bb738ac70bedd01e78a27ab8bab9b55007007ba4625d721cbced3964f57e080d` | active |
 
 ---
 

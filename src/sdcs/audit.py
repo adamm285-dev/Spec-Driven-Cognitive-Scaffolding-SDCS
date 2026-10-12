@@ -171,6 +171,20 @@ def strip_comments_and_whitespace(content: str, extension: str) -> str:
     return "\n".join(normalized_lines)
 
 
+def dump_ast_canonical(node: object) -> object:
+    """Recursively dumps AST omitting empty fields for cross-Python-version invariance."""
+    if isinstance(node, ast.AST):
+        fields = []
+        for k, v in ast.iter_fields(node):
+            if v in ([], None, ()):
+                continue
+            fields.append((k, dump_ast_canonical(v)))
+        return (node.__class__.__name__, tuple(fields))
+    elif isinstance(node, list):
+        return tuple(dump_ast_canonical(x) for x in node)
+    return repr(node)
+
+
 def normalize_fixture_content(content: str, extension: str) -> bytes:
     """Normalizes fixture content based on format (SPEC-001 §7.4):
     - Python (.py): AST dump (ignores comments and formatting; captures semantic structure)
@@ -183,7 +197,7 @@ def normalize_fixture_content(content: str, extension: str) -> bytes:
     if ext == ".py":
         try:
             tree = ast.parse(content)
-            return ast.dump(tree).encode("utf-8")
+            return str(dump_ast_canonical(tree)).encode("utf-8")
         except SyntaxError:
             pass
     elif ext in {".yaml", ".yml"} and yaml is not None:
