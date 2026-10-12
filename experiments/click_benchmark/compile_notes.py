@@ -17,7 +17,6 @@ def compile_notes() -> str:
     ARM_A_DIR.mkdir(parents=True, exist_ok=True)
 
     spine_raw = (ARM_B_DIR / "spine.md").read_text(encoding="utf-8")
-    wiring_raw = (ARM_B_DIR / "wiring.yaml").read_text(encoding="utf-8")
     app_map_raw = (ARM_B_DIR / "app_map.md").read_text(encoding="utf-8")
     decisions_raw = (ARM_B_DIR / "decisions.md").read_text(encoding="utf-8")
     evals_raw = (ARM_B_DIR / "evals.md").read_text(encoding="utf-8")
@@ -36,6 +35,17 @@ def compile_notes() -> str:
     decisions_clean = clean_markdown(decisions_raw)
     evals_clean = clean_markdown(evals_raw)
 
+    spine_body = re.sub(
+        r"^# Constitutional Invariants[^\n]*\n", "", spine_clean, flags=re.MULTILINE
+    )
+    app_map_body = re.sub(
+        r"^# Repository Cartography[^\n]*\n", "", app_map_clean, flags=re.MULTILINE
+    )
+    decisions_body = re.sub(
+        r"^# Negative Episodic Memory[^\n]*\n", "", decisions_clean, flags=re.MULTILINE
+    )
+    evals_body = re.sub(r"^# Positive Ground Truth[^\n]*\n", "", evals_clean, flags=re.MULTILINE)
+
     notes = f"""# Pallets/Click Developer Notes
 
 This document contains general architecture notes, code conventions, module layout, and test instructions for working on `pallets/click`.
@@ -43,12 +53,12 @@ This document contains general architecture notes, code conventions, module layo
 ---
 
 ## 1. Core Architectural Invariants
-{re.sub(r'^# Constitutional Invariants[^\n]*\n', '', spine_clean, flags=re.MULTILINE)}
+{spine_body}
 
 ---
 
 ## 2. Subsystem Layout & Module Mapping
-{re.sub(r'^# Repository Cartography[^\n]*\n', '', app_map_clean, flags=re.MULTILINE)}
+{app_map_body}
 
 ---
 
@@ -66,12 +76,12 @@ Here is how the modules interact:
 ---
 
 ## 4. Past Architectural Decisions & Rejected Alternatives
-{re.sub(r'^# Negative Episodic Memory[^\n]*\n', '', decisions_clean, flags=re.MULTILINE)}
+{decisions_body}
 
 ---
 
 ## 5. Testing & Verification
-{re.sub(r'^# Positive Ground Truth[^\n]*\n', '', evals_clean, flags=re.MULTILINE)}
+{evals_body}
 """
     output_path = ARM_A_DIR / "notes.md"
     output_path.write_text(notes.strip() + "\n", encoding="utf-8")

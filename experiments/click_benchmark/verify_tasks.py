@@ -16,8 +16,8 @@ from pathlib import Path
 
 from tasks import BENCHMARK_TASKS
 
-SCRATCH_CLICK = Path(os.environ.get("CLICK_REPO_PATH", BENCHMARK_DIR / "click"))
 BENCHMARK_DIR = Path(__file__).parent
+SCRATCH_CLICK = Path(os.environ.get("CLICK_REPO_PATH", BENCHMARK_DIR / "click"))
 
 FORBIDDEN_LEAK_KEYWORDS = [
     r"update_min_steps",

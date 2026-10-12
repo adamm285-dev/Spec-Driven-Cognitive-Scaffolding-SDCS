@@ -190,7 +190,8 @@ def normalize_fixture_content(content: str, extension: str) -> bytes:
     elif ext in {".yaml", ".yml"} and yaml is not None:
         try:
             data = yaml.safe_load(content)
-            return yaml.dump(data, sort_keys=True, canonical=True).encode("utf-8")
+            dumped: str = yaml.dump(data, sort_keys=True, canonical=True)
+            return dumped.encode("utf-8")
         except Exception:
             pass
     elif ext == ".json":

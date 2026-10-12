@@ -61,7 +61,6 @@ def analyze():
         by_task_arm[task_id][arm].append(r)
 
     # Compute overall metrics per arm
-    metrics = ["tokens_total", "turns", "regressions_count", "deadends_count", "test_runtime_ms"]
     stats: Dict[str, Dict[str, Dict[str, float]]] = {"overall": {}, "tasks": {}}
 
     for arm in ["arm_a", "arm_b"]:

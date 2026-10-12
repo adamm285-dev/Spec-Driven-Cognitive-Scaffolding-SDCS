@@ -15,10 +15,10 @@ from pathlib import Path
 SDCS_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SDCS_ROOT / "src"))
 
-from sdcs.skeleton import extract_file_skeleton, calculate_skeleton_metrics
-from sdcs.verifier.state import count_tokens, get_tokenizer_info
-from sdcs import decay, __version__
-from sdcs.verifier import cycles, quality
+from sdcs.skeleton import extract_file_skeleton, calculate_skeleton_metrics  # noqa: E402
+from sdcs.verifier.state import count_tokens, get_tokenizer_info  # noqa: E402
+from sdcs import decay, __version__  # noqa: E402
+from sdcs.verifier import cycles, quality  # noqa: E402
 
 
 def get_git_stamp(repo: Path) -> str:
@@ -119,20 +119,22 @@ def measure_hollow_corpus() -> dict:
     lines = res.stdout.splitlines()
 
     hollow_caught = sum(
-        1 for l in lines if "test_gate_q_flags_the_hollow_test" in l and "PASSED" in l
+        1 for line in lines if "test_gate_q_flags_the_hollow_test" in line and "PASSED" in line
     )
-    hollow_total = sum(1 for l in lines if "test_gate_q_flags_the_hollow_test" in l)
+    hollow_total = sum(1 for line in lines if "test_gate_q_flags_the_hollow_test" in line)
 
     sound_passed = sum(
-        1 for l in lines if "test_gate_q_passes_the_sound_test" in l and "PASSED" in l
+        1 for line in lines if "test_gate_q_passes_the_sound_test" in line and "PASSED" in line
     )
-    sound_total = sum(1 for l in lines if "test_gate_q_passes_the_sound_test" in l)
+    sound_total = sum(1 for line in lines if "test_gate_q_passes_the_sound_test" in line)
 
-    total_passed = sum(1 for l in lines if "PASSED" in l and "test_reviewer_hollow_corpus.py" in l)
+    total_passed = sum(
+        1 for line in lines if "PASSED" in line and "test_reviewer_hollow_corpus.py" in line
+    )
     total_items = (
         hollow_total
         + sound_total
-        + (1 if any("test_the_corpus_carries_both_populations" in l for l in lines) else 0)
+        + (1 if any("test_the_corpus_carries_both_populations" in line for line in lines) else 0)
     )
 
     hollow_catch_rate = (hollow_caught / hollow_total * 100) if hollow_total else 0.0
@@ -164,19 +166,23 @@ def measure_breaker_cases() -> dict:
     )
     passed = res.returncode == 0
     lines = res.stdout.splitlines()
-    total_passed = sum(1 for l in lines if "PASSED" in l and "test_reviewer_breaker_cases.py" in l)
-    total_tests = sum(1 for l in lines if "test_reviewer_breaker_cases.py::" in l)
+    total_passed = sum(
+        1 for line in lines if "PASSED" in line and "test_reviewer_breaker_cases.py" in line
+    )
+    total_tests = sum(1 for line in lines if "test_reviewer_breaker_cases.py::" in line)
 
     tdd_passed = any(
-        "test_alternating_code_and_test_commits_are_progress_not_thrash" in l and "PASSED" in l
-        for l in lines
+        "test_alternating_code_and_test_commits_are_progress_not_thrash" in line
+        and "PASSED" in line
+        for line in lines
     )
     thrash_passed = any(
-        "test_the_same_block_added_and_removed_five_times_blocks" in l and "PASSED" in l
-        for l in lines
+        "test_the_same_block_added_and_removed_five_times_blocks" in line and "PASSED" in line
+        for line in lines
     )
     reland_passed = any(
-        "test_land_revert_reland_is_a_workflow_not_thrash" in l and "PASSED" in l for l in lines
+        "test_land_revert_reland_is_a_workflow_not_thrash" in line and "PASSED" in line
+        for line in lines
     )
 
     return {
@@ -316,7 +322,6 @@ def generate_evidence_md() -> str:
     hollow = measure_hollow_corpus()
     breaker = measure_breaker_cases()
     prod_replay = measure_production_replay()
-    click_bench = measure_click_benchmark()
     tokenizer_info = get_tokenizer_info()
 
     state_path = SDCS_ROOT / "state.md"

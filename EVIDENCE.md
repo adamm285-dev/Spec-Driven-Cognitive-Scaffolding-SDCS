@@ -9,7 +9,7 @@ This document records physical telemetry, AST structural measurements, and repro
 
 ## 1. Executive Summary: Measured Telemetry
 
-- **Repository Version:** SDCS `cc6cfb5 (dirty)`
+- **Repository Version:** SDCS `3a64789 (dirty)`
 - **Active Tokenizer:** tiktoken (`cl100k_base`)
 - **Single-Pass Hydration Payload (Standard):** 4344 tokens (322 lines across 5 pillars in 1 atomic read)
 - **Single-Pass Hydration Payload (Lite):** 494 tokens (34 lines across 2 pillars in 1 atomic read)
