@@ -101,6 +101,10 @@ SDCS decouples agent cognition into seven purpose-built files plus an isolated f
 | **7** | `evals.md` | Positive Episodic Memory | **The Scorecard** | Benchmark standing, golden test fixtures, and SHA-256 diversity guards. |
 | **+** | `sessions/*.md` | Historical Handoff Logs | **The Flight Recorder** | Discrete, immutable post-shift engineering handoffs. Never ingested on system boot. |
 
+> [!NOTE]
+> **What about `MOCKS.md`?**  
+> `MOCKS.md` is not an ambient Turn 1 cognitive pillar—it is an in-stride operational ledger enforced by **Gate L** in the **Kinetic Layer (Layer 2)**. To protect token budgets, it is never ingested on boot; it is updated only when product code fakes real behavior. See **[Gate L: Mock Ledger Reconciliation](#2-navigating-the-kinetic-gates-closed-loop-defense-in-depth)** below.
+
 ---
 
 ## Architectural Lineage & Theoretical Foundations
@@ -247,6 +251,7 @@ flowchart TD
         GT["Gate T (AST Import Verification)"]
         GM["Gate M (Cartography Drift Check)"]
         GC["Gate C (Contract Immutability)"]
+        GL["Gate L & MOCKS.md (Mock Ledger Reconciliation)"]
         GH[".githooks/pre-commit (Physical Disk Barrier)"]
     end
 
@@ -346,6 +351,9 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 > **The +1 Flight Recorder Invariant:**
 > The agent is **strictly prohibited from auto-loading `sessions/*.md` on boot**. Historical shift handoffs are immutable, write-once flight logs. Loading them on boot recreates conversational bloat, pollutes working memory, and triggers context drift. Instead, agents query `sessions/manifest.jsonl` on-demand via `sdcs session list --query <topic>` only when forensic debugging is required.
 
+> **The In-Stride Reality Ledger (`MOCKS.md` & Gate L):**  
+> Similarly, `MOCKS.md` is strictly excluded from Turn 1 boot hydration. It is not an ambient cognitive world-model; it is a Layer 2 kinetic ledger audited on-demand by **Gate L** (`sdcs verify --mocks`) whenever product code introduces or removes a `MOCK(M-NNN)` marker.
+
 ---
 
 ### 2. Navigating the Kinetic Gates: Closed-Loop Defense-in-Depth
@@ -367,6 +375,11 @@ Un-scaffolded agents often enter argumentative rationalization loops when encoun
 | **Epistemic & Toolchain** | **Gate E** | Toolchain & Environment Gate | `sdcs doctor` / `--env` | Blaming valid application code for local runtime or interpreter drift. |
 | **Epistemic & Reality** | **Gate L** | Mock Ledger Reconciliation | `sdcs verify --mocks` | Undeclared mocks in product code (simulated responses, seeded data, demo-only keys, fake-success fallbacks) and a `MOCKS.md` that drifts from the code. |
 | **Kinetic Circuit** | **Breaker** | The Circuit Breaker | `sdcs verify --cycles` | Alternating period-2 file thrashing ($A \to B \to A \to B$) and infinite token loops. |
+
+#### Gate L & MOCKS.md: Two Operational Phases
+Gate L enforces honest engineering across two distinct development phases:
+1. **The Greenfield Velocity Accelerator (Turn 1):** When one-shotting a new application from zero, agents are encouraged to stub external services (Stripe, Twilio, OAuth, live databases) so the end-to-end loop compiles and runs immediately. However, every fake MUST be tagged with a `# MOCK(M-NNN)` marker and registered in `MOCKS.md`. You get 100% prototype velocity on Day 1 without accumulating invisible technical debt.
+2. **In-Stride Burndown Enforcement (Turns 2+):** On subsequent engineering shifts, Gate L physically blocks commits if mocks are removed without updating `MOCKS.md`, if new untracked mocks appear, or if a fallback pretends a failure was a success.
 
 #### Kinetic Defenses in Action: Automated Inverted ADR Serialization
 
@@ -675,6 +688,12 @@ python sdcs_init.py --grill
 * **Extracts Hard Ceilings & Floors:** Demands quantitative latency, throughput, memory, and coverage targets.
 * **Auto-Populates `roadmap.md`:** Generates structured `[INTENT]` and `[MEASURED]` acceptance criteria.
 * **Scaffolded File:** Generated at `prompts/grillme.md` (or `.agent/prompts/grillme.md`).
+
+#### The Greenfield "One-Shot" Pattern: Honest Rapid Prototyping
+One of the most powerful workflows enabled by `/grillme` and **Gate L** is **one-shotting a brand-new application from scratch**:
+- **The Upstream Contract:** During the `/grillme` interview, the human stakeholder and agent agree on which external services (payment processing, notification webhooks, live databases) will be initially mocked to achieve immediate end-to-end user loop execution.
+- **Velocity Without Delusion:** As the agent writes the initial codebase in one shot, it does not hide its shortcuts. Every simulated API and in-memory store is immediately stamped with a `# MOCK(M-NNN)` marker and logged into `MOCKS.md` with concrete criteria for *"To make it real"*.
+- **Instant Production Burndown:** When the one-shot run finishes, the team has both a functional application and an exact, machine-enforced checklist of every real integration required before production deployment.
 
 ---
 

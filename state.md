@@ -11,6 +11,7 @@
 - Clean Scaffolding: 100% generic framework; zero proprietary names or local paths.
 - Adversarial Spec Protocol: /grillme upgraded across prompts/grillme.md, src/sdcs/init.py, and sdcs_init.py with Gate L, Gate T, and Gate Q awareness.
 - Slide Deck: slide_01.png updated to versionless header badge [SDCS].
+- Documentation: README.md updated with Gate L, MOCKS.md Layer 2 placement, and Greenfield One-Shot Velocity Pattern.
 - Test Suite: 236/236 passed; all 10 kinetic gates and CI workflows green.
 
 ## Immediate Next Action (Post-Compact)
