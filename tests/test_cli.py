@@ -61,6 +61,7 @@ def test_cli_verify_help():
     result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
     assert "--topology" in result.stdout
     assert "--append-rejections" in result.stdout
+    assert "--mocks" in result.stdout
     assert "--all" in result.stdout
 
 
