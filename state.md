@@ -2,16 +2,15 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 350 Tokens -->
 
 ## Current Objective
-- Framework Sanitization & Release v1.9.0 Public Readiness.
+- SDCS Release v1.9.0 Public Distribution.
 
 ## Status & Gate Verification
-- Clean Scaffolding: 100% generic framework; zero proprietary names or local paths in pillars, tests, or scripts.
-- Cross-Python AST Hash Normalization: Fixture hashes invariant across Python 3.10–3.13 via canonical AST field filtering.
-- CI Pipeline Hardening: Ruff, Black, and Mypy clean with 0 warnings.
-- Mock Ledger (Gate L): Active and verified; clean empty MOCKS.md in framework root.
-- Git Commits & Attribution: All commits authored strictly by Adam Murphy (`adamm285-dev`).
-- Evals & Ground Truth: 6 cryptographically locked test fixtures verified via SHA-256 (`sdcs audit` PASS).
-- Test Suite: 236/236 passed in 32s; all 7 kinetic gates green.
+- Release Published: GitHub Release `v1.9.0` published with wheel and sdist distributions.
+- PyPI: `sdcs 1.9.0` deployed successfully via GitHub Actions (`publish-pypi.yml` run 38209386309).
+- Zenodo & Citation: `.zenodo.json` and `CITATION.cff` updated and deposited for DOI indexing.
+- Clean Scaffolding: 100% generic framework; zero proprietary names or local paths.
+- Cross-Python Invariance: Fixture hashes invariant across Python 3.10–3.13 via canonical AST filtering.
+- Test Suite: 236/236 passed; all 10 kinetic gates and CI workflows green.
 
 ## Immediate Next Action (Post-Compact)
 - Ready for public consumption or downstream project initialization.
