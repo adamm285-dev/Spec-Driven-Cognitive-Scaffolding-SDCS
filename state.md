@@ -2,17 +2,14 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 350 Tokens -->
 
 ## Current Objective
-- SDCS Release v1.9.0 Public Distribution.
+- SDCS Release v1.9.1: Gate L Undeclared Mock & `REQ-GATE-L-06` Fake-Success AST Detector.
 
 ## Status & Gate Verification
-- Release Published: GitHub Release `v1.9.0` published with wheel and sdist distributions.
-- PyPI: `sdcs 1.9.0` deployed successfully via GitHub Actions (`publish-pypi.yml` run 38209386309).
-- Zenodo & Citation: `.zenodo.json` and `CITATION.cff` updated and deposited for DOI indexing.
-- Clean Scaffolding: 100% generic framework; zero proprietary names or local paths.
-- Adversarial Spec Protocol: /grillme upgraded across prompts/grillme.md, src/sdcs/init.py, and sdcs_init.py with Gate L, Gate T, and Gate Q awareness.
-- Slide Deck: slide_01.png updated to versionless header badge [SDCS].
-- Documentation: README.md updated with Gate L, MOCKS.md Layer 2 placement, and Greenfield One-Shot Velocity Pattern.
-- Test Suite: 236/236 passed; all 10 kinetic gates and CI workflows green.
+- Gate L Hardened (`src/sdcs/verifier/mocks.py`): AST & comment scanning for undeclared product mocks (`REQ-GATE-L-01`) + unconditional rejection of `except`/`catch` fake-success fallbacks (`REQ-GATE-L-06`).
+- Validation: Catches 20/20 violations across all 10 undeclared mocks + `REQ-GATE-L-06` on untouched `CacheForge` HEAD (`5d9fbb0`); 0 false positives on SDCS (`13/13` in `tests/test_mocks.py`).
+- Docs & Spec: `/grillme` upgraded with Gate L/T/Q checks; `README.md` updated with `MOCKS.md` Layer 2 placement and Greenfield One-Shot Velocity Pattern.
+- Test Suite: `239/239` passed across 35 suites; all 10 kinetic gates, `ruff`, `black`, and `mypy` green.
 
 ## Immediate Next Action (Post-Compact)
-- Ready for public consumption or downstream project initialization.
+- Tag and push `v1.9.1` release to `origin/main`.
+

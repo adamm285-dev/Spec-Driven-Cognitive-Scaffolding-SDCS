@@ -165,3 +165,221 @@ def test_templates_wire_in_gate_l():
     assert "Gate L mock ledger reconciliation (`sdcs verify --mocks`)" in TEMPLATE_AGENTS
     assert "Mock Ledger Invariant (Gate L)" in TEMPLATE_AGENTS
     assert "M-NNN" in TEMPLATE_MOCKS
+
+
+def test_undeclared_mocks_are_detected_and_cleared_when_declared(tmp_path: Path):
+    _write(
+        tmp_path,
+        "src/client.py",
+        (
+            "import asyncio\n\n"
+            "class NebiusClient:\n"
+            "    def __init__(self, mock_mode: bool = False):\n"
+            "        self.mock_mode = mock_mode\n"
+            "        self._simulated_kv_cache = set()\n\n"
+            "    async def stream(self):\n"
+            "        simulated_delay = 0.015\n"
+            "        await asyncio.sleep(simulated_delay)\n"
+            "        return {'is_simulated': True}\n\n"
+            "    async def _mock_completion(self):\n"
+            "        return {'id': 'chatcmpl-mock-123'}\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "src/invariants.py",
+        (
+            "class GatewayTelemetry:\n"
+            "    requests_total: int = 0\n"
+            "    def hit_rate(self) -> float:\n"
+            "        if self.requests_total == 0:\n"
+            "            return 0.90  # Benchmark baseline\n"
+            "        return 1.0\n\n"
+            "telemetry = GatewayTelemetry()\n"
+            "# Seed baseline entries so dashboard displays live verification data on initial boot\n"
+            "telemetry.recent_requests = [{'id': 'turn-01'}]\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "benchmarks/run_benchmark.py",
+        (
+            "from src.client import NebiusClient\n\n"
+            "def run_suite():\n"
+            "    client = NebiusClient(mock_mode=True)\n"
+            "    return client\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "examples/agent.py",
+        (
+            "import os, time\n\n"
+            "def get_telemetry():\n"
+            "    # Simulate 2.0s Tool Execution Delay\n"
+            "    time.sleep(2.0)\n"
+            "    return {}\n\n"
+            "api_key = os.environ.get('NEBIUS_API_KEY', 'cf-local-proxy-token')\n"
+        ),
+    )
+
+    problems = _problems(tmp_path)
+    assert "src/client.py:4: undeclared mock in 'NebiusClient.__init__'" in problems
+    assert "src/client.py:9: undeclared mock in 'NebiusClient.stream'" in problems
+    assert "src/client.py:13: undeclared mock in 'NebiusClient._mock_completion'" in problems
+    assert "src/invariants.py:5: undeclared mock in 'GatewayTelemetry.hit_rate'" in problems
+    assert "src/invariants.py:9: undeclared mock in 'telemetry'" in problems
+    assert "benchmarks/run_benchmark.py:4: undeclared mock in 'run_suite'" in problems
+    assert "examples/agent.py:5: undeclared mock in 'get_telemetry'" in problems
+    assert "examples/agent.py:8: undeclared mock in 'api_key'" in problems
+    assert run_mock_ledger_audit(tmp_path) == 1
+
+    # Now declare them with # MOCK(M-NNN) and a matching MOCKS.md ledger
+    _write(
+        tmp_path,
+        "src/client.py",
+        (
+            "import asyncio\n\n"
+            "class NebiusClient:\n"
+            "    # MOCK(M-001): offline mock mode\n"
+            "    def __init__(self, mock_mode: bool = False):\n"
+            "        self.mock_mode = mock_mode\n"
+            "        self._simulated_kv_cache = set()\n\n"
+            "    # MOCK(M-002): simulated stream delay\n"
+            "    async def stream(self):\n"
+            "        simulated_delay = 0.015\n"
+            "        await asyncio.sleep(simulated_delay)\n"
+            "        return {'is_simulated': True}\n\n"
+            "    # MOCK(M-003): simulated completion\n"
+            "    async def _mock_completion(self):\n"
+            "        return {'id': 'chatcmpl-mock-123'}\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "src/invariants.py",
+        (
+            "# MOCK(M-004): seeded telemetry baseline\n"
+            "class GatewayTelemetry:\n"
+            "    requests_total: int = 0\n"
+            "    def hit_rate(self) -> float:\n"
+            "        if self.requests_total == 0:\n"
+            "            return 0.90  # Benchmark baseline\n"
+            "        return 1.0\n\n"
+            "telemetry = GatewayTelemetry()\n"
+            "# MOCK(M-005): pre-seeded rows\n"
+            "# Seed baseline entries so dashboard displays live verification data on initial boot\n"
+            "telemetry.recent_requests = [{'id': 'turn-01'}]\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "benchmarks/run_benchmark.py",
+        (
+            "from src.client import NebiusClient\n\n"
+            "def run_suite():\n"
+            "    # MOCK(M-006): benchmark runs in mock mode\n"
+            "    client = NebiusClient(mock_mode=True)\n"
+            "    return client\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "examples/agent.py",
+        (
+            "import os, time\n\n"
+            "# MOCK(M-007): demo tool delay and placeholder key\n"
+            "def get_telemetry():\n"
+            "    # Simulate 2.0s Tool Execution Delay\n"
+            "    time.sleep(2.0)\n"
+            "    return {}\n\n"
+            "api_key = os.environ.get('NEBIUS_API_KEY', 'cf-local-proxy-token')\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "MOCKS.md",
+        (
+            _entry("M-001", "`src/client.py::NebiusClient.__init__`")
+            + _entry("M-002", "`src/client.py::NebiusClient.stream`")
+            + _entry("M-003", "`src/client.py::NebiusClient._mock_completion`")
+            + _entry("M-004", "`src/invariants.py::GatewayTelemetry`")
+            + _entry("M-005", "`src/invariants.py::telemetry`")
+            + _entry("M-006", "`benchmarks/run_benchmark.py::run_suite`")
+            + _entry(
+                "M-007",
+                "`examples/agent.py::get_telemetry`, `examples/agent.py::api_key`",
+            )
+        ),
+    )
+
+    assert check_mock_ledger(tmp_path).problems == []
+    assert run_mock_ledger_audit(tmp_path) == 0
+
+
+def test_req_gate_l_06_fake_success_fallback_rejected_even_when_declared(tmp_path: Path):
+    _write(
+        tmp_path,
+        "src/client.py",
+        (
+            "class Client:\n"
+            "    # MOCK(M-001): declared mock still cannot fake success on exception\n"
+            "    async def request(self):\n"
+            "        try:\n"
+            "            return await self._post()\n"
+            "        except Exception as exc:\n"
+            "            # Fall back to simulation if remote is unreachable\n"
+            "            return await self._mock_completion(error=str(exc))\n\n"
+            "    # MOCK(M-002): mock helper\n"
+            "    async def _mock_completion(self, error: str = ''):\n"
+            "        return {'ok': True}\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "web/client.ts",
+        (
+            "// MOCK(M-003): ts fallback\n"
+            "export async function fetchData() {\n"
+            "  try { return await realCall(); } catch (err) { return _mock_response(); }\n"
+            "}\n"
+        ),
+    )
+    _write(
+        tmp_path,
+        "MOCKS.md",
+        (
+            _entry("M-001", "`src/client.py::Client.request`")
+            + _entry("M-002", "`src/client.py::Client._mock_completion`")
+            + _entry("M-003", "`web/client.ts::fetchData`")
+        ),
+    )
+
+    problems = _problems(tmp_path)
+    assert "REQ-GATE-L-06 (No Fake Success)" in problems
+    assert (
+        "except handler in 'Client.request' returns mock/simulated fallback '_mock_completion'"
+        in problems
+    )
+    assert "web/client.ts:3: REQ-GATE-L-06 (No Fake Success)" in problems
+    assert run_mock_ledger_audit(tmp_path) == 1
+
+
+def test_method_level_isolation_inside_partially_marked_class(tmp_path: Path):
+    _write(
+        tmp_path,
+        "src/svc.py",
+        (
+            "class Service:\n"
+            "    # MOCK(M-001): only init is declared\n"
+            "    def __init__(self, mock_mode: bool = False):\n"
+            "        self.mock_mode = mock_mode\n\n"
+            "    def _mock_response(self):\n"
+            "        return {'status': 'ok'}\n"
+        ),
+    )
+    _write(tmp_path, "MOCKS.md", _entry("M-001", "`src/svc.py::Service.__init__`"))
+
+    problems = _problems(tmp_path)
+    assert "src/svc.py:6: undeclared mock in 'Service._mock_response'" in problems
+    assert run_mock_ledger_audit(tmp_path) == 1

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.1] - 2026-10-14: Gate L Undeclared Mock & Fake-Success AST Detector
+
+### Added
+- **Gate L Undeclared Mock AST & Comment Detector (`REQ-GATE-L-01`, `src/sdcs/verifier/mocks.py`):** Upgrades `sdcs verify --mocks` from a pure reconciliation gate into an active mock detector. Statically scans Python AST and polyglot code for unmarked mock/simulated definitions (`_mock_*`, `fake_*`, `simulated_*`), `mock_mode` parameters and `mock_mode=True` call kwargs, `_simulated_*` state attributes, `sleep()` calls paired with `simulated_*` variables or simulation docstrings/comments, placeholder API key fallbacks in `os.environ.get`, seeded baseline comments/returns, and static hardcoded Chart.js `datasets` arrays without `.update()`.
+- **Static Enforcement of `REQ-GATE-L-06` ("No Fake Success"):** Audits Python `ast.ExceptHandler` and polyglot `catch` blocks for fallbacks that return mock/simulated calls, fake-success status dicts (`{"status": "ok" | "success" | "healthy" | "online"}`), or `# Fall back to simulation` returns on error, rejecting them unconditionally even when a `MOCK(M-NNN)` marker is present.
+- **Method-Level Marker Isolation & Class Attribute Resolution:** Ensures marking `Class.__init__` does not mask an unmarked `Class._mock_response` method, and resolves `Class.attribute` symbols in `_python_symbols`.
+- **Adversarial Spec Protocol (`/grillme`) Gate L, Gate T & Gate Q Integration:** Upgraded `prompts/grillme.md`, `src/sdcs/init.py`, and `sdcs_init.py` with explicit mock inventory, boundary, and test quality interrogation, plus README Layer 2 `MOCKS.md` documentation.
+
+---
+
 ## [1.9.0] - 2026-10-12: Gate L Mock Ledger & Cross-Python AST Normalization
 
 ### Added
