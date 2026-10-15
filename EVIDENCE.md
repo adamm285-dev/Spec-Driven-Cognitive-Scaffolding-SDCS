@@ -1,4 +1,4 @@
-# Empirical Evidence & Benchmark Telemetry (SDCS v1.9.0)
+# Empirical Evidence & Benchmark Telemetry (SDCS v1.9.1)
 <!-- SPEC-001 Verification Standard | Status: EMPIRICALLY MEASURED -->
 
 This document records physical telemetry, AST structural measurements, and reproducible gate audits gathered directly from executing commands across the SDCS codebase and reference production codebases.
@@ -9,12 +9,12 @@ This document records physical telemetry, AST structural measurements, and repro
 
 ## 1. Executive Summary: Measured Telemetry
 
-- **Repository Version:** SDCS `3a64789 (dirty)`
+- **Repository Version:** SDCS `3c73d23 (clean)`
 - **Active Tokenizer:** tiktoken (`cl100k_base`)
-- **Single-Pass Hydration Payload (Standard):** 4344 tokens (322 lines across 5 pillars in 1 atomic read)
-- **Single-Pass Hydration Payload (Lite):** 494 tokens (34 lines across 2 pillars in 1 atomic read)
+- **Single-Pass Hydration Payload (Standard):** 4585 tokens (324 lines across 5 pillars in 1 atomic read)
+- **Single-Pass Hydration Payload (Lite):** 616 tokens (35 lines across 2 pillars in 1 atomic read)
 - **AST Skeletal Compactor (`sdcs slice`):** 77.8% – 98.9% token reduction across codebase modules
-- **Working Blackboard State (`state.md`):** 182 tokens (strictly within <= 350 token working memory budget)
+- **Working Blackboard State (`state.md`):** 304 tokens (strictly within <= 350 token working memory budget)
 - **Gate Q Recall on Evasive Corpus:** 11/11 hollow tests caught (100.0%), 15/15 sound controls passed (100.0%)
 - **Circuit Breaker False Block Prevention:** 0 blocking trips on progressive TDD alternating rhythms and land-revert-reland workflows (3/3 reviewer tests passed)
 - **Circuit Breaker Thrash Detection:** Hard block fired on repeated identical diff reversals (>= 3 reversals)
@@ -32,14 +32,14 @@ Token counts are computed using tiktoken (`cl100k_base`).
 | Pillar File | Role | Lines on Disk | Measured Tokens |
 | :--- | :--- | :--- | :--- |
 | `spine.md` | Pillar 1: Invariant Spine | 20 lines | 312 tokens |
-| `roadmap.md` | Pillar 3: Teleological Roadmap | 17 lines | 1136 tokens |
-| `app_map.md` | Pillar 5: Repository Cartography | 213 lines | 1417 tokens |
+| `roadmap.md` | Pillar 3: Teleological Roadmap | 17 lines | 1242 tokens |
+| `app_map.md` | Pillar 5: Repository Cartography | 214 lines | 1430 tokens |
 | `decisions.md` | Pillar 6: Negative Memory | 58 lines | 1297 tokens |
-| `state.md` | Pillar 4: Working Memory State | 14 lines | 182 tokens |
-| **TOTAL COMPILED PAYLOAD** | **5 Pillars Combined** | **322 lines** | **4344 tokens** |
+| `state.md` | Pillar 4: Working Memory State | 15 lines | 304 tokens |
+| **TOTAL COMPILED PAYLOAD** | **5 Pillars Combined** | **324 lines** | **4585 tokens** |
 
 ### Lite Profile Telemetry (`sdcs hydrate --profile lite`)
-- Combined Payload: **494 tokens** (34 lines across `spine.md` + `state.md`).
+- Combined Payload: **616 tokens** (35 lines across `spine.md` + `state.md`).
 
 ---
 
@@ -63,7 +63,7 @@ Token counts measured using tiktoken (`cl100k_base`).
 ## 4. Benchmark 3: Working Memory State Budget (`state.md` / Gate S)
 
 - **Active Working Blackboard (`state.md`):**
-  - Measured Token Count: **182 tokens**
+  - Measured Token Count: **304 tokens**
   - Maximum Allowed Budget: **350 tokens** (enforced by Gate S)
   - Verification Command: `python -m sdcs.cli verify --state`
 - **Compaction Recovery Guarantee:**
