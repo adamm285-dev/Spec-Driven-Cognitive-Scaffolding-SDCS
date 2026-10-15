@@ -11,14 +11,14 @@ This document declares the non-negotiable architectural axioms governing `pallet
 - Context resources registered via `call_on_close` and `with_resource` must always be closed/cleaned up deterministically on exit or abort.
 - Standalone mode handles exceptions and converts them into user-facing output with deterministic exit codes; non-standalone mode allows exceptions to propagate to callers.
 
-## Axiom 3: Cross-Platform File & Terminal Safety
+## Axiom 3: Cross-Platform Terminal Safety
 - Windows console and POSIX terminal abstractions in `click._termui_impl` must isolate OS differences.
-- File and terminal operations must manage system resources cleanly across POSIX and Windows environments without leaving lingering state.
+- Standard terminal styling, cursor movement, and paging operations must function consistently across supported operating systems.
 - Stream operations must handle binary and text encodings gracefully without unintended byte-string type collisions.
 
-## Axiom 4: Singleton Immutability & Identity
-- Internal sentinel representations used to indicate unset arguments, missing options, or default overrides must maintain immutable singleton semantics across the framework lifecycle.
+## Axiom 4: Internal Sentinel Semantics
+- Internal sentinel values representing missing or unset options are private framework markers and must be treated as distinct from user-provided values.
 
 ## Axiom 5: Public API Stability
 - Public classes (`Command`, `Group`, `Context`, `Parameter`, `Option`, `Argument`, `ParamType`) must preserve signature backwards compatibility.
-- Help formatting must produce deterministic, readable output across all supported terminal dimensions.\n
+- Help formatting must produce deterministic, readable output across all supported terminal dimensions.

@@ -6,4 +6,3 @@
 - Acceptance Contract:
   - [MEASURED]: 2,022 passed, 101 skipped, 1 xfailed in pytest suite.
   - [INTENT]: Bug fixes must strictly increase or maintain test coverage without introducing regressions.
-  - [INTENT]: Cross-platform file, signal, and terminal interactions must remain completely clean.\n

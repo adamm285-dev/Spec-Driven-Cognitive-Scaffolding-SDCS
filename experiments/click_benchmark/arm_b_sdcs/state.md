@@ -9,4 +9,4 @@
 - Tests: pytest execution verified with pythonpath=src.
 
 ## Immediate Next Action (Post-Compact)
-- Run targeted reproduction test; analyze source module under test; apply minimal fix; re-verify.\n
+- Run targeted reproduction test; analyze source module under test; apply minimal fix; re-verify.

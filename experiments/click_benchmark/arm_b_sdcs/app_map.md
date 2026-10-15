@@ -17,4 +17,4 @@
   - `test_termui.py`: Terminal UI, progress bar, and pager tests.
   - `test_basic.py`: Basic command parsing and context execution.
   - `test_utils/`: Targeted test modules for internal and public utility functions.
-  - `test_types/`: ParamType unit tests.\n
+  - `test_types/`: ParamType unit tests.

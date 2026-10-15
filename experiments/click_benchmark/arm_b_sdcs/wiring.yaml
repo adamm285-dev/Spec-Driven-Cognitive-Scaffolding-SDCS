@@ -75,4 +75,4 @@ sandbox:
   allowed_commands:
     - "pytest"
     - "git"
-    - "python"\n
+    - "python"

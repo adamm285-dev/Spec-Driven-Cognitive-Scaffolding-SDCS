@@ -14,4 +14,4 @@
 1. **Orientation:** Hydrate constraints; locate target module in `app_map.md`.
 2. **Planning:** Formulate minimal, atomic fix preserving subsystem boundaries.
 3. **Execution:** Apply code mutation; run targeted reproduction test.
-4. **Close-Out:** Run full test suite (`pytest -o pythonpath=src`) to verify zero regressions; prune `state.md`.\n
+4. **Close-Out:** Run full test suite (`pytest -o pythonpath=src`) to verify zero regressions; prune `state.md`.

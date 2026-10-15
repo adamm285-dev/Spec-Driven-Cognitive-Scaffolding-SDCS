@@ -14,4 +14,4 @@
 ## REJ-003: Swallowing Cleanup Exceptions During Teardown
 - Proposal: Use broad `except Exception: pass` around cleanup code in context managers.
 - Rejection: Masks critical resource leaks and makes debugging unexpected system failures impossible. Teardown routines must allow unexpected failures to surface cleanly.
-- Reopen Condition: Documented OS-level requirement where cleanup cannot be made deterministic.\n
+- Reopen Condition: Documented OS-level requirement where cleanup cannot be made deterministic.
