@@ -11,7 +11,7 @@
 - Rejection: Increases CLI startup latency. Infrequently used subroutines (like editor launches or specific formatting algorithms) must import heavy modules lazily.
 - Reopen Condition: Benchmark proving zero impact on microsecond startup time.
 
-## REJ-003: Swallowing Cleanup Exceptions During Paging/Subprocesses
+## REJ-003: Swallowing Cleanup Exceptions During Teardown
 - Proposal: Use broad `except Exception: pass` around cleanup code in context managers.
-- Rejection: Masks critical resource leaks and makes debugging platform file-locking errors impossible. Cleanup must explicitly manage resource state (e.g. closing handles before unlink).
+- Rejection: Masks critical resource leaks and makes debugging unexpected system failures impossible. Teardown routines must allow unexpected failures to surface cleanly.
 - Reopen Condition: Documented OS-level requirement where cleanup cannot be made deterministic.\n

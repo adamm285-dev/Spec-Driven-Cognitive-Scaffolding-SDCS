@@ -23,11 +23,11 @@ This document declares the non-negotiable architectural axioms governing `pallet
 
 ## Axiom 3: Cross-Platform File & Terminal Safety
 - Windows console and POSIX terminal abstractions in `click._termui_impl` must isolate OS differences.
-- Any temporary file opened for paging or editor operations must ensure handles are properly closed before filesystem mutations or unlinking, avoiding platform-specific handle locks.
+- File and terminal operations must manage system resources cleanly across POSIX and Windows environments without leaving lingering state.
 - Stream operations must handle binary and text encodings gracefully without unintended byte-string type collisions.
 
 ## Axiom 4: Singleton Immutability & Identity
-- Internal sentinel representations used to indicate unset arguments, missing options, or default overrides must preserve identity under standard copy, deepcopy, and serialization operations.
+- Internal sentinel representations used to indicate unset arguments, missing options, or default overrides must maintain immutable singleton semantics across the framework lifecycle.
 
 ## Axiom 5: Public API Stability
 - Public classes (`Command`, `Group`, `Context`, `Parameter`, `Option`, `Argument`, `ParamType`) must preserve signature backwards compatibility.
@@ -174,9 +174,9 @@ DECISIONS_CONTENT = """# Negative Episodic Memory (The Graveyard)
 - Rejection: Increases CLI startup latency. Infrequently used subroutines (like editor launches or specific formatting algorithms) must import heavy modules lazily.
 - Reopen Condition: Benchmark proving zero impact on microsecond startup time.
 
-## REJ-003: Swallowing Cleanup Exceptions During Paging/Subprocesses
+## REJ-003: Swallowing Cleanup Exceptions During Teardown
 - Proposal: Use broad `except Exception: pass` around cleanup code in context managers.
-- Rejection: Masks critical resource leaks and makes debugging platform file-locking errors impossible. Cleanup must explicitly manage resource state (e.g. closing handles before unlink).
+- Rejection: Masks critical resource leaks and makes debugging unexpected system failures impossible. Teardown routines must allow unexpected failures to surface cleanly.
 - Reopen Condition: Documented OS-level requirement where cleanup cannot be made deterministic.
 """
 
