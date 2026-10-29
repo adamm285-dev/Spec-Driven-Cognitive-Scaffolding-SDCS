@@ -203,9 +203,22 @@ On Turn 1 of any task, you MUST hydrate state across the 7 cognitive pillars in 
 6. `state.md`        -> Turn-by-turn active working memory (Pillar 4: The Blackboard)
 7. `wiring.yaml`     -> Declarative topology & subsystem boundaries (Pillar 2: The Mesh)
 
+**Pre-Hydrated Fast Path:** If your prompt already contains the `SDCS DETERMINISTIC CONTEXT COMPILER` payload (`sdcs hydrate`) or pre-hydrated pillar sections (`app_map.md`, `state.md`, `# [AST SKELETAL INTERFACES]`), **DO NOT waste turns calling `list_files` or re-reading those pillar files from disk**. Use `app_map.md` (Pillar 5) and `# [AST SKELETAL INTERFACES]` immediately on Turn 1 to locate target modules and inspect class/function signatures, reading or editing only the specific implementation files required.
+
 ## +1 Flight Recorder Invariant
 CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
 `sessions/*.md` serves as an immutable post-hoc flight recorder, NOT boot context. Auto-loading historical sessions recreates context drift and episodic amnesia. Query individual sessions or `sessions/manifest.jsonl` on demand for forensic debugging (`sdcs session`).
+
+## 2b. Practical Pillar Usage & Multi-Session Survival Guide
+1. **Zero-Discovery Navigation (`app_map.md` + AST Skeletons):** Use `app_map.md` to know every file path in the repo without running `list_files`, and use `# [AST SKELETAL INTERFACES]` to check exact class/dataclass/method signatures across modules.
+2. **Boundary Enforcement (`wiring.yaml` + `spine.md`):** Before adding any `import`, check `allowed_dependencies` in `wiring.yaml` (and module-boundary rules) so you never introduce a forbidden cross-module dependency.
+3. **In-Stride Mid-Session Requirement Locking (`state.md` <= 300 tokens):**
+   - `state.md` must preserve its 3 `##` headings (`## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`) and stay `<= 300` tokens (Gate S).
+   - Visible unit tests (`pytest` / `run_tests`) often only cover initial baseline specifications—they do **NOT** automatically test new mid-session product requirements!
+   - Whenever new requirements arrive mid-session, immediately wire every required parameter, field, default value, and return key across all affected modules (`models`, `rules`, `service`, `reporting`, etc.), record the exact parameter/field names and module checklist in `state.md`, and **commit before the session ends** (uncommitted changes are wiped when a session ends).
+4. **Post-Wipe / Session-2 Verification Protocol:**
+   - When starting a new session after a context wipe, **never finish early just because `pytest` / `run_tests` passes!**
+   - First check `state.md` (`## Immediate Next Action`) and `git log`, and inspect the target source files to verify that every mid-session requirement recorded in `state.md` is actually implemented and wired across all modules before finishing.
 
 ## 3. The 4-Phase Autonomous Execution Cycle
 Execute every turn through the 4-phase engine:

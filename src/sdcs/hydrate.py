@@ -243,20 +243,101 @@ def compile_hydration_payload(
 
     # Skeletal Hydration Option (SPEC-001 v1.8.0 Section 7.12)
     if skeletal:
+        import yaml
+
         from sdcs.skeleton import extract_file_skeleton
 
-        target_dir = (
-            (repo_root / subsystem)
-            if subsystem and (repo_root / subsystem).is_dir()
-            else (repo_root / "src")
-        )
-        if target_dir.is_dir():
+        excluded_dirs = {
+            "tests",
+            "test",
+            ".git",
+            ".agent",
+            "docs",
+            "__pycache__",
+            "sessions",
+            "prompts",
+        }
+        excluded_files = {"setup.py", "conftest.py"}
+
+        def _is_valid_source_file(fp: Path) -> bool:
+            if not fp.is_file() or fp.suffix != ".py":
+                return False
+            try:
+                rel_parts = fp.relative_to(repo_root).parts
+            except ValueError:
+                rel_parts = fp.parts
+            if any(p.startswith(".") or p in excluded_dirs for p in rel_parts[:-1]):
+                return False
+            if (
+                fp.name in excluded_files
+                or fp.name.startswith("test_")
+                or fp.name.startswith("audit_")
+            ):
+                return False
+            return True
+
+        def _collect_from_target(target: Path) -> list[Path]:
+            if target.is_file() and target.suffix == ".py":
+                return [target]
+            if target.is_dir():
+                return sorted(
+                    f
+                    for f in target.rglob("*.py")
+                    if f.is_file()
+                    and not any(
+                        p.startswith(".") or p in excluded_dirs for p in f.relative_to(target).parts
+                    )
+                )
+            return []
+
+        code_files: list[Path] = []
+        w_subs: dict = {}
+        if wiring_file and wiring_file.is_file():
+            try:
+                w_data = (
+                    yaml.safe_load(wiring_file.read_text(encoding="utf-8", errors="ignore")) or {}
+                )
+                if isinstance(w_data, dict):
+                    w_subs = w_data.get("subsystems") or {}
+            except Exception:
+                w_subs = {}
+
+        # 1. Explicit subsystem provided
+        if subsystem:
+            sub_target = repo_root / subsystem
+            if not sub_target.exists() and isinstance(w_subs, dict) and subsystem in w_subs:
+                sub_meta = w_subs.get(subsystem) or {}
+                if isinstance(sub_meta, dict) and sub_meta.get("path"):
+                    sub_target = repo_root / str(sub_meta["path"])
+            code_files = _collect_from_target(sub_target)[:15]
+
+        # 2. Otherwise, if (repo_root / "src").is_dir(), scan repo_root / "src"
+        if not code_files and not subsystem and (repo_root / "src").is_dir():
+            code_files = _collect_from_target(repo_root / "src")[:15]
+
+        # 3. Otherwise, if wiring.yaml declares subsystems.*.path, collect referenced files/dirs
+        if not code_files and not subsystem and isinstance(w_subs, dict) and w_subs:
+            seen: set[Path] = set()
+            for s_meta in w_subs.values():
+                if not isinstance(s_meta, dict):
+                    continue
+                p_str = s_meta.get("path")
+                if not p_str:
+                    continue
+                s_target = repo_root / str(p_str)
+                for cf in _collect_from_target(s_target):
+                    resolved = cf.resolve()
+                    if resolved not in seen and _is_valid_source_file(cf):
+                        seen.add(resolved)
+                        code_files.append(cf)
+            code_files = code_files[:15]
+
+        # 4. Otherwise, fall back to scanning non-test, non-hidden .py files under repo_root
+        if not code_files and not subsystem:
+            code_files = sorted(f for f in repo_root.rglob("*.py") if _is_valid_source_file(f))[:15]
+
+        if code_files:
             skel_parts = ["# [AST SKELETAL INTERFACES] Subsystem Type Signatures\n"]
-            code_files = [
-                f
-                for f in target_dir.rglob("*.py")
-                if f.is_file() and not any(p.startswith(".") for p in f.parts)
-            ][:15]
             for cf in code_files:
                 try:
                     s = extract_file_skeleton(cf)

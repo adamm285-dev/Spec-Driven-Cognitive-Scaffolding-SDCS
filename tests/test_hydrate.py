@@ -50,3 +50,44 @@ def test_hydrate_cli_execution():
     )
     assert "[PILLAR 4: THE BLACKBOARD]" in result.stdout
     assert "[SDCS::HYDRATE]" in result.stderr
+
+
+def test_hydrate_skeletal_auto_discovery_without_src(tmp_path):
+    """Verify skeletal hydration discovers packages outside src/ via wiring.yaml or fallback scan."""
+    (tmp_path / "spine.md").write_text("# Law\n", encoding="utf-8")
+    (tmp_path / "state.md").write_text("## Current Objective\nGoal\n", encoding="utf-8")
+
+    pkg_dir = tmp_path / "my_pkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "models.py").write_text(
+        "class Invoice:\n    def total(self, tax: float = 0.0) -> float:\n        return 100.0 + tax\n",
+        encoding="utf-8",
+    )
+    # Ensure test files are excluded during fallback scan
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_models.py").write_text("def test_noop(): pass\n", encoding="utf-8")
+
+    # Case 1: Fallback discovery without src/ or wiring.yaml
+    payload_fallback, _ = compile_hydration_payload(tmp_path, profile="full", skeletal=True)
+    assert "# [AST SKELETAL INTERFACES]" in payload_fallback
+    assert "my_pkg/models.py" in payload_fallback
+    assert "class Invoice:" in payload_fallback
+    assert "def total(self, tax: float" in payload_fallback
+    assert "test_models.py" not in payload_fallback
+
+    # Case 2: Discovery via wiring.yaml subsystems.*.path
+    (tmp_path / "wiring.yaml").write_text(
+        'version: "1.9.0"\nsubsystems:\n  billing:\n    path: "my_pkg"\n',
+        encoding="utf-8",
+    )
+    payload_wiring, _ = compile_hydration_payload(tmp_path, profile="full", skeletal=True)
+    assert "# [AST SKELETAL INTERFACES]" in payload_wiring
+    assert "my_pkg/models.py" in payload_wiring
+
+    # Case 3: Explicit subsystem name resolved via wiring.yaml
+    payload_sub, _ = compile_hydration_payload(
+        tmp_path, profile="full", subsystem="billing", skeletal=True
+    )
+    assert "# [AST SKELETAL INTERFACES]" in payload_sub
+    assert "my_pkg/models.py" in payload_sub
