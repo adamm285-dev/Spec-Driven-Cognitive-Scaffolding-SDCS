@@ -91,3 +91,32 @@ def test_hydrate_skeletal_auto_discovery_without_src(tmp_path):
     )
     assert "# [AST SKELETAL INTERFACES]" in payload_sub
     assert "my_pkg/models.py" in payload_sub
+
+
+def test_hydrate_adaptive_zero_read_source_bundle(tmp_path):
+    """Verify skeletal=True includes # [PRE-HYDRATED SOURCE FILES] when <=4000 tokens and omits when include_source=False."""
+    (tmp_path / "spine.md").write_text("# Law\n", encoding="utf-8")
+    (tmp_path / "state.md").write_text("## Current Objective\nGoal\n", encoding="utf-8")
+
+    pkg_dir = tmp_path / "my_pkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text("", encoding="utf-8")
+    (pkg_dir / "models.py").write_text(
+        "class Order:\n    def calculate(self, amount: int) -> int:\n        return amount * 2\n",
+        encoding="utf-8",
+    )
+
+    # Default (include_source=None) with small source (<= 4000 tokens): includes source bundle
+    payload_auto, _ = compile_hydration_payload(tmp_path, profile="full", skeletal=True)
+    assert "# [AST SKELETAL INTERFACES]" in payload_auto
+    assert "# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle" in payload_auto
+    assert "return amount * 2" in payload_auto
+    assert "my_pkg/__init__.py" not in payload_auto.split("# [PRE-HYDRATED SOURCE FILES]")[1]
+
+    # Explicit include_source=False: keeps AST skeletons, omits source bundle
+    payload_no_src, _ = compile_hydration_payload(
+        tmp_path, profile="full", skeletal=True, include_source=False
+    )
+    assert "# [AST SKELETAL INTERFACES]" in payload_no_src
+    assert "# [PRE-HYDRATED SOURCE FILES]" not in payload_no_src
+    assert "return amount * 2" not in payload_no_src

@@ -107,6 +107,7 @@ def compile_hydration_payload(
     profile: str = "standard",
     subsystem: str | None = None,
     skeletal: bool = False,
+    include_source: bool | None = None,
 ) -> tuple[str, int]:
     """Compiles single-pass cognitive hydration payload across pillars."""
     profile = profile.lower().strip()
@@ -338,15 +339,40 @@ def compile_hydration_payload(
 
         if code_files:
             skel_parts = ["# [AST SKELETAL INTERFACES] Subsystem Type Signatures\n"]
+            source_entries: list[tuple[str, str]] = []
+            total_source_tokens = 0
             for cf in code_files:
                 try:
-                    s = extract_file_skeleton(cf)
                     rel = cf.relative_to(repo_root).as_posix()
+                    s = extract_file_skeleton(cf)
                     skel_parts.append(f"### `{rel}`\n```python\n{s}\n```\n")
+                except Exception:
+                    pass
+                try:
+                    raw_src = cf.read_text(encoding="utf-8", errors="ignore")
+                    if cf.name == "__init__.py" and not raw_src.strip():
+                        continue
+                    rel = cf.relative_to(repo_root).as_posix()
+                    source_entries.append((rel, raw_src.rstrip()))
+                    total_source_tokens += count_tokens(raw_src)
                 except Exception:
                     pass
             if len(skel_parts) > 1:
                 sections.append("\n".join(skel_parts))
+
+            should_include_source = (
+                include_source
+                if include_source is not None
+                else (total_source_tokens <= 4000 and len(source_entries) > 0)
+            )
+            if should_include_source and source_entries:
+                src_parts = [
+                    "# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle\n"
+                    "<!-- Exact current file contents from disk. DO NOT call `list_files` or `read_file` on these files; use `edit_file` or `write_file` directly on Turn 1! -->\n"
+                ]
+                for rel, raw_src in source_entries:
+                    src_parts.append(f"### `{rel}`\n```python\n{raw_src}\n```\n")
+                sections.append("\n".join(src_parts))
 
     full_payload = "\n\n---\n\n".join(sections)
     total_tokens = count_tokens(full_payload)
