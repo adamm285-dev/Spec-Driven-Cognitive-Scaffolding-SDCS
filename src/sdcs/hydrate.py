@@ -131,11 +131,6 @@ def compile_hydration_payload(
 """
     sections.append(header_banner)
 
-    state_header = (
-        "# [PILLAR 4: THE BLACKBOARD] Working Memory\n"
-        "<!-- In-Stride Spec Ledger: When updating `state.md`, list every active requirement's exact parameter names, defaults, and target modules under `## Status & Gate Verification` (do not replace with generic Gate T/Q/S boilerplate). On resume after compaction/reset, verify every requirement against `# [PRE-HYDRATED SOURCE FILES]` before finishing. -->"
-    )
-
     if profile == "lite":
         # Profile Lite: spine.md + state.md (minimal fast-boot working set)
         if spine_file and spine_file.is_file():
@@ -144,7 +139,7 @@ def compile_hydration_payload(
             )
         if state_file and state_file.is_file():
             sections.append(
-                f"{state_header}\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
             )
 
     elif profile == "standard":
@@ -179,7 +174,7 @@ def compile_hydration_payload(
 
         if state_file and state_file.is_file():
             sections.append(
-                f"{state_header}\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
             )
 
     else:
@@ -209,7 +204,7 @@ def compile_hydration_payload(
             )
         if state_file and state_file.is_file():
             sections.append(
-                f"{state_header}\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+                f"# [PILLAR 4: THE BLACKBOARD] Working Memory\n\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}"
             )
         if wiring_file and wiring_file.is_file():
             sections.append(

@@ -117,17 +117,18 @@ Template for New Milestones:
 
 TEMPLATE_STATE = """# Dynamic Working Memory (The Blackboard)
 <!-- SPEC-001 v1.9.0 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
-<!-- Preserve the 3 ## headings below. Record concrete specification contracts (exact parameter names, defaults, return keys, and module paths), NOT generic boilerplate. -->
+<!-- Read on Turn 1 boot. Strictly pruned after milestone completion. -->
 
 ## Current Objective
 - Complete repository bootstrapping and verify invariant enforcement hooks.
 
 ## Status & Gate Verification
-- Active Spec Ledger: Record exact parameter names, default values, return keys, and invariants introduced during the task, plus which modules implement them.
-- Verification Standing: Initial baseline pending (`pytest`, `sdcs verify`).
+- Gate T: AST topology verified via `sdcs verify`.
+- Gate Q: Visible unit tests tracked via `pytest`.
+- Gate S: Token budget <= 300 tokens.
 
 ## Immediate Next Action
-- Inspect pre-hydrated source modules and wire all active specification contracts across every affected module.
+- Inspect pre-hydrated source modules and implement active specification requirements.
 """
 
 TEMPLATE_DECISIONS = """# Negative Episodic Memory (The Graveyard)
@@ -216,12 +217,12 @@ CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
 2. **Boundary Enforcement (`wiring.yaml` + `spine.md`):** Before adding any `import`, check `allowed_dependencies` in `wiring.yaml` (and module-boundary rules) so you never introduce a forbidden cross-module dependency.
 3. **In-Stride Requirement Locking (`state.md` <= 300 tokens):**
    - `state.md` must preserve its 3 `##` headings (`## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`) and stay `<= 300` tokens (Gate S).
-   - Existing unit test suites often cover only baseline specifications and may not test newly introduced requirements or edge cases.
-   - **Do not fill `## Status & Gate Verification` with generic Gate T/Q/S boilerplate.** Use it as a **Concrete Specification Ledger** recording exact parameter/field names, default values, return keys, and formulas across modules—especially whenever new or clarified requirements arrive mid-task.
-   - Implement new requirements immediately across all affected modules (`models`, `rules`, `service`, `reporting`, etc.), update `state.md` with the exact contract checklist, and commit your working code + `state.md` together before the session ends.
+   - Do not duplicate `app_map.md` or `# [AST SKELETAL INTERFACES]` by listing full module-by-module signature inventories in `state.md`.
+   - Existing unit test suites often cover only baseline specifications and may not test newly introduced mid-session requirements.
+   - Whenever new requirements arrive, wire every required parameter, field, default value, and return key across all affected modules, record the newly added parameter/field names and any unverified modules in `state.md`, and immediately commit your changes so verified progress is persisted in git history.
 4. **Post-Compaction / Resumed-Context Verification:**
-   - When resuming work after a context reset or compaction, do not finish solely because the existing unit test suite passes or because `state.md` says tests pass.
-   - Directly inspect `# [PRE-HYDRATED SOURCE FILES]` and `# [AST SKELETAL INTERFACES]` against `state.md` and the task specification to verify that every required parameter, default value, and return key is wired in every module (`models`, `rules`, `service`, `reporting`, etc.). If any module is missing a contract, edit it, run tests once, update `state.md`, and commit.
+   - When resuming work after a context reset or compaction, do not assume the task is complete solely because the existing test suite passes.
+   - Review `state.md` (`## Immediate Next Action`) and `# [PRE-HYDRATED SOURCE FILES]` (or target source files if not pre-hydrated) to verify that every requirement recorded in `state.md` is fully wired across all modules before completing the task.
 
 ## 3. The 4-Phase Autonomous Execution Cycle
 Execute every turn through the 4-phase engine:
@@ -250,8 +251,7 @@ When explicitly instructed to "prepare for compact", or when context window exha
 ## 6. Close-Out Protocol & Pillar Update Cadence
 Maintain each cognitive pillar according to its SPEC-001 mutability cadence:
 1. **In-Stride Working Memory (`state.md` — Every Commit):**
-   - Whenever you modify code or receive updated requirements, prune and update `state.md` (`<= 300` tokens, preserving `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action`) so `## Status & Gate Verification` lists the exact parameter names, defaults, and module contracts implemented so far, and `## Immediate Next Action` lists any remaining module wiring.
-   - **Commit your working code + `state.md` immediately** (do not spend multiple consecutive close-out turns editing files without committing, or uncommitted work may be lost if the session terminates).
+   - Whenever you modify code or receive updated requirements, prune and update `state.md` (`<= 300` tokens, preserving `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action`) and **commit your working code + `state.md` first** so verified progress is immediately locked into git history.
 2. **Event-Driven Structural Pillars (Only When Triggered):**
    - **Cartography (`app_map.md`):** Synchronize (`sdcs map --sync`) **only when files or directories are created, moved, or deleted** (no update needed when editing existing files).
    - **Topology (`wiring.yaml`):** Update **only when introducing new subsystems or modules** (`sdcs verify --topology`).

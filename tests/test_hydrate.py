@@ -127,8 +127,8 @@ def test_hydrate_adaptive_zero_read_source_bundle(tmp_path):
     assert "return amount * 2" not in payload_no_src
 
 
-def test_template_state_schema_and_hydration_spec_ledger_directive(tmp_path):
-    """Verify TEMPLATE_STATE passes audit_state_tokens with warnings == [] and hydration includes spec-ledger directive."""
+def test_template_state_schema_and_hydration_blackboard_header(tmp_path):
+    """Verify TEMPLATE_STATE passes audit_state_tokens with warnings == [] and hydration includes clean blackboard header."""
     from sdcs.init import TEMPLATE_STATE
     from sdcs.verifier.state import audit_state_tokens
 
@@ -146,4 +146,4 @@ def test_template_state_schema_and_hydration_spec_ledger_directive(tmp_path):
     for prof in ("lite", "standard", "full"):
         payload, _ = compile_hydration_payload(tmp_path, profile=prof)
         assert "# [PILLAR 4: THE BLACKBOARD] Working Memory" in payload
-        assert "In-Stride Spec Ledger:" in payload
+        assert "In-Stride Spec Ledger:" not in payload

@@ -2,14 +2,13 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- SDCS Release v1.9.4: Align `TEMPLATE_STATE` with `verifier/state.py`, inject `# [PILLAR 4: THE BLACKBOARD]` spec-ledger directive, and refine `TEMPLATE_AGENTS`.
+- SDCS Release v1.9.5: Clean `# [PILLAR 4: THE BLACKBOARD]` header, canonical `TEMPLATE_STATE`, and anti-duplication `state.md` rule in `TEMPLATE_AGENTS` / `AGENTS.md`.
 
 ## Status & Gate Verification
-- Active Spec Ledger:
-  - `src/sdcs/init.py` & `sdcs_init.py`: `TEMPLATE_STATE` uses `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action` (`audit_state_tokens(..., max_tokens=300)` passes with `warnings == []`).
-  - `src/sdcs/hydrate.py`: `compile_hydration_payload` (`lite`, `standard`, `full`) includes `<!-- In-Stride Spec Ledger: ... -->` under `# [PILLAR 4: THE BLACKBOARD] Working Memory`.
-  - `src/sdcs/init.py`, `sdcs_init.py`, `AGENTS.md`: Section 2b (Items 3 & 4) and Section 6 (Item 1) specify concrete contract ledgers in `state.md`.
-- Verification Standing: `242/242` unit tests (`pytest`) and all SDCS gates green.
+- Gate T: AST topology verified via `sdcs verify`.
+- Gate Q: `242/242` unit tests passing via `pytest`.
+- Gate S: Token budget <= 300 tokens.
+- Anti-duplication rule wired in Section 2b Item 3 (`src/sdcs/init.py`, `sdcs_init.py`, `AGENTS.md`).
 
 ## Immediate Next Action
-- Commit and tag `v1.9.4` on `main`.
+- Commit, tag `v1.9.5`, and push `main` and `v1.9.5` to `origin`.
