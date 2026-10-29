@@ -116,6 +116,10 @@ def test_template_agents_sync():
     from sdcs.init import TEMPLATE_AGENTS as PACKAGE_TEMPLATE_AGENTS
 
     assert standalone.TEMPLATE_AGENTS == PACKAGE_TEMPLATE_AGENTS
+    assert (
+        standalone.TEMPLATE_STATE
+        == __import__("sdcs.init", fromlist=["TEMPLATE_STATE"]).TEMPLATE_STATE
+    )
 
 
 def test_template_hook_sync():

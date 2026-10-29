@@ -2,12 +2,14 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- SDCS Release v1.9.3: Adaptive Zero-Read Source Hydration (`<= 4000` tokens) and Principled Pillar Update Cadence (`TEMPLATE_AGENTS` / `AGENTS.md`).
+- SDCS Release v1.9.4: Align `TEMPLATE_STATE` with `verifier/state.py`, inject `# [PILLAR 4: THE BLACKBOARD]` spec-ledger directive, and refine `TEMPLATE_AGENTS`.
 
 ## Status & Gate Verification
-- Adaptive Zero-Read Hydration (`src/sdcs/hydrate.py`): `compile_hydration_payload(..., skeletal=True)` appends `# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle` when subsystem source tokens `<= 4000` (or `include_source=True`).
-- Agent Protocol (`src/sdcs/init.py`, `sdcs_init.py`, `AGENTS.md`): Refined Pre-Hydrated Context Fast Path, Post-Compaction Continuity Guide, and Section 6 Pillar Update Cadence (In-Stride `state.md` vs. Event-Driven structural pillars).
-- Test Suite: `241/241` passed across 35 suites (`tests/test_hydrate.py`, `tests/test_init.py`, `tests/test_cli.py`); all SDCS kinetic gates green.
+- Active Spec Ledger:
+  - `src/sdcs/init.py` & `sdcs_init.py`: `TEMPLATE_STATE` uses `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action` (`audit_state_tokens(..., max_tokens=300)` passes with `warnings == []`).
+  - `src/sdcs/hydrate.py`: `compile_hydration_payload` (`lite`, `standard`, `full`) includes `<!-- In-Stride Spec Ledger: ... -->` under `# [PILLAR 4: THE BLACKBOARD] Working Memory`.
+  - `src/sdcs/init.py`, `sdcs_init.py`, `AGENTS.md`: Section 2b (Items 3 & 4) and Section 6 (Item 1) specify concrete contract ledgers in `state.md`.
+- Verification Standing: `242/242` unit tests (`pytest`) and all SDCS gates green.
 
-## Immediate Next Action (Post-Compact)
-- Commit and update tag `v1.9.3` on `main`.
+## Immediate Next Action
+- Commit and tag `v1.9.4` on `main`.

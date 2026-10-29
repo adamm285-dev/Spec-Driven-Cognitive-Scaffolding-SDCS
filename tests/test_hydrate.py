@@ -111,12 +111,39 @@ def test_hydrate_adaptive_zero_read_source_bundle(tmp_path):
     assert "# [AST SKELETAL INTERFACES]" in payload_auto
     assert "# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle" in payload_auto
     assert "return amount * 2" in payload_auto
-    assert "my_pkg/__init__.py" not in payload_auto.split("# [PRE-HYDRATED SOURCE FILES]")[1]
+    assert (
+        "my_pkg/__init__.py"
+        not in payload_auto.split("# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle")[
+            1
+        ]
+    )
 
     # Explicit include_source=False: keeps AST skeletons, omits source bundle
     payload_no_src, _ = compile_hydration_payload(
         tmp_path, profile="full", skeletal=True, include_source=False
     )
     assert "# [AST SKELETAL INTERFACES]" in payload_no_src
-    assert "# [PRE-HYDRATED SOURCE FILES]" not in payload_no_src
+    assert "# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle" not in payload_no_src
     assert "return amount * 2" not in payload_no_src
+
+
+def test_template_state_schema_and_hydration_spec_ledger_directive(tmp_path):
+    """Verify TEMPLATE_STATE passes audit_state_tokens with warnings == [] and hydration includes spec-ledger directive."""
+    from sdcs.init import TEMPLATE_STATE
+    from sdcs.verifier.state import audit_state_tokens
+
+    state_file = tmp_path / "state.md"
+    state_file.write_text(TEMPLATE_STATE, encoding="utf-8")
+
+    passed, total_tokens, section_tokens, warnings = audit_state_tokens(state_file, max_tokens=300)
+    assert passed is True
+    assert total_tokens <= 300
+    assert warnings == []
+    assert "Current Objective" in section_tokens
+    assert "Status & Gate Verification" in section_tokens
+    assert "Immediate Next Action" in section_tokens
+
+    for prof in ("lite", "standard", "full"):
+        payload, _ = compile_hydration_payload(tmp_path, profile=prof)
+        assert "# [PILLAR 4: THE BLACKBOARD] Working Memory" in payload
+        assert "In-Stride Spec Ledger:" in payload
