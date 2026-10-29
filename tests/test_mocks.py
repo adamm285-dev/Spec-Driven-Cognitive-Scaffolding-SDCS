@@ -162,7 +162,7 @@ def test_init_keeps_an_existing_ledger(tmp_path: Path):
 def test_templates_wire_in_gate_l():
     assert "sdcs.cli verify --mocks" in TEMPLATE_PRE_COMMIT_HOOK
     assert "GATE L: MOCK LEDGER OUT OF SYNC" in TEMPLATE_PRE_COMMIT_HOOK
-    assert "Gate L mock ledger reconciliation (`sdcs verify --mocks`)" in TEMPLATE_AGENTS
+    assert "**Gate L** (`sdcs verify --mocks`)" in TEMPLATE_AGENTS
     assert "Mock Ledger Invariant (Gate L)" in TEMPLATE_AGENTS
     assert "M-NNN" in TEMPLATE_MOCKS
 

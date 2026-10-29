@@ -47,6 +47,7 @@ def test_init_scaffold_root():
         assert "Golden Reference Corpus" in evals
 
         agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+        assert "What SDCS Is" in agents
         assert "Turn 1 Boot Hydration Order (7 Pillars)" in agents
         assert "wiring.yaml" in agents
         assert "Flight Recorder Invariant" in agents
@@ -120,6 +121,14 @@ def test_template_agents_sync():
         standalone.TEMPLATE_STATE
         == __import__("sdcs.init", fromlist=["TEMPLATE_STATE"]).TEMPLATE_STATE
     )
+
+
+def test_root_agents_md_matches_template():
+    """Ensure the repo's own AGENTS.md is what `sdcs init` writes for users."""
+    from sdcs.init import TEMPLATE_AGENTS
+
+    root_agents = Path(__file__).parent.parent / "AGENTS.md"
+    assert root_agents.read_text(encoding="utf-8") == TEMPLATE_AGENTS
 
 
 def test_template_hook_sync():

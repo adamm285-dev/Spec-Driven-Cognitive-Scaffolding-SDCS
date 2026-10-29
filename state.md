@@ -2,13 +2,13 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- SDCS Release v1.9.5: Clean `# [PILLAR 4: THE BLACKBOARD]` header, canonical `TEMPLATE_STATE`, and anti-duplication `state.md` rule in `TEMPLATE_AGENTS` / `AGENTS.md`.
+- Rewrite `TEMPLATE_AGENTS` / `AGENTS.md`: plain "What SDCS Is" explainer (Section 0) replaces the ontology jargon; repeated `state.md` / commit / pre-hydration rules deduped (2,447 -> 1,785 tokens).
 
 ## Status & Gate Verification
-- Gate T: AST topology verified via `sdcs verify`.
-- Gate Q: `242/242` unit tests passing via `pytest`.
-- Gate S: Token budget <= 300 tokens.
-- Anti-duplication rule wired in Section 2b Item 3 (`src/sdcs/init.py`, `sdcs_init.py`, `AGENTS.md`).
+- Gate Q: `243/243` unit tests passing via `pytest`, incl. new `test_root_agents_md_matches_template`.
+- `sdcs verify --all`: PASSED (T, S, cycles, Q, E, C-Cache, L, evals).
+- Gate M: drift only from pre-existing untracked files (PNGs, `observation.md`, `.sdcs/`, `uv.lock`).
+- Synced: `src/sdcs/init.py`, `sdcs_init.py`, root `AGENTS.md`.
 
 ## Immediate Next Action
-- Commit, tag `v1.9.5`, and push `main` and `v1.9.5` to `origin`.
+- Human review of the new template wording; no version bump or tag yet.
