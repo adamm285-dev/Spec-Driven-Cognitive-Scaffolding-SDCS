@@ -195,9 +195,9 @@ You are operating inside a deterministic cybernetic control system, not an uncon
 - **3. Dynamic Layer (Memory & Time Evolution):** `decisions.md` (Pillar 6: Negative Episodic Memory / Graveyard), `evals.md` (Pillar 7: Positive Episodic Memory / Empirical Standing & SHA-256 fixture locks), `state.md` (Pillar 4: Active Working Blackboard <= 300 tokens), and `sessions/manifest.jsonl` (+1 Flight Recorder Causal Lineage).
 
 ## 2. Turn 1 Boot Hydration Order (7 Pillars)
-- **ZERO-READ PRE-HYDRATED RULE:**
-  - **If `SDCS DETERMINISTIC CONTEXT COMPILER` (`sdcs hydrate`) is present in your prompt:** All 7 Pillars (`spine.md`, `roadmap.md`, `app_map.md`, `decisions.md`, `evals.md`, `state.md`, `wiring.yaml`), `# [AST SKELETAL INTERFACES]`, and `# [PRE-HYDRATED SOURCE FILES]` are **ALREADY hydrated in your prompt**.
-  - **NEVER call `list_files` or `read_file` on any pillar file or any file already shown in `# [PRE-HYDRATED SOURCE FILES]`—in either Session 1 OR Session 2!** Begin editing target `.py` files immediately on Turn 1 using `edit_file` or `write_file`.
+- **Pre-Hydrated Context Fast Path:**
+  - If `SDCS DETERMINISTIC CONTEXT COMPILER` (`sdcs hydrate`) is already present in your prompt, all 7 Pillars (`spine.md`, `roadmap.md`, `app_map.md`, `decisions.md`, `evals.md`, `state.md`, `wiring.yaml`), `# [AST SKELETAL INTERFACES]`, and `# [PRE-HYDRATED SOURCE FILES]` are already loaded in your context.
+  - Do not make redundant `list_files` or `read_file` calls on pillar files or source files already shown in `# [PRE-HYDRATED SOURCE FILES]`—either on initial boot or when resuming after a context reset or compaction. Begin implementing edits directly on Turn 1.
   - Only read the 7 pillar files manually from disk if your prompt does NOT contain the `SDCS DETERMINISTIC CONTEXT COMPILER` payload.
 
 If your prompt is NOT pre-hydrated, hydrate state across the 7 cognitive pillars in this exact sequence on Turn 1:
@@ -213,24 +213,23 @@ If your prompt is NOT pre-hydrated, hydrate state across the 7 cognitive pillars
 CRITICAL INVARIANT: NEVER inspect or hydrate `sessions/*.md` on boot.
 `sessions/*.md` serves as an immutable post-hoc flight recorder, NOT boot context. Auto-loading historical sessions recreates context drift and episodic amnesia. Query individual sessions or `sessions/manifest.jsonl` on demand for forensic debugging (`sdcs session`).
 
-## 2b. Practical Pillar Usage & Multi-Session Survival Guide
-1. **Zero-Discovery Navigation (`app_map.md` + AST Skeletons + Pre-Hydrated Source):** Use `app_map.md` to know every file path in the repo without running `list_files`, use `# [AST SKELETAL INTERFACES]` to check exact class/dataclass/method signatures across modules, and use `# [PRE-HYDRATED SOURCE FILES]` to edit `.py` files immediately on Turn 1 without calling `read_file`.
+## 2b. Practical Pillar Usage & Continuity Guide
+1. **Zero-Discovery Navigation (`app_map.md` + AST Skeletons + Pre-Hydrated Source):** Use `app_map.md` to resolve file paths without directory scans, `# [AST SKELETAL INTERFACES]` to inspect class/dataclass/function signatures across modules, and `# [PRE-HYDRATED SOURCE FILES]` to edit target `.py` files directly on Turn 1 without redundant file reads.
 2. **Boundary Enforcement (`wiring.yaml` + `spine.md`):** Before adding any `import`, check `allowed_dependencies` in `wiring.yaml` (and module-boundary rules) so you never introduce a forbidden cross-module dependency.
-3. **In-Stride Mid-Session Requirement Locking (`state.md` <= 300 tokens):**
+3. **In-Stride Requirement Locking (`state.md` <= 300 tokens):**
    - `state.md` must preserve its 3 `##` headings (`## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`) and stay `<= 300` tokens (Gate S).
-   - Visible unit tests (`pytest` / `run_tests`) often only cover initial baseline specifications—they do **NOT** automatically test new mid-session product requirements!
-   - Whenever new requirements arrive mid-session, immediately wire every required parameter, field, default value, and return key across all affected modules (`models`, `rules`, `service`, `reporting`, etc.), record the exact parameter/field names and module checklist in `state.md`, and **commit before the session ends** (uncommitted changes are wiped when a session ends).
-4. **Post-Wipe / Session-2 Verification Protocol:**
-   - When starting a new session after a context wipe, **never finish early just because `pytest` / `run_tests` passes!**
-   - On Turn 1 of Session 2, review the pre-hydrated `state.md` and `# [PRE-HYDRATED SOURCE FILES]` already shown in your prompt (**do NOT call `read_file` on files already shown in your prompt**).
-   - Check whether every mid-session requirement from Session 1 is fully wired across all modules (`models`, `rules`, `service`, `reporting`, etc.). If any requirement is missing or incomplete, immediately edit the affected `.py` file(s), run tests, update `state.md`, and call `finish`! If all requirements are already wired in `# [PRE-HYDRATED SOURCE FILES]`, run `run_tests` once and call `finish` immediately.
+   - Existing unit test suites often cover only baseline specifications and may not test newly introduced requirements.
+   - Whenever new requirements arrive, wire every required parameter, field, default value, and return key across all affected modules, record the exact parameter/field checklist in `state.md`, and commit your changes so verified progress is persisted in git history.
+4. **Post-Compaction / Resumed-Context Verification:**
+   - When resuming work after a context reset or compaction, do not assume the task is complete solely because the existing test suite passes.
+   - Review `state.md` (`## Immediate Next Action`) and `# [PRE-HYDRATED SOURCE FILES]` (or target source files if not pre-hydrated) to verify that every requirement recorded in `state.md` is fully wired across all modules before completing the task.
 
 ## 3. The 4-Phase Autonomous Execution Cycle
 Execute every turn through the 4-phase engine:
 1. **Orientation:** Hydrate constraints and ground truth from the Semantic and Dynamic layers.
 2. **Planning:** Formulate atomic diffs against `state.md` respecting boundaries in `wiring.yaml`.
 3. **Execution:** Apply code mutations and verify against kinetic gates (Gate T AST audits) and empirical baselines (`evals.md`).
-4. **Close-Out:** Prune `state.md` (<= 300 tokens) and immediately commit/finish.
+4. **Close-Out:** Update `state.md` (<= 300 tokens), commit verified changes, and update structural pillars when their triggering events occur.
 
 ## 4. Invariant Rules
 - **Context Isolation:** Consult `app_map.md` and load only what is strictly relevant to the task (use `sdcs map -s <subsystem>` for focused slicing).
@@ -243,16 +242,23 @@ Execute every turn through the 4-phase engine:
 - **Mock Ledger Invariant (Gate L):** Any product code that stands in for real behavior (simulated responses, seeded or hardcoded data, demo-only keys or endpoints, offline stubs) gets a `MOCK(M-NNN)` comment marker and a matching entry in `MOCKS.md`, in the same commit. Remove markers and entry together. Never add a fallback that reports a failed call as a success. `sdcs verify --mocks` enforces this.
 
 ## 5. Mid-Shift Checkpoint Protocol ("prepare for compact")
-When explicitly instructed by the user to "prepare for compact" in an interactive CLI session:
+When explicitly instructed to "prepare for compact", or when context window exhaustion nears prior to session compaction:
 1. **Topology & Subsystem Audit:** Run `sdcs verify --topology` to verify that all imports comply with `wiring.yaml`.
 2. **Blackboard Pruning (`state.md`):** Aggressively prune and overwrite `state.md` strictly to <= 300 tokens containing only `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action (Post-Compact)`.
-3. **Interactive CLI Sweeps (only when unconstrained by a commit window):** Synchronize `app_map.md` (`sdcs map --sync`), log rejected experiments to `decisions.md`, and write a checkpoint to `sessions/YYYY-MM-DD_<topic>.md` (`sdcs session index`).
+3. **Checkpoint Sweeps:** Synchronize `app_map.md` (`sdcs map --sync`) if files were added/removed, log any rejected experiments to `decisions.md`, update `roadmap.md` `[MEASURED]` blocks if milestones were met, and write a checkpoint to `sessions/YYYY-MM-DD_<topic>.md` (`sdcs session index`).
 4. **Readiness Signal:** Output a brief confirmation and state: "Ready for compaction."
 
-## 6. Fast-Commit & Close-Out Protocol (Mandatory)
-- **CRITICAL COMMIT-WINDOW RULE:** Uncommitted changes are **wiped (`git reset --hard`)** when a session ends!
-- Whenever a session is ending (`"This session is ending. Commit your work now."`) or when closing out a turn-limited session, **ONLY update `state.md` (`<= 300` tokens) and immediately call `commit` or `finish`!**
-- **NEVER waste commit-window turns editing `roadmap.md`, `decisions.md`, `evals.md`, `app_map.md`, or `sessions/*.md`!** Updating `roadmap.md`, `decisions.md`, and `sessions/` is strictly for interactive CLI checkpoints when full CLI tools are available and turn budgets are unconstrained.
+## 6. Close-Out Protocol & Pillar Update Cadence
+Maintain each cognitive pillar according to its SPEC-001 mutability cadence:
+1. **In-Stride Working Memory (`state.md` — Every Commit):**
+   - Whenever you modify code or receive updated requirements, prune and update `state.md` (`<= 300` tokens, preserving `## Current Objective`, `## Status & Gate Verification`, and `## Immediate Next Action`) and **commit your working code + `state.md` first** so verified progress is immediately locked into git history.
+2. **Event-Driven Structural Pillars (Only When Triggered):**
+   - **Cartography (`app_map.md`):** Synchronize (`sdcs map --sync`) **only when files or directories are created, moved, or deleted** (no update needed when editing existing files).
+   - **Topology (`wiring.yaml`):** Update **only when introducing new subsystems or modules** (`sdcs verify --topology`).
+   - **Rejection Graveyard (`decisions.md`):** Append an entry **only when an attempted architecture or hypothesis fails and is rejected**.
+   - **Ground Truth (`evals.md`):** Recalibrate (`sdcs eval record` / `sdcs audit`) **only when golden test fixtures are added or modified**.
+3. **Milestone & Compaction Checkpoints (`roadmap.md` & `sessions/`):**
+   - Update `roadmap.md` `[MEASURED]` blocks and write a shift handoff log to `sessions/YYYY-MM-DD_<topic>.md` (`sdcs session index`) when completing a macro milestone or when instructed to `"prepare for compact"`.
 """
 
 TEMPLATE_SESSION_HANDOFF = """# Engineering Shift Handoff
