@@ -227,8 +227,17 @@ Otherwise, read the pillars in this order, or get them in one call with `sdcs hy
 ## 2. Working Memory (`state.md`)
 - Keep exactly three headings: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Stay at or under 300 tokens (Gate S).
 - Record what the next agent can't get elsewhere: the objective, newly added parameter and field names, gate results, modules not yet verified, and the next step. Don't copy `app_map.md` or signature inventories into it.
-- Whenever you change code or the requirements change, update `state.md` and commit it together with the code, so verified progress is in git history (if a session is ending immediately, commit your code changes first so uncommitted work is never lost).
-- Passing tests don't prove a task is done. Existing suites often cover only the original spec, not requirements added mid-session. When new requirements arrive, wire every parameter, field, default, and return key through all affected modules. After a resume, check each requirement recorded in `state.md` against the source before calling the task complete.
+- **Write new requirements down first.** When a requirement arrives mid-task, add one line for it under `## Current Objective` before you start implementing it, naming the fields, parameters, or behaviors it adds. If the session ends partway through, the next agent still knows the requirement exists; one that never reaches `state.md` is lost.
+- Whenever you change code or the requirements change, update `state.md` and commit it together with the code, so verified progress is in git history. Make a commit your last action before a session ends: anything edited after your final commit, `state.md` included, is lost.
+- When new requirements arrive, wire every parameter, field, default, and return key through all affected modules.
+
+## Before You Finish
+Passing tests are not proof the task is done. Test suites often predate the requirements you were given, so they can pass while those requirements are missing.
+Before declaring the task complete:
+1. List every requirement recorded in `state.md` under `## Current Objective`.
+2. For each one, name the file and the function, field, or parameter that implements it, confirmed by reading the code now, not from memory.
+3. A requirement without a location is not done: implement it, then repeat.
+If budget remains and anything is unverified, use it.
 
 ## 3. Working Rules
 - **Navigate from the map:** Find paths in `app_map.md` (`sdcs map -s <subsystem>` gives a focused slice), signatures in `# [AST SKELETAL INTERFACES]`, and source in `# [PRE-HYDRATED SOURCE FILES]` instead of scanning directories or re-reading pre-hydrated files. When source files are not pre-hydrated in your prompt, confirm the real symbols with a targeted read or search before editing.

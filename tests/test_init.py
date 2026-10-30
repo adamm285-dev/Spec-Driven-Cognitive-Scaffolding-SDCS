@@ -48,6 +48,8 @@ def test_init_scaffold_root():
 
         agents = (root / "AGENTS.md").read_text(encoding="utf-8")
         assert "What SDCS Is" in agents
+        assert "Write new requirements down first" in agents
+        assert "Before You Finish" in agents
         assert "Turn 1 Boot Hydration Order (7 Pillars)" in agents
         assert "wiring.yaml" in agents
         assert "Flight Recorder Invariant" in agents

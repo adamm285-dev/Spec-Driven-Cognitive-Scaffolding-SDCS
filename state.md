@@ -2,12 +2,12 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- Release SDCS v1.9.6: plain "What SDCS Is" explainer in `TEMPLATE_AGENTS` / `AGENTS.md`, pre-hydrated fast-resume verification, and in-stride commit guidance.
+- SDCS v1.9.7: `TEMPLATE_AGENTS` Section 2 adds "Write new requirements down first" (record under `## Current Objective` before implementing) and "make a commit your last action"; new `## Before You Finish` checklist replaces the duplicated green-tests bullet.
 
 ## Status & Gate Verification
-- Gate Q: `243/243` unit tests passing via `pytest`, incl. `test_root_agents_md_matches_template`.
+- Gate Q: `243/243` unit tests passing via `pytest`.
 - `sdcs verify --all`: PASSED (T, S, cycles, Q, E, C-Cache, L, evals).
-- Synced: `src/sdcs/init.py`, `sdcs_init.py`, root `AGENTS.md`, `pyproject.toml`, `src/sdcs/__init__.py`.
+- Synced: `src/sdcs/init.py`, `sdcs_init.py`, root `AGENTS.md`, `pyproject.toml`, `src/sdcs/__init__.py`, `tests/test_cli.py`.
 
 ## Immediate Next Action
-- Tag and push `v1.9.6` to `origin`.
+- Human: tag/push `v1.9.7`; re-sync the bench's vendored `sdcs_v1_9_1_public` and pin the new commit.
