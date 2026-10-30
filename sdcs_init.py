@@ -221,18 +221,18 @@ Otherwise, read the pillars in this order, or get them in one call with `sdcs hy
 6. `state.md`: current working memory (Pillar 4)
 7. `wiring.yaml`: subsystem boundaries (Pillar 2)
 
-**Fast resume:** After compaction or a restart, read `state.md` first. If `## Immediate Next Action` names an unfinished step, check that its target files exist and recent tests still pass, then do that step. Skip the whole-repo survey.
+**Fast resume:** After compaction or a restart, read `state.md` first. Check every requirement recorded in `state.md` against `# [PRE-HYDRATED SOURCE FILES]` (or on disk if not pre-hydrated) to confirm all affected modules are wired and tests pass, then execute any remaining step in `## Immediate Next Action`. Skip the whole-repo survey.
 
 **Flight Recorder Invariant:** Do not read `sessions/*.md` on boot. They are immutable history, not working memory; loading them wastes tokens and pulls in stale context. Query them on demand when debugging (`sdcs session`, `sessions/manifest.jsonl`).
 
 ## 2. Working Memory (`state.md`)
 - Keep exactly three headings: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Stay at or under 300 tokens (Gate S).
 - Record what the next agent can't get elsewhere: the objective, newly added parameter and field names, gate results, modules not yet verified, and the next step. Don't copy `app_map.md` or signature inventories into it.
-- Whenever you change code or the requirements change, update `state.md` and commit it together with the code, so verified progress is in git history.
+- Whenever you change code or the requirements change, update `state.md` and commit it together with the code, so verified progress is in git history (if a session is ending immediately, commit your code changes first so uncommitted work is never lost).
 - Passing tests don't prove a task is done. Existing suites often cover only the original spec, not requirements added mid-session. When new requirements arrive, wire every parameter, field, default, and return key through all affected modules. After a resume, check each requirement recorded in `state.md` against the source before calling the task complete.
 
 ## 3. Working Rules
-- **Navigate from the map:** Find paths in `app_map.md` (`sdcs map -s <subsystem>` gives a focused slice) and signatures in `# [AST SKELETAL INTERFACES]` instead of scanning directories. Confirm the real symbols with a targeted search before editing; the map can be stale.
+- **Navigate from the map:** Find paths in `app_map.md` (`sdcs map -s <subsystem>` gives a focused slice), signatures in `# [AST SKELETAL INTERFACES]`, and source in `# [PRE-HYDRATED SOURCE FILES]` instead of scanning directories or re-reading pre-hydrated files. When source files are not pre-hydrated in your prompt, confirm the real symbols with a targeted read or search before editing.
 - **Check boundaries before importing:** Every new `import` must be allowed by `allowed_dependencies` in `wiring.yaml`.
 - **Wiring Mutation Invariant:** When you add a subsystem, module, or package, add it to `wiring.yaml` in the same change. Never loosen an existing boundary, add a cycle, or edit `wiring.yaml` to get past a Gate T rejection.
 - **Respect the graveyard:** Don't retry an approach or revert a decision recorded in `decisions.md` unless its "WHAT WOULD REOPEN IT" condition is met or a human signs off.
