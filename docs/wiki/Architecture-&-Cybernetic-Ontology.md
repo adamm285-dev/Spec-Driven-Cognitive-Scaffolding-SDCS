@@ -1,6 +1,6 @@
 # Architecture & Cybernetic Ontology
 
-In SDCS v1.4.1, the codebase is not modeled as an unconstrained filesystem. It operates as a **closed-loop deterministic cybernetic control system** organized across three physical layers governed by an external teleological anchor.
+In SDCS v1.9.7, the codebase is not modeled as an unconstrained filesystem. It operates as a **closed-loop deterministic cybernetic control system** organized across three physical layers governed by an external teleological anchor.
 
 ```mermaid
 flowchart TD

@@ -7,10 +7,10 @@ SDCS externalizes agent cognition across seven deterministic repository artifact
 | **1** | `spine.md` | Constitutional Invariants | **The Law** | ~300 tokens | Non-negotiable domain axioms; protected by Gate C pre-commit hook. |
 | **2** | `wiring.yaml` | Declarative Topology | **The Mesh** | Scalable | Subsystem boundaries & permitted import edges; audited statically by Gate T. |
 | **3** | `roadmap.md` | Macro Acceptance Contract | **The North Star** | Scalable | Strict separation of human `[INTENT]` vs empirical `[MEASURED]`. Carries NO task queue. |
-| **4** | `state.md` | Active Working Memory | **The Blackboard** | $\le 300$ tokens | Read on Turn 1 boot; strictly pruned across turns and compactions (Gate A). |
+| **4** | `state.md` | Active Working Memory | **The Blackboard** | $\le 300$ tokens | Read on Turn 1 boot; strictly pruned across turns and compactions (Gate S). |
 | **5** | `app_map.md` | Repository Cartography | **The Compass** | $\le 1,000$ tokens | Page table of physical file paths; synchronized via Gate M (`sdcs map --check/--sync`). |
 | **6** | `decisions.md` | Negative Episodic Memory | **The Graveyard** | ~1,000 tokens | Rejection log of measured dead ends (`Claim` $\to$ `Measurement` $\to$ `Reopen Condition`). |
-| **7** | `evals.md` | Positive Episodic Memory | **The Scorecard** | Scalable | Ground truth baseline standing; golden fixtures anchored via SHA-256 (Gate E). |
+| **7** | `evals.md` | Positive Episodic Memory | **The Scorecard** | Scalable | Ground truth baseline standing; golden fixtures anchored via SHA-256 (`sdcs audit`). |
 | **+** | `sessions/*.md` | Historical Shift Logs | **The Flight Recorder**| Append-only | **CRITICAL INVARIANT: NEVER ingested on system boot.** Queried on demand via manifest. |
 
 ---
@@ -29,10 +29,13 @@ SDCS externalizes agent cognition across seven deterministic repository artifact
 
 ### Pillar 4: `state.md` (The Blackboard)
 * **Purpose:** Active working memory whiteboard tracking only the immediate subtask, active blockers, and pending gate verification.
-* **Budget:** Strictly capped at $\le 300$ tokens. Contains exactly three sections:
+* **Budget:** Strictly capped at $\le 300$ tokens (enforced by Gate S). Contains exactly three sections:
   1. `## Current Objective`
   2. `## Status & Gate Verification`
   3. `## Immediate Next Action`
+* **Write New Requirements Down First:** Record incoming requirements under `## Current Objective` before implementing to guarantee survival across sessions.
+* **Commit Priority:** Making a commit your last action ensures verified progress is captured in git history.
+* **Before You Finish Checklist:** Every requirement in `state.md` must be confirmed at a physical code location (file, function, field, parameter) before declaring completion.
 
 ### Pillar 5: `app_map.md` (The Compass)
 * **Purpose:** Codebase cartography. The agent consults this index first, eliminating brute-force recursive file scans.
@@ -51,3 +54,7 @@ SDCS externalizes agent cognition across seven deterministic repository artifact
 ### +1 Flight Recorder: `sessions/*.md`
 * **Purpose:** Discrete post-shift engineering handoff logs.
 * **Invariant:** Stored as discrete files (`sessions/YYYY-MM-DD_<topic>.md`). **Strictly forbidden from boot ingestion**, eliminating Compaction Amnesia and token bloat. Queried on demand via `sessions/manifest.jsonl`.
+
+> [!NOTE]
+> **What about `MOCKS.md`?**
+> `MOCKS.md` is not an ambient Turn 1 cognitive pillar: it is an in-stride operational ledger enforced by **Gate L** in the **Kinetic Layer (Layer 2)**. To protect token budgets, it is never ingested on boot; it is updated only when product code fakes real behavior.

@@ -1,6 +1,6 @@
 # The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth
 
-In **SDCS v1.8.0**, repository constraints are not suggestions—they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
+In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Trigger / Command | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
@@ -8,7 +8,7 @@ In **SDCS v1.8.0**, repository constraints are not suggestions—they are **phys
 | **Spatial & Structural** | **Gate T** | Topological Invariant Gate | `sdcs verify --topology` | Prohibited AST cross-subsystem imports violating `wiring.yaml`. |
 | **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
 | **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
-| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>350 tokens) & subagent lifecycle. |
+| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>300 tokens) and missing canonical schema headings. |
 | **Cognitive & Cache** | **Gate C-Cache** | KV-Cache Prefix Invariance | `sdcs verify --cache-invariance` | Cache-busting volatile tokens (timestamps, turn counters) in system prompt prefix. |
 | **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Publishing sensitive API keys, tokens, emails, phone numbers, or IPs to central warehouse. |
 | **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless test functions, or swallowed exceptions. |
@@ -53,7 +53,7 @@ In **SDCS v1.8.0**, repository constraints are not suggestions—they are **phys
 
 ## 5. Gate S: Working Memory Budget Gate
 * **Mechanism:** Deterministic token-budget linter verifying token counts and canonical 3-section schema of `state.md`.
-* **Enforcement:** Requires `state.md` $\le 350$ tokens (or custom ceiling via `--max-tokens`) and enforces canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Also handles ephemeral subagent blackboard lifecycle (`sdcs state fork` and `sdcs state rollup`).
+* **Enforcement:** Requires `state.md` $\le 300$ tokens (or custom ceiling via `--max-tokens`) and enforces canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Also handles ephemeral subagent blackboard lifecycle (`sdcs state fork` and `sdcs state rollup`).
 
 ## 6. Gate W: Secret & PII Sanitizer
 * **Mechanism:** Static AST and regex scanner inspecting code and documentation before publication to the central cognitive warehouse.
@@ -62,7 +62,7 @@ In **SDCS v1.8.0**, repository constraints are not suggestions—they are **phys
 ## 7. Gate Q: Test Quality & Anti-Mock AST Auditor
 * **Mechanism:** Static AST inspector auditing newly created or modified test suites.
 * **Enforcement:** Halts commits introducing:
-  - **Rule Q1 (Trivial Assertions):** Tests asserting `True`, `not False`, or `x is not None`.
+  - **Rule Q1 (Trivial Assertions):** Tests asserting `True`, `not False`, or trivial constant comparisons like `assert 1 == 1`.
   - **Rule Q2 (Assertless Tests):** Test functions executing code without assertions.
   - **Rule Q3 (Swallowed Exceptions):** Masking test failures via `try...except Exception: pass`.
   - **Rule Q4 (Mock Abuse):** Mocks exceeding assertions without invoking the target unit.
@@ -82,3 +82,9 @@ In **SDCS v1.8.0**, repository constraints are not suggestions—they are **phys
 ## 11. Deterministic Pre-Flight Auto-Repair
 * **Mechanism:** Sandbox execution hook intercepting code changes before kinetic gates and test suites run.
 * **Enforcement:** Runs local determinist formatters (`ruff --fix`, `black`, `prettier`, `gofmt`) using **0 LLM inference tokens**, eliminating unnecessary LLM turns caused by trivial style and formatting failures (`sdcs repair`).
+
+## 12. Gate L: Mock Ledger & Undeclared Mock AST Auditor
+* **Mechanism:** Reconciles `# MOCK(M-NNN)` markers in product code with `MOCKS.md` entries (`Where`, `What it fakes`, `Why`, `To make it real`).
+* **Active AST Detection (`REQ-GATE-L-01`):** Statically audits Python AST and polyglot code for undeclared simulation routines (`_mock_*`, `fake_*`, `simulated_*`), `mock_mode` flags, simulation sleep timers, placeholder credentials, and seeded test returns.
+* **Unconditional Fake-Success Block (`REQ-GATE-L-06`):** Unconditionally rejects `except` or `catch` blocks that return mock fallbacks or fake success status (`{"status": "ok"}`), even if a `MOCK(M-NNN)` marker is present.
+* **Command:** `sdcs verify --mocks`

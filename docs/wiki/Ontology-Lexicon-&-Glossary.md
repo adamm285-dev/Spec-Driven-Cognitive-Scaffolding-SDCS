@@ -1,6 +1,6 @@
 # Ontology Lexicon & Glossary
 
-A formal glossary of terms, paradigms, and failure modes formalized across **SPEC-001 v1.4.1**.
+A formal glossary of terms, paradigms, and failure modes formalized across **SPEC-001 v1.9.7**.
 
 ---
 
@@ -27,10 +27,10 @@ A formal glossary of terms, paradigms, and failure modes formalized across **SPE
 * **In-Stride Update:** The requirement that agents introduce new packages, modules, or tests must update declarative boundaries (`wiring.yaml`) and cartography (`app_map.md`) in the same commit transaction as the code.
 
 ### K
-* **Kinetic Gate:** An automated, non-negotiable verification checkpoint (e.g., Gate T, Gate M, Gate C, Gate A, Gate E, Gate S) that physically halts git transactions or execution loops if architectural contracts are breached.
+* **Kinetic Gate:** An automated, non-negotiable verification checkpoint (e.g., Gate C, Gate T, Gate P, Gate M, Gate S, Gate C-Cache, Gate W, Gate Q, Gate E, Gate L, Circuit Breaker) that physically halts git transactions or execution loops if architectural contracts are breached.
 
 ### P
-* **Phantom Corpus Trap:** A deceptive failure mode where an agent claims 100% test pass rates across a benchmark suite, but multiple test files are actually byte-identical copies or empty templates sharing identical contents. SDCS eliminates this via Gate E's normalized SHA-256 fixture audits.
+* **Phantom Corpus Trap:** A deceptive failure mode where an agent claims 100% test pass rates across a benchmark suite, but multiple test files are actually byte-identical copies or empty templates sharing identical contents. SDCS eliminates this via evals.md and sdcs audit's normalized SHA-256 fixture audits.
 
 ### S
 * **Semantic Layer:** The structural layer of the SDCS ontology defining what exists in the repository (`spine.md`, `wiring.yaml`, and `app_map.md`).

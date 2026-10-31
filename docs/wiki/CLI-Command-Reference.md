@@ -1,6 +1,6 @@
 # CLI Command Reference (`sdcs`)
 
-The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.8.0).
+The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.9.7).
 
 ---
 
@@ -66,7 +66,7 @@ sdcs verify --topology
 # Gate T + Inverted ADR: Format and append boundary failures to decisions.md
 sdcs verify --topology --append-rejections
 
-# Gate S: Audit state.md working memory budget (default <= 350 tokens)
+# Gate S: Audit state.md working memory budget (default <= 300 tokens)
 sdcs verify --state
 
 # Gate P: Audit staged files against wiring.yaml sandbox protected_paths
@@ -252,7 +252,7 @@ sdcs grill --milestone M-001
 
 ## 14. AST Skeletal Compactor: `sdcs slice`
 
-Extracts structural AST skeletons (classes, methods, type hints, docstrings) while replacing execution bodies with `...`, yielding 78.0%–98.9% token savings across Python, TypeScript, JavaScript, Go, and Rust.
+Extracts structural AST skeletons (classes, methods, type hints, docstrings) while replacing execution bodies with `...`, yielding 78.0%-98.9% token savings across Python, TypeScript, JavaScript, Go, and Rust.
 
 ```bash
 # Extract skeleton of a specific file

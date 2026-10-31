@@ -1,6 +1,6 @@
 # Agent Runbooks & Standard Operating Procedures (SOPs)
 
-This document specifies the operational runbooks governing autonomous coding agents operating within SDCS v1.4.1 repositories.
+This document specifies the operational runbooks governing autonomous coding agents operating within SDCS v1.9.7 repositories.
 
 ---
 
@@ -59,3 +59,12 @@ Before declaring any task complete or staging files at the conclusion of an engi
 4. **Synchronize Cartography:** Audit and sync `app_map.md` via Gate M (`sdcs map --check` / `sdcs map --sync`).
 5. **Verify Topology:** Ensure 100% compliance with `wiring.yaml` via Gate T (`sdcs verify --topology`).
 6. **Append Flight Record:** Create `sessions/YYYY-MM-DD_<topic>.md` and sync manifest (`sdcs session index`).
+
+---
+
+## SOP-005: Mock Ledger Invariant (Gate L)
+
+When product code must simulate external dependencies or fake real behavior:
+1. **Declare In-Stride:** Stamp every product-code mock with a `# MOCK(M-NNN)` marker and register it in `MOCKS.md` with all four required fields (`Where`, `What it fakes`, `Why`, `To make it real`) in the same commit.
+2. **No Fake Success (`REQ-GATE-L-06`):** Never implement error fallbacks in `except` or `catch` blocks that pretend a failure was a success or return mock objects.
+3. **Verify:** Run `sdcs verify --mocks` before committing.

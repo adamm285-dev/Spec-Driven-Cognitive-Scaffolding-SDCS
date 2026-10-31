@@ -13,7 +13,7 @@ SDCS eliminates Compaction Amnesia through the **Mid-Shift Checkpoint Protocol (
 | Dimension | Specification Contract | Operational Behavior |
 | :--- | :--- | :--- |
 | **WHY** | **Lossless Memory Persistence** | Guarantees zero context loss. Fine-grained history is externalized to the immutable flight recorder, while active working memory is trimmed to $\le 300$ tokens so Turn 1 hydration is immediate. |
-| **WHEN** | **1. Human Trigger:** `"prepare for compact"`<br>**2. Token Saturation (70–80%)**<br>**3. Milestone Completion** | Triggered mid-shift whenever the developer types `"prepare for compact"` before running `/compact`, or when token usage nears context exhaustion. |
+| **WHEN** | **1. Human Trigger:** `"prepare for compact"`<br>**2. Token Saturation (70-80%)**<br>**3. Milestone Completion** | Triggered mid-shift whenever the developer types `"prepare for compact"` before running `/compact`, or when token usage nears context exhaustion. |
 | **WHERE** | **Cross-Pillar Synchronization:**<br>• `wiring.yaml` (Pillar 2)<br>• `sessions/*.md` (+1 Flight Recorder)<br>• `state.md` (Pillar 4)<br>• `decisions.md` (Pillar 6)<br>• `app_map.md` (Pillar 5)<br>• `roadmap.md` (Pillar 3) | Checkpoints are written to physical disk files before memory is cleared. |
 | **HOW** | **5-Step Mechanical Checklist** | The agent mechanically executes the 5-step checklist and emits an explicit readiness signal before compaction proceeds. |
 
@@ -58,9 +58,9 @@ Aggressively prune and overwrite `state.md` strictly to $\le 300$ tokens contain
 [Concise active milestone goal]
 
 ## Status & Gate Verification
-[Passing gates: Gate T, Gate M, Gate C, Gate A, Gate E]
+[Passing gates: Gate T, Gate M, Gate C, Gate S, Gate L, Gate E]
 
-## Immediate Next Action (Post-Compact)
+## Immediate Next Action
 [Next exact file to edit or test to run]
 ```
 
