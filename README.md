@@ -10,7 +10,7 @@
 
 ![Spec-Driven Cognitive Scaffolding Architecture](media/slides/slide_01.png)
 
-A formal, file-based cognitive harness for autonomous agentic software engineering conforming to [SPEC-001](SPEC-001.md).
+> **A deterministic constraint harness treating autonomous coding agents as untrusted execution engines: preventing specification gaming, scaffold drift, and memory corruption through kinetic AST boundary enforcement, deterministic non-LLM oracles, and cryptographic test baselines conforming to [SPEC-001](SPEC-001.md).**
 
 ---
 
@@ -64,17 +64,19 @@ Prefer listening or watching? Explore the architectural foundations, cybernetic 
 
 ---
 
-## The Problem: The Failure of Monolithic Prompting
+## The Problem: Scaffold Breakdown & Specification Gaming
 
 ![The Failure of Monolithic Prompting](media/slides/slide_02.png)
 
-Autonomous coding agents typically fail not because of underlying model capability, but because of **context conflation**. When all operational logic, temporary thoughts, file directories, and project history are crammed into a single system prompt or chat log, three fatal pathologies emerge:
+Frontier coding models possess remarkable parametric reasoning, yet autonomous agents routinely fail on long-horizon software engineering tasks. They fail not from reasoning deficits, but from **scaffold breakdown** and **context conflation**. When operational rules, temporary thoughts, codebase cartography, and historical diffs are crammed into a single prompt or chat transcript, fatal pathologies emerge:
 
-1. **Context Drift:** As conversational message counts increase, core architectural constraints and safety rules get diluted and pushed out of the model's effective attention window.
-2. **Cartographic Hallucination:** Lacking a persistent, explicit map of the codebase, agents enter token-wasting brute-force search loops (`find`, `grep`) or hallucinate non-existent files and interfaces.
-3. **Episodic Amnesia:** Agents possess no structured negative memory. When restarted or encountering a rollback, they repeatedly re-attempt architectural decisions that were already measured and rejected in prior sessions.
+1. **Scaffold Drift & Attention Dilution:** As conversational turns accumulate debug chatter and raw diffs, foundational architectural constraints degrade in attention weight and slide out of the effective context window.
+2. **Specification Gaming & Reward Hacking:** Untrusted models fulfill surface-level syntactic prompts while quietly breaking architectural contracts: introducing undeclared mocks, authoring assertless hollow tests, or returning fake success (`{"status": "ok"}`) inside error handlers.
+3. **Cartographic Hallucination:** Lacking an external, persistent page table of the repository, agents burn token budgets on recursive `find` and `grep` loops, inventing non-existent paths or duplicating utilities.
+4. **Episodic Amnesia:** Models lack structured negative memory. When restarted or encountering a rollback, they repeatedly re-attempt hypotheses and architectures that were already empirically measured and rejected in prior turns.
+5. **State Poisoning via "LLM-as-a-Judge":** Relying on model self-critique or probabilistic prompting allows invalid mutations to enter the workspace unchecked. True verification requires **deterministic non-LLM oracles** (static AST parsers, compilers, and cryptographic fixture digests).
 
-> **Root Cause:** Monolithic prompts conflate invariant rules, ephemeral scratchpad state, module cartography, and historical audit logs into a single bloated context window.
+> **Root Cause:** Monolithic prompts treat the probabilistic model as its own judge, conflating constitutional invariants, ephemeral scratchpad state, module cartography, and historical audit logs into a single unconstrained context window.
 
 ---
 
@@ -357,7 +359,7 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 
 ![The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth](media/slides/slide_10.png)
 
-Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures: they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.9.7, the agent treats repository constraints as **physical laws of motion** organized across spatial, cognitive, and epistemic defense tiers:
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures: they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.9.7, the agent treats repository constraints as **physical laws of motion** enforced by **deterministic non-LLM oracles** (static AST visitors, cryptographic SHA-256 fixture audits, token-budget linters, and local formatters) executing in <50ms without model self-critique:
 
 | Defense Tier | Gate | Name | Enforcement Trigger | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
