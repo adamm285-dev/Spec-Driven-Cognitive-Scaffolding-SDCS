@@ -12,7 +12,7 @@ SDCS eliminates Compaction Amnesia through the **Mid-Shift Checkpoint Protocol (
 
 | Dimension | Specification Contract | Operational Behavior |
 | :--- | :--- | :--- |
-| **WHY** | **Lossless Memory Persistence** | Guarantees zero context loss. Fine-grained history is externalized to the immutable flight recorder, while active working memory is trimmed to $\le 300$ tokens so Turn 1 hydration is immediate. |
+| **WHY** | **Lossless Memory Persistence** | Guarantees zero context loss. Fine-grained history is externalized to the immutable flight recorder, while active working memory is trimmed to $\le 500$ tokens so Turn 1 hydration is immediate. |
 | **WHEN** | **1. Human Trigger:** `"prepare for compact"`<br>**2. Token Saturation (70-80%)**<br>**3. Milestone Completion** | Triggered mid-shift whenever the developer types `"prepare for compact"` before running `/compact`, or when token usage nears context exhaustion. |
 | **WHERE** | **Cross-Pillar Synchronization:**<br>• `wiring.yaml` (Pillar 2)<br>• `sessions/*.md` (+1 Flight Recorder)<br>• `state.md` (Pillar 4)<br>• `decisions.md` (Pillar 6)<br>• `app_map.md` (Pillar 5)<br>• `roadmap.md` (Pillar 3) | Checkpoints are written to physical disk files before memory is cleared. |
 | **HOW** | **5-Step Mechanical Checklist** | The agent mechanically executes the 5-step checklist and emits an explicit readiness signal before compaction proceeds. |
@@ -31,7 +31,7 @@ SDCS eliminates Compaction Amnesia through the **Mid-Shift Checkpoint Protocol (
   2. Flight Recorder Snapshot    ──► Writes immutable log to `sessions/YYYY-MM-DD_<topic>.md`
                              │
                              ▼
-  3. Blackboard Pruning          ──► Prunes `state.md` strictly to ≤ 300 tokens
+  3. Blackboard Pruning          ──► Prunes `state.md` strictly to ≤ 500 tokens
                              │
                              ▼
   4. Episodic Memory Sweeps      ──► Records failed approaches to `decisions.md` & runs `sdcs map --sync`
@@ -52,7 +52,7 @@ Write an immutable checkpoint log to `sessions/YYYY-MM-DD_<topic>.md` capturing:
 * Update `sessions/manifest.jsonl` via `sdcs session index`.
 
 ### 3. Blackboard Pruning (`state.md`)
-Aggressively prune and overwrite `state.md` strictly to $\le 300$ tokens containing only:
+Aggressively prune and overwrite `state.md` strictly to $\le 500$ tokens containing only:
 ```markdown
 ## Current Objective
 [Concise active milestone goal]
@@ -73,4 +73,4 @@ Aggressively prune and overwrite `state.md` strictly to $\le 300$ tokens contain
 Output a brief confirmation:
 > *"All 7 pillars and the flight recorder are synchronized. Ready for compaction."*
 
-The developer then triggers `/compact` or restarts the session. On post-compact Turn 1, the agent reads the clean $\le 300$-token `state.md` and resumes engineering with zero amnesia.
+The developer then triggers `/compact` or restarts the session. On post-compact Turn 1, the agent reads the clean $\le 500$-token `state.md` and resumes engineering with zero amnesia.

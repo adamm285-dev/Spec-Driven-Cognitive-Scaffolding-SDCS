@@ -8,7 +8,7 @@ In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physi
 | **Spatial & Structural** | **Gate T** | Topological Invariant Gate | `sdcs verify --topology` | Prohibited AST cross-subsystem imports violating `wiring.yaml`. |
 | **Spatial & Structural** | **Gate P** | Blast-Radius Sandbox Guard | `sdcs verify --sandbox` | Staging modifications within declared `protected_paths`. |
 | **Spatial & Structural** | **Gate M** | Cartography Drift Gate | `sdcs map --check` | Commits with untracked new files or orphaned paths in `app_map.md`. |
-| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>300 tokens) and missing canonical schema headings. |
+| **Cognitive & Temporal** | **Gate S** | Working Memory Budget Gate | `sdcs verify --state` | Context window amnesia caused by bloated `state.md` (>500 tokens) and missing canonical schema headings. |
 | **Cognitive & Cache** | **Gate C-Cache** | KV-Cache Prefix Invariance | `sdcs verify --cache-invariance` | Cache-busting volatile tokens (timestamps, turn counters) in system prompt prefix. |
 | **Cognitive & Fleet** | **Gate W** | Secret & PII Sanitizer | `sdcs warehouse publish` | Publishing sensitive API keys, tokens, emails, phone numbers, or IPs to central warehouse. |
 | **Epistemic & Quality** | **Gate Q** | Test Quality & Anti-Mock Gate | `sdcs verify --quality` | "Hollow tests" asserting `True`, assertless test functions, or swallowed exceptions. |
@@ -53,7 +53,7 @@ In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physi
 
 ## 5. Gate S: Working Memory Budget Gate
 * **Mechanism:** Deterministic token-budget linter verifying token counts and canonical 3-section schema of `state.md`.
-* **Enforcement:** Requires `state.md` $\le 300$ tokens (or custom ceiling via `--max-tokens`) and enforces canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Also handles ephemeral subagent blackboard lifecycle (`sdcs state fork` and `sdcs state rollup`).
+* **Enforcement:** Requires `state.md` $\le 500$ tokens (or custom ceiling via `--max-tokens`) and enforces canonical headers: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Also handles ephemeral subagent blackboard lifecycle (`sdcs state fork` and `sdcs state rollup`).
 
 ## 6. Gate W: Secret & PII Sanitizer
 * **Mechanism:** Static AST and regex scanner inspecting code and documentation before publication to the central cognitive warehouse.
@@ -88,3 +88,15 @@ In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physi
 * **Active AST Detection (`REQ-GATE-L-01`):** Statically audits Python AST and polyglot code for undeclared simulation routines (`_mock_*`, `fake_*`, `simulated_*`), `mock_mode` flags, simulation sleep timers, placeholder credentials, and seeded test returns.
 * **Unconditional Fake-Success Block (`REQ-GATE-L-06`):** Unconditionally rejects `except` or `catch` blocks that return mock fallbacks or fake success status (`{"status": "ok"}`), even if a `MOCK(M-NNN)` marker is present.
 * **Command:** `sdcs verify --mocks`
+
+---
+
+## 13. Unified One-Shot Verification Receipt: `sdcs check`
+
+To streamline shift close-out and CI/CD verification pipelines, SDCS v1.9.7 provides `sdcs check`, which runs `pytest -q`, quietly reconciles `app_map.md` and `evals.md` hashes, audits all 7 kinetic gates (Gates T, S, Cycles, Q, E, C-Cache, and L), and emits a compact 3-line receipt:
+
+```text
+TESTS: PASS (248 passed in 38.98s)
+SYNC : PASS (app_map.md & evals.md SHA-256 corpus synced)
+GATES: PASS (All 7 SDCS gates clean; state.md <= 500t)
+```

@@ -43,7 +43,7 @@ Without the furnished office, an autonomous agent worker is dropped into an empt
 
 **SDCS provides deterministic lighting for the furnished office:**
 1. **The Floor Plan (`app_map.md` & `wiring.yaml`)**: The agent knows the exact layout and boundary contracts before touching code.
-2. **The Whiteboard (`state.md`)**: Volatile turn-by-turn memory strictly capped $\le 300$ tokens.
+2. **The Whiteboard (`state.md`)**: Volatile turn-by-turn memory strictly capped $\le 500$ tokens.
 3. **The Rejection Graveyard (`decisions.md`)**: Negative episodic memory stopping the agent from retrying rejected dead ends.
 4. **The Scorecard (`evals.md`)**: Cryptographic ground truth anchored to physical test fixtures and SHA-256 hashes.
 5. **The Kinetic Bouncer (10 Gates & Circuit Breaker)**: Physical pre-commit guards blocking broken imports, hollow tests, mock drift, and file oscillations.
@@ -91,7 +91,7 @@ SDCS decouples agent cognition into seven purpose-built files plus an isolated f
 | **1** | `spine.md` | Constitutional Invariants | **The Law** | Immutable domain axioms, verification gates, and forbidden actions. |
 | **2** | `wiring.yaml` | Declarative Topology | **The Mesh** | Component boundaries, service mesh, interface bindings, and contracts. |
 | **3** | `roadmap.md` | Acceptance Contract | **The North Star** | High-level human intent vs. measured empirical reality (`[INTENT]` vs `[MEASURED]`). |
-| **4** | `state.md` | Dynamic Working Memory | **The Whiteboard** | Active milestone objectives, immediate blockers, and pending gates (~300 token budget). |
+| **4** | `state.md` | Dynamic Working Memory | **The Whiteboard** | Active milestone objectives, immediate blockers, and pending gates (~500 token budget). |
 | **5** | `app_map.md` | Repository Cartography | **The Compass** | Structural index of modules and responsibilities consulted prior to file access. |
 | **6** | `decisions.md` | Negative Episodic Memory | **The Graveyard** | Rejection log of measured dead ends (`Claim` → `Measurement` → `Reopen Condition`). |
 | **7** | `evals.md` | Positive Episodic Memory | **The Scorecard** | Benchmark standing, golden test fixtures, and SHA-256 diversity guards. |
@@ -218,7 +218,7 @@ A critical failure mode of agent architectures is token exhaustion caused by aut
 
 | Artifact | Role | Lifecycle | Agent Ingestion |
 | :--- | :--- | :--- | :--- |
-| **`state.md`** | **The Whiteboard** (Active Working Memory) | Constantly overwritten and pruned | **Always read on Turn 1.** Contains only active objectives, immediate blockers, and current verification status (~300 tokens). |
+| **`state.md`** | **The Whiteboard** (Active Working Memory) | Constantly overwritten and pruned | **Always read on Turn 1.** Contains only active objectives, immediate blockers, and current verification status (~500 tokens). |
 | **`sessions/*.md`** | **The Flight Recorder** (Shift Handoff Log) | Write-once, append-only discrete files | **CRITICAL INVARIANT: NEVER ingested on system boot.** Queried on demand only when an agent needs targeted forensic context. |
 
 ### Why Discrete Files Beat One Monolithic `sessions.md`
@@ -257,7 +257,7 @@ flowchart TD
     subgraph DYNAMIC ["3. Dynamic Layer (Memory & Time Evolution)"]
         DM["decisions.md (Negative Memory: Rejection Graveyard)"]
         EV["evals.md (Positive Memory: Empirical Ground Truth)"]
-        ST["state.md (Active Working Blackboard <= 300 tokens)"]
+        ST["state.md (Active Working Blackboard <= 500 tokens)"]
         FR["sessions/manifest.jsonl (Causal Flight Recorder)"]
     end
 
@@ -278,7 +278,7 @@ The agent executes every turn through a deterministic, 4-phase continuous engine
 | **Phase 1: Orientation** | Hydrate constraints and ground truth in strict sequence: `spine.md` → `roadmap.md` → `app_map.md` → `decisions.md` → `evals.md` → `state.md`. | **Semantic Layer** (`spine.md`, `app_map.md`) to establish what exists.<br>**Dynamic Layer** (`decisions.md`, `evals.md`, `state.md`) to load memory. |
 | **Phase 2: Planning** | Formulate atomic diffs against `state.md`. Read `wiring.yaml` + strictly relevant target files identified via `app_map.md`. | **Semantic Layer** (`wiring.yaml`) to verify that the proposed import topology is valid. |
 | **Phase 3: Execution** | Apply code mutations and run empirical test/linter gates. | **Kinetic Layer** (`Gate T` & git hooks): AST parser physically blocks illegal imports.<br>**Dynamic Layer** (`evals.md`): Benchmark telemetry scores delta. |
-| **Phase 4: Close-Out** | Prune `state.md` ($\le 300$ tokens), record rejections in `decisions.md`, and log shift handoff in `sessions/`. | **Dynamic Layer** (`decisions.md`, `state.md`, `sessions/*.md`): Updates closed-loop state for subsequent turns. |
+| **Phase 4: Close-Out** | Prune `state.md` ($\le 500$ tokens), verify with `sdcs check`, record rejections in `decisions.md`, and log shift handoff in `sessions/`. | **Dynamic Layer** (`decisions.md`, `state.md`, `sessions/*.md`): Updates closed-loop state for subsequent turns. |
 
 ---
 
@@ -294,7 +294,7 @@ flowchart TD
         B2 --> B3["3. app_map.md (The Compass: Where are the files?)"]
         B3 --> B4["4. decisions.md (The Graveyard: What failed before?)"]
         B4 --> B5["5. evals.md (The Scorecard: Verified golden hashes)"]
-        B5 --> B6["6. state.md (The Blackboard: Turn objective <= 300 tokens)"]
+        B5 --> B6["6. state.md (The Blackboard: Turn objective <= 500 tokens)"]
         B6 --> B7["7. wiring.yaml (The Mesh: Subsystem boundaries)"]
     end
 
@@ -304,7 +304,7 @@ flowchart TD
         GT["Gate T: AST Boundary Audits (sdcs verify --topology)"]
         GP["Gate P: Blast-Radius Sandbox Guard (sdcs verify --sandbox)"]
         GM["Gate M: Cartography Drift Check (sdcs map --check)"]
-        GS["Gate S: Working Memory Budget (sdcs verify --state <= 300t)"]
+        GS["Gate S: Working Memory Budget (sdcs verify --state <= 500t)"]
         GW["Gate W: Secret & PII Sanitizer (sdcs verify --warehouse)"]
         GQ["Gate Q: Test Quality & Anti-Mock (sdcs verify --quality)"]
         GE["Gate E: Environment & Toolchain Lock (sdcs doctor / sdcs verify --env)"]
@@ -314,6 +314,7 @@ flowchart TD
 
     subgraph TACTICAL ["3. Tactical In-Stride Agent Tools"]
         direction TB
+        CHECK["sdcs check (One-shot compact 3-line verification receipt)"]
         WATCH["sdcs watch (Realtime 16-bit Living Pixel Office HUD)"]
         HYDRATE["sdcs hydrate -p standard (Single-pass context compiler)"]
         MAP["sdcs map -s <subsystem> (Page focused cartography slices)"]
@@ -327,6 +328,27 @@ flowchart TD
     BOOT --> KINETIC
     KINETIC --> TACTICAL
 ```
+
+### Scale-Adaptive Boot Context & Turn-1 Mid-Session Spec Lock
+
+In SDCS v1.9.7, repository scale governs Turn 1 boot hydration adaptively:
+
+1. **Scale-Adaptive Boot Profiles (`sdcs hydrate --profile adaptive`):**
+   - **Small Repositories ($\le 4,000$ source tokens, $\le 10$ files):** Emits `AGENTS.md` + `state.md` + `# [PRE-HYDRATED SOURCE FILES]` (Zero-Read Workspace Bundle). The exact verbatim source contents from disk are pre-hydrated directly into Turn 1 prompt context, allowing agents to edit target `.py` files immediately on Turn 1 without burning tool calls on exploratory `list_files` or `read_file`.
+   - **Large Repositories / Monorepos ($> 4,000$ source tokens):** Emits `# [AST SKELETAL INTERFACES]` and repository cartography (`app_map.md`). The agent navigates type signatures and pages focused subsystem slices (`sdcs map -s <subsystem>`) instead of dumping entire source trees into context.
+
+2. **CacheForge AST Symbol-Window Slicer (`extract_symbol_window_slice`):**
+   - In Session 2 or multi-turn execution, `src/sdcs/skeleton.py` dynamically slices active modules.
+   - Module-level imports, constants, `@dataclass` definitions, `Enum` classes, and exception classes are preserved verbatim.
+   - Functions and methods matching active target symbols (or `__init__`) are kept 100% byte-for-byte so `edit_file` `Target` strings never fail.
+   - Untouched helper methods ($\ge 2$ body lines) are collapsed to 1-line `...` stubs, reducing KV-cache token consumption by up to 85% while keeping valid syntax.
+
+3. **Turn-1 Mid-Session Spec Lock (`state.md` $\le 500$ tokens):**
+   - Whenever a user message introduces multi-package or mid-session sprint requirements not in `TASK.md`, the agent's **VERY FIRST tool call** must be `edit_file` on `state.md` (`## Current Objective` and `## Immediate Next Action`) to lock exact parameter names, default values, formulas, return shapes, and ordering rules **BEFORE** editing any `.py` code files.
+   - Completed requirements are marked `- [x]` in `state.md` as they land.
+   - Close-out runs `sdcs check` before the final commit.
+
+---
 
 ### 1. Turn 1 Boot Hydration Order: Why the Sequence is Rigid
 
@@ -502,6 +524,14 @@ During extended engineering sessions, agents often add new packages or refactor 
 
 SDCS provides deterministic Python tooling to bootstrap repositories and enforce verification gates:
 
+* **`sdcs check` (`src/sdcs/cli.py`):**
+  - **One-Shot Compact Verification:** Runs `pytest -q`, quietly synchronizes `app_map.md` cartography and `evals.md` fixture hashes, evaluates all 7 kinetic gates (Topology, State Budget, Cycles, Quality, Env, Cache Invariance, and Mocks), and emits a compact 3-line receipt:
+    ```text
+    TESTS: PASS (248 passed in 38.98s)
+    SYNC : PASS (app_map.md & evals.md SHA-256 corpus synced)
+    GATES: PASS (All 7 SDCS gates clean; state.md <= 500t)
+    ```
+  - Options: `--repo-root <path>`, `--max-tokens <int>` (default: 500), and `--skip-pytest`.
 * **`sdcs init` (`python sdcs_init.py`):**
   - Scaffolds the complete 7-pillar framework into any existing repository.
   - Automatically indexes existing files and directory structure into `app_map.md`.
@@ -611,6 +641,9 @@ sdcs eval record all
 ### 3. Verify Codebase Invariants (Topology & Working Memory)
 
 ```bash
+# One-shot compact verification: runs tests, syncs evals & app_map, and checks all 7 gates
+sdcs check
+
 # Statically audit codebase imports against wiring.yaml subsystem boundaries (Gate T)
 sdcs verify --topology
 
@@ -618,11 +651,11 @@ sdcs verify --topology
 # and append them directly to decisions.md
 sdcs verify --topology --append-rejections
 
-# Audit working memory state.md token budget (Gate S, default <= 300 tokens)
+# Audit working memory state.md token budget (Gate S, default <= 500 tokens)
 sdcs verify --state
 
 # Enforce custom token ceiling
-sdcs verify --state --max-tokens 300
+sdcs verify --state --max-tokens 500
 
 # Reconcile product-code mocks with MOCKS.md and detect undeclared mocks (Gate L)
 sdcs verify --mocks
@@ -636,7 +669,7 @@ sdcs verify --all
 
 * **Zero Execution Risk:** Audits Abstract Syntax Trees (AST) using Python's standard `ast` module without importing or executing runtime code.
 * **Negative Memory Serialization:** Programmatically binds architectural failures to Pillar 6 (`decisions.md`) using the strict **Claim $\rightarrow$ Measurement $\rightarrow$ Reopen Condition** schema.
-* **Working Memory Discipline:** Prevents context exhaustion by halting when `state.md` exceeds 300 tokens prior to compaction.
+* **Working Memory Discipline:** Prevents context exhaustion by halting when `state.md` exceeds 500 tokens prior to compaction.
 
 ---
 
@@ -773,6 +806,7 @@ SDCS is built for **autonomous, multi-turn shifts** where context drift causes e
 | :--- | :--- | :--- | :--- |
 | **Lite** | `spine.md` + `state.md` | Minimal fast-boot set | Interactive pair-programming, CSS/typo fixes, quick single-file refactors. |
 | **Standard** | `spine.md` + `roadmap.md` + `app_map.md` + `state.md` | Standard working set | Subsystem feature work, localized refactors, unit test coverage expansion. |
+| **Adaptive** | Dynamic: Zero-Read Workspace Bundle (small repo) or 7-Pillar Cartography + AST Skeletons (large repo) | Dynamic scale-aware context | Default for autonomous multi-turn agents and CacheForge long-horizon execution. |
 | **Full Shift** | All 7 Pillars + `sessions/template.md` on close-out | Complete grounding | Autonomous multi-turn agent runs, overnight refactors, cross-subsystem migrations. |
 
 ---
@@ -787,7 +821,7 @@ When an autonomous agent encounters a failing test gate on Turn 12, a known fail
 3. **Topological Invariant Gate (Gate T):** AST-level static import audit ensuring code respects `wiring.yaml` subsystem boundaries, serializing violations into `decisions.md`.
 4. **Blast-Radius Sandbox Guard (Gate P):** Verifies staged files against declarative `protected_paths` in `wiring.yaml` (`sdcs verify --sandbox`).
 5. **Cartography Drift Gate (Gate M):** Pre-commit verification (`sdcs map --check`) asserting zero unmapped or orphaned files in `app_map.md` before code can be staged.
-6. **Working Memory Budget Gate (Gate S):** Token-budget linter guaranteeing `state.md` never exceeds 300 tokens (`sdcs verify --state`), preventing context window saturation.
+6. **Working Memory Budget Gate (Gate S):** Token-budget linter guaranteeing `state.md` never exceeds 500 tokens (`sdcs verify --state`), preventing context window saturation.
 7. **Secret & PII Sanitizer (Gate W):** Static scanner blocking sensitive API keys, bearer tokens, emails, phone numbers, and routable IPs from being committed or published (`sdcs verify --warehouse`).
 8. **Test Quality & Anti-Mock Gate (Gate Q):** Static AST auditor blocking trivial assertions (`assert True`), assertless test functions, and swallowed exceptions (`sdcs verify --quality`).
 9. **Toolchain & Environment Lock (Gate E & `sdcs doctor`):** Diagnoses interpreter versions, tools, and 7-pillar health to prevent agents from blaming working application code on environment drift (`sdcs doctor`, `sdcs verify --env`).

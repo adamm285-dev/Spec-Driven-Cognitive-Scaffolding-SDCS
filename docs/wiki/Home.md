@@ -26,7 +26,7 @@ pip install sdcs
 * 🛡️ **[Kinetic Enforcement Gates](Kinetic-Enforcement-Gates)**: The 10 automated kinetic gates (Gates C, T, P, M, S, C-Cache, W, Q, E, L) and the Circuit Breaker physically blocking architectural erosion and file thrashing.
 * 🔄 **[Lossless Compaction Protocol](Lossless-Compaction-Protocol)**: The 5-step checklist eliminating Compaction Amnesia during long pair-programming shifts.
 * 📋 **[Agent Runbooks & SOPs](Agent-Runbooks-&-SOPs)**: Standard operating procedures for boot sequence, in-stride wiring, and baseline fixture recalibration.
-* 💻 **[CLI Command Reference](CLI-Command-Reference)**: Complete options and workflows for `sdcs init`, `sdcs watch`, `sdcs doctor`, `sdcs hydrate`, `sdcs verify`, `sdcs map`, `sdcs eval`, `sdcs state`, `sdcs warehouse`, `sdcs decay`, `sdcs session`, `sdcs graph`, `sdcs grill`, `sdcs slice`, `sdcs repair`, and `sdcs route`.
+* 💻 **[CLI Command Reference](CLI-Command-Reference)**: Complete options and workflows for `sdcs check`, `sdcs init`, `sdcs watch`, `sdcs doctor`, `sdcs hydrate`, `sdcs verify`, `sdcs map`, `sdcs eval`, `sdcs state`, `sdcs warehouse`, `sdcs decay`, `sdcs session`, `sdcs graph`, `sdcs grill`, `sdcs slice`, `sdcs repair`, and `sdcs route`.
 * 📖 **[Ontology Lexicon & Glossary](Ontology-Lexicon-&-Glossary)**: Formal terminology dictionary (Phantom Corpus, Inverted ADR, Teleological Anchor, etc.).
 
 ---

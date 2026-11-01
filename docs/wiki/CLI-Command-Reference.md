@@ -49,6 +49,9 @@ sdcs hydrate -p lite
 # Full shift profile (all 7 pillars)
 sdcs hydrate -p full
 
+# Adaptive profile (Zero-Read Workspace Bundle on <=4k tokens; AST cartography on >4k)
+sdcs hydrate --profile adaptive
+
 # Subsystem-focused context slicing
 sdcs hydrate -p standard -s core
 ```
@@ -66,7 +69,7 @@ sdcs verify --topology
 # Gate T + Inverted ADR: Format and append boundary failures to decisions.md
 sdcs verify --topology --append-rejections
 
-# Gate S: Audit state.md working memory budget (default <= 300 tokens)
+# Gate S: Audit state.md working memory budget (default <= 500 tokens)
 sdcs verify --state
 
 # Gate P: Audit staged files against wiring.yaml sandbox protected_paths
@@ -294,4 +297,28 @@ sdcs route --file src/sdcs/core.py --failures 3
 
 # Evaluate during planning phase (always routes to Frontier)
 sdcs route --planning
+```
+
+---
+
+## 17. One-Shot Compact Verification: `sdcs check`
+
+Executes full test suite (`pytest -q`), quietly synchronizes `app_map.md` cartography and `evals.md` fixture hashes, audits all 7 kinetic gates (Topology, State Budget, Cycles, Quality, Env, Cache Invariance, Mocks), and emits a compact 3-line receipt:
+
+```bash
+# Run one-shot compact verification receipt
+sdcs check
+
+# Run on a custom repository root with custom state token ceiling
+sdcs check --repo-root /path/to/repo --max-tokens 500
+
+# Run cartography/eval sync and all 7 gates without executing pytest
+sdcs check --skip-pytest
+```
+
+Output:
+```text
+TESTS: PASS (248 passed in 38.98s)
+SYNC : PASS (app_map.md & evals.md SHA-256 corpus synced)
+GATES: PASS (All 7 SDCS gates clean; state.md <= 500t)
 ```

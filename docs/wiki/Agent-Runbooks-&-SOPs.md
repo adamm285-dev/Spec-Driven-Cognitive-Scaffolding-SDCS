@@ -14,7 +14,7 @@ On Turn 1 of any task (or upon session startup / post-compaction recovery), the 
 3. app_map.md     ──► Repository Cartography: Resolve paths first (The Compass)
 4. decisions.md   ──► Negative Episodic Memory: Rejected hypotheses (The Graveyard)
 5. evals.md       ──► Verified Baseline & Golden Hash Scorecard (Positive Ground Truth)
-6. state.md       ──► Active Working Memory Blackboard <= 300 tokens (The Whiteboard)
+6. state.md       ──► Active Working Memory Blackboard <= 500 tokens (The Whiteboard)
 7. wiring.yaml    ──► Declarative Topology & Component Boundaries (The Mesh)
 ```
 
@@ -68,3 +68,30 @@ When product code must simulate external dependencies or fake real behavior:
 1. **Declare In-Stride:** Stamp every product-code mock with a `# MOCK(M-NNN)` marker and register it in `MOCKS.md` with all four required fields (`Where`, `What it fakes`, `Why`, `To make it real`) in the same commit.
 2. **No Fake Success (`REQ-GATE-L-06`):** Never implement error fallbacks in `except` or `catch` blocks that pretend a failure was a success or return mock objects.
 3. **Verify:** Run `sdcs verify --mocks` before committing.
+
+---
+
+## SOP-006: Scale-Adaptive Boot Hydration & Zero-Read Workspace Bundles
+
+In SDCS v1.9.7, repository scale governs Turn 1 boot hydration adaptively:
+1. **Small Repositories (<= 4,000 source tokens, <= 10 files):**
+   - When `# [PRE-HYDRATED SOURCE FILES]` (or `# [CacheForge Zero-Read Workspace Bundle]`) is present in the prompt, the exact verbatim file contents are pre-hydrated directly from disk.
+   - Do **NOT** call `list_files` or `read_file` on those files; start editing target `.py` files immediately on Turn 1 using `edit_file`.
+2. **Large Repositories / Monorepos (> 4,000 source tokens):**
+   - Hydrate `# [AST SKELETAL INTERFACES]` and page focused subsystem cartography via `sdcs map -s <subsystem>`.
+
+---
+
+## SOP-007: Turn-1 Mid-Session Spec Lock (`state.md` <= 500 tokens)
+
+Whenever a user message introduces multi-package or mid-session sprint requirements not in `TASK.md`:
+1. **The In-Stride Lock Rule:** Your **VERY FIRST tool call** MUST be `edit_file` on `state.md` to record every requirement's exact parameter names, default values, formulas, inequalities, return types, and target `.py` file paths under `## Current Objective` and `## Immediate Next Action` **BEFORE** reading or editing any `.py` code files.
+2. **Budget Constraint:** Keep `state.md` <= 500 tokens (Gate S) by using concise 1-line bullets while preserving exact formulas.
+3. **Traceability:** Mark completed items `- [x]` in `state.md` as each component lands.
+
+---
+
+## SOP-008: Symbol-Windowed Editing & One-Shot `sdcs check` Close-Out
+
+1. **Symbol-Windowed Editing:** When modifying modules with collapsed stubs, leave untouched helper methods (`...`) untouched. Pass only exact verbatim target function and class lines as `Target` to `edit_file`.
+2. **The Verification Receipt:** Before calling `finish` or committing, run `sdcs check` to verify unit tests pass, fixture hashes synchronize, and all 7 kinetic gates stay clean.
