@@ -2,15 +2,16 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- Polish README.md hero framing for frontier systems engineers: emphasize untrusted execution engines, non-LLM deterministic oracles, and specification gaming prevention without em-dashes.
-- Update docs/wiki files to v1.9.7 (completed in 9141b09).
-- Update README.md to v1.9.7 (completed in 2954a20).
+- [x] Sync public SDCS v1.9.7 upgrades: extract_symbol_window_slice in skeleton.py, sdcs check subcommand in cli.py, scale-adaptive AGENTS.md template with CacheForge Zero-Read protocol in init.py, adaptive hydration in hydrate.py, and 500t default ceiling in state verifier.
+- [x] Synchronize sdcs_init.py and AGENTS.md with src/sdcs/init.py byte-for-byte.
+- [x] Add comprehensive test coverage in test_skeleton.py and test_cli.py.
+- [x] Maintain distinct naming for SDCS v1.9.7 and CacheForge (no SDCS v3).
 
 ## Status & Gate Verification
-- Gate Q: 243/243 unit tests passing via pytest.
-- sdcs verify --all: PASSED (T, S, cycles, Q, E, C-Cache, L, evals).
-- README.md: updated with systems-engineering framing; 0 em-dashes verified.
-- docs/wiki: 10 files updated to v1.9.7 with zero em-dashes (commit 9141b09).
+- Gate Q: 248/248 tests passing via pytest in both public and holdout repositories.
+- Gate S: state.md verified within budget; canonical 3 headings preserved.
+- sdcs check: PASS (TESTS, SYNC, GATES all green).
+- Zero em-dashes verified across all updated source, test, template, and documentation files.
 
 ## Immediate Next Action
-- Ready for user review or tag push.
+- Stage, commit, and push upgrades to origin/main.

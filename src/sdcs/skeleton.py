@@ -163,6 +163,119 @@ def _extract_rust_skeleton(source_code: str) -> str:
     return "\n".join(out_lines)
 
 
+def extract_symbol_window_slice(
+    source_code: str,
+    target_symbols: set[str],
+) -> tuple[str, int, int]:
+    """
+    CacheForge AST Symbol-Window Slicer:
+      - Keeps module-level imports, constants, and `@dataclass` / `Enum` / `Exception` classes verbatim.
+      - For top-level functions (`def func(...)`) and service/manager class methods (`def method(...)`):
+          * If the function name, method name, or enclosing class name is in `target_symbols`, OR
+            if the function/method body references any identifier in `target_symbols` (or `__init__`),
+            preserves the **100% exact verbatim source lines** from disk so `edit_file` `Target` strings
+            match byte-for-byte!
+          * Otherwise, collapses the untouched method/function body to a 1-line `...` stub while keeping its exact signature line!
+    Returns `(sliced_source, kept_verbatim_nodes, collapsed_nodes)`.
+    """
+    try:
+        tree = ast.parse(source_code)
+    except SyntaxError:
+        return source_code, 1, 0
+
+    lines = source_code.splitlines()
+    if not lines:
+        return source_code, 0, 0
+
+    collapse_ranges: list[tuple[int, int, str]] = []
+    kept_count = 0
+    collapsed_count = 0
+
+    def _node_mentions_target(node: ast.AST) -> bool:
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Name) and sub.id in target_symbols:
+                return True
+            if isinstance(sub, ast.Attribute) and sub.attr in target_symbols:
+                return True
+        return False
+
+    def _is_dataclass_or_enum_or_error(cls_node: ast.ClassDef) -> bool:
+        if cls_node.name.endswith("Error") or cls_node.name.endswith("Exception"):
+            return True
+        for dec in cls_node.decorator_list:
+            if isinstance(dec, ast.Name) and dec.id == "dataclass":
+                return True
+            if (
+                isinstance(dec, ast.Call)
+                and isinstance(dec.func, ast.Name)
+                and dec.func.id == "dataclass"
+            ):
+                return True
+        for base in cls_node.bases:
+            if isinstance(base, ast.Name) and base.id in (
+                "Enum",
+                "IntEnum",
+                "StrEnum",
+                "ValueError",
+                "Exception",
+            ):
+                return True
+        return False
+
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if node.name in target_symbols or _node_mentions_target(node):
+                kept_count += 1
+            else:
+                first_body_stmt = node.body[0]
+                end_line = getattr(node, "end_lineno", first_body_stmt.lineno)
+                if end_line > first_body_stmt.lineno:
+                    indent = " " * getattr(first_body_stmt, "col_offset", 4)
+                    collapse_ranges.append((first_body_stmt.lineno, end_line, indent))
+                    collapsed_count += 1
+                else:
+                    kept_count += 1
+        elif isinstance(node, ast.ClassDef):
+            if _is_dataclass_or_enum_or_error(node):
+                kept_count += 1
+                continue
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    if (
+                        item.name == "__init__"
+                        or item.name in target_symbols
+                        or _node_mentions_target(item)
+                    ):
+                        kept_count += 1
+                    else:
+                        first_stmt = item.body[0]
+                        end_line = getattr(item, "end_lineno", first_stmt.lineno)
+                        if end_line >= first_stmt.lineno and (end_line - first_stmt.lineno) >= 2:
+                            indent = " " * getattr(first_stmt, "col_offset", 8)
+                            collapse_ranges.append((first_stmt.lineno, end_line, indent))
+                            collapsed_count += 1
+                        else:
+                            kept_count += 1
+
+    if not collapse_ranges:
+        return source_code, kept_count, 0
+
+    collapse_ranges.sort(key=lambda r: r[0])
+    out_lines: list[str] = []
+    cur_line = 1
+    for start_l, end_l, indent in collapse_ranges:
+        while cur_line < start_l and cur_line <= len(lines):
+            out_lines.append(lines[cur_line - 1])
+            cur_line += 1
+        out_lines.append(f"{indent}...")
+        cur_line = end_l + 1
+    while cur_line <= len(lines):
+        out_lines.append(lines[cur_line - 1])
+        cur_line += 1
+
+    return "\n".join(out_lines), kept_count, collapsed_count
+
+
 def extract_file_skeleton(file_path: Path) -> str:
     """Extracts structural skeleton from a file based on its extension."""
     if not file_path.is_file():

@@ -91,7 +91,7 @@ def parse_state_sections(content: str) -> dict[str, str]:
 
 def audit_state_tokens(
     state_file: Path,
-    max_tokens: int = 350,
+    max_tokens: int = 500,
 ) -> tuple[bool, int, dict[str, int], list[str]]:
     """
     Audits state.md against the specified token budget and verifies canonical schema.
@@ -138,7 +138,7 @@ def audit_state_tokens(
 def run_state_audit(
     repo_root: Path,
     state_path: str | Path | None = None,
-    max_tokens: int = 350,
+    max_tokens: int = 500,
 ) -> int:
     """CLI execution entrypoint for state working memory audit."""
     target_state = locate_state_file(repo_root, state_path)

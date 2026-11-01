@@ -1,10 +1,44 @@
-# AGENTS.md — Operational Harness Protocol
+# AGENTS.md :  Operational Harness Protocol
 <!-- Conforming to SPEC-001 v1.9.0 -->
 
-## 0. What SDCS Is
+## 1. Turn 1 Boot Hydration Order (7 Pillars) & Hot-Path Execution
+Scale-Adaptive Boot Context:
+- **When `# [PRE-HYDRATED SOURCE FILES]` (or `# [CacheForge Zero-Read Workspace Bundle]`) is present in your prompt:**
+  1. The exact verbatim contents of the workspace `.py` files are already in your prompt. Do **NOT** call `list_files` or `read_file` on those files.
+  2. Untouched helper methods collapsed to `...` do not need modification; leave collapsed `...` stubs untouched and pass only the exact verbatim target function/class lines as `Target` to `edit_file`.
+  3. When implementing a baseline `TASK.md` specification (where `TASK.md` is already on disk), start editing the target `.py` files on Turn 1 using `edit_file`.
+  4. Whenever a user message introduces multi-package or mid-session sprint requirements that are NOT in `TASK.md`, your **VERY FIRST tool call** MUST be `edit_file` on `state.md` to lock all newly requested requirements (including exact parameter names, default values, formulas, inequalities, return shapes, and ordering rules) BEFORE editing any `.py` files!
+  5. Do not read `spine.md`, `roadmap.md`, `decisions.md`, `evals.md`, `MOCKS.md`, or `app_map.md` on boot. They are on-disk reference manuals consulted only when a gate triggers or when navigating unhydrated directories.
+- **When working in a large repository (> 4,000 source tokens) where `# [AST SKELETAL INTERFACES]` and `app_map.md` are hydrated:**
+  1. Whenever a user message introduces multi-package or mid-session sprint requirements that are NOT in `TASK.md`, your **VERY FIRST tool call** MUST be `edit_file` on `state.md` to record every requirement's exact parameter names, default values, formulas/inequalities, return types, and target `.py` file paths (using `app_map.md` and `# [AST SKELETAL INTERFACES]`) BEFORE reading or editing any `.py` code files!
+  2. Then call `read_file` only on the specific target file you are about to edit (unless already pre-hydrated in `# [CacheForge Zero-Read Workspace Bundle]`), and apply surgical `edit_file` changes.
+
+**Fast resume (Post-Reset / Session 2):** After compaction or a session reset, read `state.md` (`## Current Objective` and `## Immediate Next Action`) first and compare every listed requirement and edge-case rule against the pre-hydrated source files. If any requirement or validation parameter in `state.md` is missing from any target module, use `edit_file` to wire it immediately before running `run_tests` and calling `finish`.
+
+**Flight Recorder Invariant:** Do not read `sessions/*.md` on boot. They are immutable history, not working memory; loading them wastes tokens and pulls in stale context. Query them on demand when debugging (`sdcs session`, `sessions/manifest.jsonl`).
+
+## 2. Working Memory (`state.md` <= 500 Tokens) & Mid-Session Spec Lock
+- Keep exactly three headings: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Stay at or under 500 tokens (Gate S) by using concise 1-line bullets per package while preserving exact formulas (`<=` vs `>=`, cap scope, return dict/tuple shapes, and explain-plan ordering).
+- **Write new requirements down first (Never summarize completed baseline work).** Whenever a user message introduces multi-package or mid-session sprint requirements:
+  1. Your **VERY FIRST tool call** after receiving that message **MUST** be `edit_file` on `state.md`. Write **ONLY the newly requested sprint requirements** (preserving exact parameter names, default values, formulas, inequalities, return shapes, and ordering rules) under `## Current Objective` and list the target `.py` files under `## Immediate Next Action` **BEFORE** reading or editing any `.py` code files.
+  2. Then use `edit_file` to implement the newly requested requirements across all affected modules.
+- Whenever you change code or the requirements change, update `state.md` (marking completed items `- [x]`) and commit it together with the code, so verified progress is in git history. Make a commit (`commit` or `finish`) your last action before a session ends: anything edited after your final commit, `state.md` included, is lost.
+
+## Before You Finish
+Passing tests are not proof the task is done, because test suites often predate newly added requirements.
+Before calling `finish`:
+1. Check your active context to ensure every initial and mid-session requirement is implemented across all affected modules and recorded in `state.md` under `## Current Objective`.
+2. Do NOT call `read_file` to re-read files that are already in your context or that you just edited.
+3. Once all requirements are implemented, `state.md` is updated (marking completed items `- [x]`), and tests pass (run `sdcs check` or `pytest -q`), call `finish` (or `commit`) immediately.
+
+## Critical Commit Invariant
+Uncommitted changes are permanently deleted (`git reset --hard`) when a session ends!
+Whenever you receive "This session is ending. Commit your work now", you MUST call `commit` or `finish` immediately. Never spend your final turns on additional edits without committing.
+
+## 0. What SDCS Is (7-Pillar Architecture & Gate Reference)
 You will lose your memory. Context resets, compaction, and new sessions erase what you learned. Spec-Driven Cognitive Scaffolding (SDCS) exists so the next agent (often you, an hour from now) can resume exactly where you stopped, without re-exploring the repo or repeating failed attempts.
 
-It does this with a few files, each with one job:
+It does this with 7 Pillars, each with one job:
 - `state.md`: what is happening right now. The handoff note for the next agent.
 - `roadmap.md`: where the project is going. Each milestone states its `[INTENT]` and its `[MEASURED]` result.
 - `spine.md`, `wiring.yaml`: the rules and the module boundaries. You may add new modules to `wiring.yaml`; never loosen what is already there.
@@ -12,8 +46,6 @@ It does this with a few files, each with one job:
 - `decisions.md`: what was tried and rejected, so nobody tries it again.
 - `evals.md`: what has been verified to work, locked by SHA-256 fixture hashes.
 - `sessions/`: past shift logs. A flight recorder, read only when debugging.
-
-Rules you could forget are enforced by `sdcs verify` gates and the pre-commit hook. A rejected commit is the system working, not an obstacle to route around. Your job: do the user's task, and leave these files more accurate than you found them.
 
 When a gate fails, its name tells you what to fix:
 - **Gate T** (`sdcs verify --topology`): an import crosses a boundary declared in `wiring.yaml`.
@@ -24,45 +56,14 @@ When a gate fails, its name tells you what to fix:
 - **Gate Q** (`sdcs verify --quality`): a test is hollow or mocks the thing it should test.
 - The sandbox, secret, environment, cache-prefix, and cycle gates are listed in `sdcs verify --help`. `sdcs verify --all` runs every gate.
 
-## 1. Turn 1 Boot Hydration Order (7 Pillars)
-If your prompt already contains `SDCS DETERMINISTIC CONTEXT COMPILER` (the output of `sdcs hydrate`), all 7 pillars, `# [AST SKELETAL INTERFACES]`, and `# [PRE-HYDRATED SOURCE FILES]` are already loaded. Do not re-read those files, on boot or after compaction; start work on Turn 1.
-
-Otherwise, read the pillars in this order, or get them in one call with `sdcs hydrate --profile standard [-s <subsystem>]` (`lite` and `full` profiles also exist):
-1. `spine.md`: invariants and forbidden actions (Pillar 1)
-2. `roadmap.md`: the active milestone, `[INTENT]` vs `[MEASURED]` (Pillar 3)
-3. `app_map.md`: resolve target paths here before searching (Pillar 5)
-4. `decisions.md`: rejected approaches (Pillar 6)
-5. `evals.md`: the verified baseline (Pillar 7)
-6. `state.md`: current working memory (Pillar 4)
-7. `wiring.yaml`: subsystem boundaries (Pillar 2)
-
-**Fast resume:** After compaction or a restart, read `state.md` first. Check every requirement recorded in `state.md` against `# [PRE-HYDRATED SOURCE FILES]` (or on disk if not pre-hydrated) to confirm all affected modules are wired and tests pass, then execute any remaining step in `## Immediate Next Action`. Skip the whole-repo survey.
-
-**Flight Recorder Invariant:** Do not read `sessions/*.md` on boot. They are immutable history, not working memory; loading them wastes tokens and pulls in stale context. Query them on demand when debugging (`sdcs session`, `sessions/manifest.jsonl`).
-
-## 2. Working Memory (`state.md`)
-- Keep exactly three headings: `## Current Objective`, `## Status & Gate Verification`, `## Immediate Next Action`. Stay at or under 300 tokens (Gate S).
-- Record what the next agent can't get elsewhere: the objective, newly added parameter and field names, gate results, modules not yet verified, and the next step. Don't copy `app_map.md` or signature inventories into it.
-- **Write new requirements down first.** When a requirement arrives mid-task, add one line for it under `## Current Objective` before you start implementing it, naming the fields, parameters, or behaviors it adds. If the session ends partway through, the next agent still knows the requirement exists; one that never reaches `state.md` is lost.
-- Whenever you change code or the requirements change, update `state.md` and commit it together with the code, so verified progress is in git history. Make a commit your last action before a session ends: anything edited after your final commit, `state.md` included, is lost.
-- When new requirements arrive, wire every parameter, field, default, and return key through all affected modules.
-
-## Before You Finish
-Passing tests are not proof the task is done. Test suites often predate the requirements you were given, so they can pass while those requirements are missing.
-Before declaring the task complete:
-1. List every requirement recorded in `state.md` under `## Current Objective`.
-2. For each one, name the file and the function, field, or parameter that implements it, confirmed by reading the code now, not from memory.
-3. A requirement without a location is not done: implement it, then repeat.
-If budget remains and anything is unverified, use it.
-
 ## 3. Working Rules
-- **Navigate from the map:** Find paths in `app_map.md` (`sdcs map -s <subsystem>` gives a focused slice), signatures in `# [AST SKELETAL INTERFACES]`, and source in `# [PRE-HYDRATED SOURCE FILES]` instead of scanning directories or re-reading pre-hydrated files. When source files are not pre-hydrated in your prompt, confirm the real symbols with a targeted read or search before editing.
+- **Navigate from the map:** Find paths in `app_map.md` (`sdcs map -s <subsystem>` gives a focused slice), signatures in `# [AST SKELETAL INTERFACES]`, and source in `# [PRE-HYDRATED SOURCE FILES]` instead of scanning directories or re-reading pre-hydrated files.
 - **Check boundaries before importing:** Every new `import` must be allowed by `allowed_dependencies` in `wiring.yaml`.
 - **Wiring Mutation Invariant:** When you add a subsystem, module, or package, add it to `wiring.yaml` in the same change. Never loosen an existing boundary, add a cycle, or edit `wiring.yaml` to get past a Gate T rejection.
 - **Respect the graveyard:** Don't retry an approach or revert a decision recorded in `decisions.md` unless its "WHAT WOULD REOPEN IT" condition is met or a human signs off.
 - **No task queue in the roadmap:** Active tasks live in `state.md`.
 - **Mock Ledger Invariant (Gate L):** Product code that stands in for real behavior (simulated responses, seeded or hardcoded data, demo-only keys or endpoints, offline stubs) gets a `MOCK(M-NNN)` comment marker and a matching `MOCKS.md` entry in the same commit. Add and remove them together. Never add a fallback that reports a failed call as a success.
-- **Verify before reporting done:** Run the tests, typechecks, and `sdcs verify --all`. When you add or change a test fixture, re-record it with `sdcs eval record <Asset-ID>|all` (or `sdcs audit`).
+- **Verify before reporting done:** Run `sdcs check` (which runs `pytest -q`, syncs `app_map.md` and `evals.md` SHA-256 hashes, and verifies all SDCS gates in a single 3-line receipt) or `sdcs verify --all`.
 
 ## 4. When to Update the Other Files
 Update each one only when its trigger happens:

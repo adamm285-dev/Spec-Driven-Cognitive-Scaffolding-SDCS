@@ -32,6 +32,7 @@ def test_cli_help():
     assert "state" in result.stdout
     assert "doctor" in result.stdout
     assert "watch" in result.stdout
+    assert "check" in result.stdout
 
 
 def test_cli_grill():
@@ -151,3 +152,34 @@ def test_cli_audit_record_positional(tmp_path: Path):
 
     updated = evals_file.read_text(encoding="utf-8")
     assert "pending" not in updated
+
+
+def test_cli_check_help():
+    cmd = [sys.executable, "-m", "sdcs.cli", "check", "--help"]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
+    assert "--repo-root" in result.stdout
+    assert "--max-tokens" in result.stdout
+
+
+def test_cli_check_execution(tmp_path: Path):
+    from sdcs.init import init_scaffold
+
+    init_scaffold(target_dir=tmp_path)
+    test_dir = tmp_path / "tests"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    (test_dir / "test_smoke.py").write_text(
+        "def test_smoke():\n    res = 2 + 3\n    assert res == 5\n", encoding="utf-8"
+    )
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "sdcs.cli",
+        "check",
+        "--repo-root",
+        str(tmp_path),
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True, check=True, env=ENV)
+    assert "TESTS: PASS" in res.stdout
+    assert "SYNC : PASS" in res.stdout
+    assert "GATES: PASS" in res.stdout

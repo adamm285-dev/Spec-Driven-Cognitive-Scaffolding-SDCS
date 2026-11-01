@@ -111,7 +111,7 @@ def compile_hydration_payload(
 ) -> tuple[str, int]:
     """Compiles single-pass cognitive hydration payload across pillars."""
     profile = profile.lower().strip()
-    if profile not in ("lite", "standard", "full"):
+    if profile not in ("lite", "standard", "full", "adaptive"):
         profile = "standard"
     sections: list[str] = []
 
@@ -122,6 +122,87 @@ def compile_hydration_payload(
     decisions_file = locate_pillar_file(repo_root, "decisions.md")
     evals_file = locate_pillar_file(repo_root, "evals.md")
     wiring_file = locate_pillar_file(repo_root, "wiring.yaml")
+
+    if profile == "adaptive":
+        import yaml
+        from sdcs.skeleton import extract_file_skeleton
+
+        excluded_dirs = {
+            "tests",
+            "test",
+            ".git",
+            ".agent",
+            "docs",
+            "__pycache__",
+            "sessions",
+            "prompts",
+        }
+        excluded_files = {"setup.py", "conftest.py"}
+
+        def _is_valid_adaptive_src(fp: Path) -> bool:
+            if not fp.is_file() or fp.suffix != ".py":
+                return False
+            try:
+                rel_parts = fp.relative_to(repo_root).parts
+            except ValueError:
+                rel_parts = fp.parts
+            if any(p.startswith(".") or p in excluded_dirs for p in rel_parts[:-1]):
+                return False
+            if (
+                fp.name in excluded_files
+                or fp.name.startswith("test_")
+                or fp.name.startswith("audit_")
+            ):
+                return False
+            return True
+
+        adaptive_files = sorted(f for f in repo_root.rglob("*.py") if _is_valid_adaptive_src(f))[
+            :100
+        ]
+        adaptive_entries: list[tuple[str, str]] = []
+        adaptive_tokens = 0
+        for cf in adaptive_files:
+            try:
+                raw_src = cf.read_text(encoding="utf-8", errors="ignore")
+                if cf.name == "__init__.py" and not raw_src.strip():
+                    continue
+                rel = cf.relative_to(repo_root).as_posix()
+                adaptive_entries.append((rel, raw_src.rstrip()))
+                adaptive_tokens += count_tokens(raw_src)
+            except Exception:
+                pass
+
+        should_hot_path = (
+            include_source
+            if include_source is not None
+            else (adaptive_tokens <= 4000 and 0 < len(adaptive_entries) <= 10)
+        )
+        if should_hot_path and adaptive_entries:
+            # Small-Repo Hot Path (<= 4000 source tokens): emit AGENTS.md + state.md + Zero-Read Workspace Bundle
+            # without duplicating the 6 reference manuals on Turn 1.
+            src_parts = []
+            agents_file = locate_pillar_file(repo_root, "AGENTS.md")
+            if agents_file and agents_file.is_file():
+                src_parts.append(
+                    f"# [WORKSPACE AGENTS.MD]\n{agents_file.read_text(encoding='utf-8', errors='ignore').strip()}"
+                )
+            if state_file and state_file.is_file():
+                src_parts.append(
+                    f"# [PILLAR 4: THE BLACKBOARD] Working Memory (`state.md`)\n```markdown\n{state_file.read_text(encoding='utf-8', errors='ignore').strip()}\n```"
+                )
+            src_parts.extend(
+                [
+                    "# [PRE-HYDRATED SOURCE FILES] Zero-Read Workspace Bundle",
+                    "The exact verbatim file contents from disk are pre-hydrated below (do not call `read_file` on these files; pass exact lines directly to `edit_file`).",
+                ]
+            )
+            for rel, raw_src in adaptive_entries:
+                src_parts.append(f"### `{rel}` (Full Verbatim Source)\n```python\n{raw_src}\n```")
+            full_payload = "\n\n".join(src_parts)
+            return full_payload, count_tokens(full_payload)
+        else:
+            # Large-Repo / Monorepo (> 4000 source tokens): escalate to Standard 7-Pillar Cartography + AST Skeletons
+            profile = "standard"
 
     header_banner = f"""<!-- ===================================================================== -->
 <!-- SDCS DETERMINISTIC CONTEXT COMPILER (SPEC-001 v1.5.0)                  -->
@@ -167,7 +248,7 @@ def compile_hydration_payload(
         if decisions_file and decisions_file.is_file():
             rejections = extract_active_rejections(
                 decisions_file.read_text(encoding="utf-8", errors="ignore"),
-                max_entries=8,
+                max_entries=16,
                 subsystem=subsystem,
             )
             sections.append(f"# [PILLAR 6: THE GRAVEYARD] Active Rejections\n\n{rejections}")
@@ -310,11 +391,11 @@ def compile_hydration_payload(
                 sub_meta = w_subs.get(subsystem) or {}
                 if isinstance(sub_meta, dict) and sub_meta.get("path"):
                     sub_target = repo_root / str(sub_meta["path"])
-            code_files = _collect_from_target(sub_target)[:15]
+            code_files = _collect_from_target(sub_target)[:100]
 
         # 2. Otherwise, if (repo_root / "src").is_dir(), scan repo_root / "src"
         if not code_files and not subsystem and (repo_root / "src").is_dir():
-            code_files = _collect_from_target(repo_root / "src")[:15]
+            code_files = _collect_from_target(repo_root / "src")[:100]
 
         # 3. Otherwise, if wiring.yaml declares subsystems.*.path, collect referenced files/dirs
         if not code_files and not subsystem and isinstance(w_subs, dict) and w_subs:
@@ -331,23 +412,19 @@ def compile_hydration_payload(
                     if resolved not in seen and _is_valid_source_file(cf):
                         seen.add(resolved)
                         code_files.append(cf)
-            code_files = code_files[:15]
+            code_files = code_files[:100]
 
         # 4. Otherwise, fall back to scanning non-test, non-hidden .py files under repo_root
         if not code_files and not subsystem:
-            code_files = sorted(f for f in repo_root.rglob("*.py") if _is_valid_source_file(f))[:15]
+            code_files = sorted(f for f in repo_root.rglob("*.py") if _is_valid_source_file(f))[
+                :100
+            ]
 
         if code_files:
             skel_parts = ["# [AST SKELETAL INTERFACES] Subsystem Type Signatures\n"]
             source_entries: list[tuple[str, str]] = []
             total_source_tokens = 0
             for cf in code_files:
-                try:
-                    rel = cf.relative_to(repo_root).as_posix()
-                    s = extract_file_skeleton(cf)
-                    skel_parts.append(f"### `{rel}`\n```python\n{s}\n```\n")
-                except Exception:
-                    pass
                 try:
                     raw_src = cf.read_text(encoding="utf-8", errors="ignore")
                     if cf.name == "__init__.py" and not raw_src.strip():
@@ -357,22 +434,33 @@ def compile_hydration_payload(
                     total_source_tokens += count_tokens(raw_src)
                 except Exception:
                     pass
-            if len(skel_parts) > 1:
-                sections.append("\n".join(skel_parts))
+                try:
+                    rel = cf.relative_to(repo_root).as_posix()
+                    s = extract_file_skeleton(cf)
+                    skel_parts.append(f"### `{rel}`\n```python\n{s}\n```\n")
+                except Exception:
+                    pass
 
             should_include_source = (
                 include_source
                 if include_source is not None
-                else (total_source_tokens <= 4000 and len(source_entries) > 0)
+                else (total_source_tokens <= 4000 and 0 < len(source_entries) <= 10)
             )
             if should_include_source and source_entries:
+                sections.append(
+                    "# [AST SKELETAL INTERFACES] Subsystem Type Signatures\n"
+                    "(Full verbatim source files are included directly below; AST skeletons omitted to prevent duplicate blocks and preserve exact disk formatting for `edit_file`.)"
+                )
                 src_parts = [
                     "# [PRE-HYDRATED SOURCE FILES] Zero-Read Implementation Bundle\n"
-                    "<!-- Exact current file contents from disk. DO NOT call `list_files` or `read_file` on these files; use `edit_file` or `write_file` directly on Turn 1! -->\n"
+                    "Pre-hydrated workspace context provided. The exact verbatim file contents from disk are shown below (do not call `read_file` on these files; pass exact lines directly to `edit_file`).\n"
+                    "When implementing new cross-module functionality, ensure new types and enums are imported at the top of target files.\n"
                 ]
                 for rel, raw_src in source_entries:
                     src_parts.append(f"### `{rel}`\n```python\n{raw_src}\n```\n")
                 sections.append("\n".join(src_parts))
+            elif len(skel_parts) > 1:
+                sections.append("\n".join(skel_parts))
 
     full_payload = "\n\n---\n\n".join(sections)
     total_tokens = count_tokens(full_payload)

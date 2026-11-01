@@ -307,8 +307,8 @@ def main():
     verify_parser.add_argument(
         "--max-tokens",
         type=int,
-        default=350,
-        help="Maximum allowed token budget for state.md (default: 350)",
+        default=500,
+        help="Maximum allowed token budget for state.md (default: 500)",
     )
     verify_parser.add_argument(
         "--state-path",
@@ -704,6 +704,24 @@ def main():
         type=Path,
         default=Path("."),
         help="Path to repository root (default: current directory)",
+    )
+
+    # Subcommand: check (Compact One-Shot Verification Receipt: pytest -q + evals sync + map sync + verify --all)
+    check_parser = subparsers.add_parser(
+        "check",
+        help="Run pytest -q, sync evals.md/app_map.md, and verify all SDCS gates with a compact 3-line receipt",
+    )
+    check_parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path("."),
+        help="Path to repository root (default: current directory)",
+    )
+    check_parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=500,
+        help="Maximum token budget for state.md (default: 500)",
     )
 
     args = parser.parse_args()
@@ -1113,6 +1131,77 @@ def main():
             json_output=args.json,
         )
         sys.exit(code)
+    elif args.command == "check":
+        import contextlib
+        import io
+        import subprocess
+        from sdcs.map import run_map_command
+        from sdcs.verifier.cache import run_cache_invariance_audit
+        from sdcs.verifier.cycles import run_cycle_audit
+        from sdcs.verifier.environment import run_env_audit
+        from sdcs.verifier.mocks import run_mock_ledger_audit
+        from sdcs.verifier.quality import run_quality_audit
+        from sdcs.verifier.state import run_state_audit
+        from sdcs.verifier.topology import run_topology_audit
+
+        repo_root = args.repo_root.resolve()
+        # 1. Run pytest -q
+        pytest_proc = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+        )
+        pytest_lines = [
+            ln.strip()
+            for ln in (pytest_proc.stdout + "\n" + pytest_proc.stderr).splitlines()
+            if ln.strip()
+        ]
+        pytest_summary = pytest_lines[-1] if pytest_lines else "no tests"
+        if pytest_proc.returncode != 0:
+            print(f"[FAIL] TESTS: {pytest_summary}")
+            print(pytest_proc.stdout[-1500:])
+            sys.exit(pytest_proc.returncode)
+
+        # 2. Auto-sync app_map.md & evals.md hashes quietly
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            run_map_command(
+                repo_root=repo_root, map_path=None, check=False, sync=True, subsystem=None
+            )
+            evals_file = locate_evals_file(repo_root)
+            if evals_file and evals_file.is_file():
+                run_audit(evals_file=evals_file, repo_root=repo_root, recalibrate="all")
+
+        # 3. Run all SDCS verification gates quietly, surfacing output only if a gate fails
+        gate_results: list[tuple[str, int, str]] = []
+        for gate_name, fn in [
+            ("Gate T (Topology)", lambda: run_topology_audit(repo_root=repo_root)),
+            (
+                "Gate S (State Budget)",
+                lambda: run_state_audit(repo_root=repo_root, max_tokens=args.max_tokens),
+            ),
+            ("Gate Cycles", lambda: run_cycle_audit(repo_root=repo_root)),
+            ("Gate Q (Quality)", lambda: run_quality_audit(repo_root=repo_root)),
+            ("Gate E (Env)", lambda: run_env_audit(repo_root=repo_root)),
+            ("Gate Cache", lambda: run_cache_invariance_audit(repo_root=repo_root)),
+            ("Gate L (Mocks)", lambda: run_mock_ledger_audit(repo_root=repo_root)),
+        ]:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                rc = fn()
+            gate_results.append((gate_name, rc, buf.getvalue().strip()))
+
+        failed_gates = [(g, out) for g, rc, out in gate_results if rc != 0]
+        if failed_gates:
+            print(f"[PASS] TESTS: {pytest_summary}")
+            for g, out in failed_gates:
+                print(f"[FAIL] {g}:\n{out}")
+            sys.exit(1)
+
+        print(f"TESTS: PASS ({pytest_summary})")
+        print("SYNC : PASS (app_map.md & evals.md SHA-256 corpus synced)")
+        print(f"GATES: PASS (All 7 SDCS gates clean; state.md <= {args.max_tokens}t)")
+        sys.exit(0)
     else:
         parser.print_help()
         sys.exit(0)

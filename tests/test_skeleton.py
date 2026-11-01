@@ -6,6 +6,7 @@ from sdcs.skeleton import (
     calculate_skeleton_metrics,
     extract_file_skeleton,
     extract_python_skeleton,
+    extract_symbol_window_slice,
     run_skeleton_command,
 )
 
@@ -88,3 +89,70 @@ def test_run_skeleton_command(tmp_path: Path, capsys):
     # Test directory run
     code_dir = run_skeleton_command(tmp_path)
     assert code_dir == 0
+
+
+def test_extract_symbol_window_slice_targeted():
+    source = """import os
+from dataclasses import dataclass
+
+@dataclass
+class Config:
+    timeout: int = 30
+
+def helper_one(x: int) -> int:
+    a = x * 2
+    b = a + 3
+    return b
+
+def target_worker(cfg: Config) -> int:
+    return cfg.timeout * 2
+"""
+    targets = {"target_worker"}
+    sliced, kept_count, collapsed_count = extract_symbol_window_slice(source, targets)
+
+    assert "import os" in sliced
+    assert "@dataclass" in sliced
+    assert "class Config:" in sliced
+    assert "timeout: int = 30" in sliced
+    assert "def helper_one(x: int) -> int:" in sliced
+    assert "..." in sliced
+    assert "a = x * 2" not in sliced
+    assert "def target_worker(cfg: Config) -> int:" in sliced
+    assert "return cfg.timeout * 2" in sliced
+    assert collapsed_count == 1
+    assert kept_count >= 1
+
+
+def test_extract_symbol_window_slice_class_methods():
+    source = """class Service:
+    def __init__(self, host: str):
+        self.host = host
+        self.active = True
+
+    def untouched_helper(self, val: int) -> int:
+        step1 = val + 1
+        step2 = step1 * 2
+        return step2
+
+    def execute_task(self, query: str) -> str:
+        return f"{self.host}:{query}"
+"""
+    targets = {"execute_task"}
+    sliced, kept_count, collapsed_count = extract_symbol_window_slice(source, targets)
+
+    assert "def __init__(self, host: str):" in sliced
+    assert "self.host = host" in sliced
+    assert "def untouched_helper(self, val: int) -> int:" in sliced
+    assert "step1 = val + 1" not in sliced
+    assert "..." in sliced
+    assert "def execute_task(self, query: str) -> str:" in sliced
+    assert 'return f"{self.host}:{query}"' in sliced
+    assert collapsed_count == 1
+
+
+def test_extract_symbol_window_slice_syntax_error():
+    broken = "def broken(:\n    pass\n"
+    sliced, kept_count, collapsed_count = extract_symbol_window_slice(broken, {"broken"})
+    assert sliced == broken
+    assert kept_count == 1
+    assert collapsed_count == 0
