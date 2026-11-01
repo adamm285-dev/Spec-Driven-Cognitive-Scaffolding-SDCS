@@ -89,12 +89,76 @@ def parse_state_sections(content: str) -> dict[str, str]:
     return sections
 
 
+def compute_elastic_state_budget(
+    content: str,
+    repo_root: Path | None = None,
+    base_budget: int = 350,
+    max_ceiling: int = 1200,
+) -> tuple[int, int, int, list[str]]:
+    """
+    Computes a dynamic, scope-elastic working memory token budget for `state.md`:
+      - Starts at `base_budget` (default 350 tokens) for standard 1-package tasks (`<= 4` active bullets).
+      - Automatically expands by +28 tokens for each active requirement bullet beyond 4,
+        and +25 tokens per detected package beyond 1 in multi-package monorepos (capped at `max_ceiling`).
+      - Enforces the core `state.md` discipline via per-bullet density auditing (`<= 55` tokens per bullet)
+        and completed-item (`- [x]`) compaction advisories.
+    Returns `(effective_budget, active_bullet_count, completed_bullet_count, density_advisories)`.
+    """
+    active_bullets = 0
+    completed_bullets = 0
+    density_advisories: list[str] = []
+
+    for raw_line in content.splitlines():
+        s = raw_line.strip()
+        if not (s.startswith("- ") or s.startswith("* ")):
+            continue
+        b_tokens = count_tokens(s)
+        if re.match(r"^[-*]\s*\[[xX]\]", s) or "[DONE]" in s or "[COMPLETED]" in s:
+            completed_bullets += 1
+        else:
+            active_bullets += 1
+            if b_tokens > 55:
+                preview = s[:60] + ("..." if len(s) > 60 else "")
+                density_advisories.append(
+                    f"Verbose bullet ({b_tokens}t > 55t density target): '{preview}'"
+                )
+
+    if completed_bullets > 5:
+        density_advisories.append(
+            f"{completed_bullets} completed (`- [x]`) bullets present; consider collapsing finished items into a 1-line summary."
+        )
+
+    pkg_count = 1
+    if repo_root and repo_root.is_dir():
+        try:
+            pkg_dirs = [
+                d
+                for d in repo_root.iterdir()
+                if d.is_dir()
+                and not d.name.startswith(".")
+                and d.name not in ("tests", "docs", "scripts", "build", "dist", "__pycache__")
+                and (d / "__init__.py").is_file()
+            ]
+            pkg_count = max(1, len(pkg_dirs))
+        except OSError:
+            pkg_count = 1
+
+    extra_bullet_allowance = max(0, active_bullets - 4) * 28
+    extra_pkg_allowance = max(0, pkg_count - 1) * 25
+    elastic_budget = min(
+        max_ceiling,
+        base_budget + extra_bullet_allowance + extra_pkg_allowance,
+    )
+    return elastic_budget, active_bullets, completed_bullets, density_advisories
+
+
 def audit_state_tokens(
     state_file: Path,
-    max_tokens: int = 500,
+    max_tokens: int = 350,
+    elastic: bool = True,
 ) -> tuple[bool, int, dict[str, int], list[str]]:
     """
-    Audits state.md against the specified token budget and verifies canonical schema.
+    Audits state.md against the specified (or scope-elastic) token budget and verifies canonical schema.
     Returns: (passed, total_tokens, section_tokens, warnings)
     """
     if not state_file.is_file():
@@ -102,6 +166,14 @@ def audit_state_tokens(
 
     content = state_file.read_text(encoding="utf-8", errors="ignore")
     total_tokens = count_tokens(content)
+
+    effective_max = max_tokens
+    density_notes: list[str] = []
+    if elastic:
+        elastic_max, _act, _comp, density_notes = compute_elastic_state_budget(
+            content, repo_root=state_file.parent, base_budget=max_tokens
+        )
+        effective_max = max(max_tokens, elastic_max)
 
     sections = parse_state_sections(content)
     section_tokens: dict[str, int] = {}
@@ -126,10 +198,13 @@ def audit_state_tokens(
             "Missing recommended canonical section: '## Immediate Next Action (Post-Compact)'"
         )
 
-    passed = total_tokens <= max_tokens
+    for note in density_notes:
+        warnings.append(f"[DENSITY ADVISORY] {note}")
+
+    passed = total_tokens <= effective_max
     if not passed:
         warnings.append(
-            f"Token budget exceeded: {total_tokens} tokens > {max_tokens} token threshold."
+            f"Token budget exceeded: {total_tokens} tokens > {effective_max} token threshold (base={max_tokens})."
         )
 
     return passed, total_tokens, section_tokens, warnings
@@ -138,15 +213,31 @@ def audit_state_tokens(
 def run_state_audit(
     repo_root: Path,
     state_path: str | Path | None = None,
-    max_tokens: int = 500,
+    max_tokens: int = 350,
+    elastic: bool = True,
 ) -> int:
     """CLI execution entrypoint for state working memory audit."""
     target_state = locate_state_file(repo_root, state_path)
 
+    effective_budget = max_tokens
+    active_b = 0
+    done_b = 0
+    if target_state and target_state.is_file() and elastic:
+        raw_txt = target_state.read_text(encoding="utf-8", errors="ignore")
+        elastic_b, active_b, done_b, _ = compute_elastic_state_budget(
+            raw_txt, repo_root=repo_root, base_budget=max_tokens
+        )
+        effective_budget = max(max_tokens, elastic_b)
+
     print("====================================================================")
     print(" SDCS :: Working Memory Token Budget Linter (SPEC-001 v1.4.0 Pillar 4)")
     print(f" Target State: {target_state}")
-    print(f" Token Budget: <= {max_tokens} tokens")
+    if effective_budget > max_tokens:
+        print(
+            f" Token Budget: <= {effective_budget} tokens (Elastic Scale from {max_tokens}t base; {active_b} active bullets, {done_b} done)"
+        )
+    else:
+        print(f" Token Budget: <= {effective_budget} tokens")
     print(f" Tokenizer:    {get_tokenizer_info()}")
     print("====================================================================\n")
 
@@ -155,10 +246,12 @@ def run_state_audit(
         return 1
 
     passed, total_tokens, section_tokens, warnings = audit_state_tokens(
-        target_state, max_tokens=max_tokens
+        target_state, max_tokens=max_tokens, elastic=elastic
     )
 
-    print(f"Total Working Memory Tokens: {total_tokens} / {max_tokens} ({get_tokenizer_info()})")
+    print(
+        f"Total Working Memory Tokens: {total_tokens} / {effective_budget} ({get_tokenizer_info()})"
+    )
     print("Section Breakdown:")
     for header, count in section_tokens.items():
         if header == "__preamble__":
@@ -168,7 +261,13 @@ def run_state_audit(
     print()
 
     for w in warnings:
-        prefix = "❌ [BUDGET EXCEEDED]" if "budget exceeded" in w.lower() else "⚠️ [SCHEMA WARNING]"
+        if "budget exceeded" in w.lower():
+            prefix = "❌ [BUDGET EXCEEDED]"
+        elif "density advisory" in w.lower():
+            prefix = "💡 [DENSITY ADVISORY]"
+            w = w.replace("[DENSITY ADVISORY] ", "")
+        else:
+            prefix = "⚠️ [SCHEMA WARNING]"
         print(f"{prefix} {w}")
 
     if passed:

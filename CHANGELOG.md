@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.8] - 2026-11-01: Dynamic Elastic State Regulation Equation
+
+### Added
+- **Scope-Elastic Token Regulation Equation (`compute_elastic_state_budget`, `src/sdcs/verifier/state.py`):** Replaces static 350/500-token working memory thresholds with a deterministic, scope-elastic equation:
+  - Baseline budget of 350 tokens for standard single-package tasks (`<= 4` active requirement bullets).
+  - Automatically scales by `+28` tokens for each active requirement bullet beyond 4.
+  - Automatically scales by `+25` tokens for each detected package beyond 1 in multi-package monorepos.
+  - Hard safety ceiling enforced at 1200 tokens.
+- **Per-Bullet Density & Compaction Advisories:** Emits `[DENSITY ADVISORY]` notifications when individual active bullets exceed 55 tokens, or when more than 5 completed (`- [x]`) bullets accumulate without compaction.
+- **Strict Mode CLI Flag (`--no-elastic`):** Added `--no-elastic` flag across `sdcs verify --state` and `sdcs check` subcommands to allow enforcing static fixed ceilings when required.
+- **Pre-Commit Hook Synchronization:** Updated `.githooks/pre-commit`, `sdcs_init.py`, and `src/sdcs/init.py` templates to evaluate Gate S through the dynamic elastic equation.
+
+---
+
 ## [1.9.7] - 2026-10-31: CacheForge Symbol Windowing, sdcs check & Scale-Adaptive Boot Protocol
 
 ### Added

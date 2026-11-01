@@ -121,8 +121,8 @@ def test_gate_c_blocks_constitutional_tampering(fresh_repo):
 
 def test_gate_s_blocks_working_memory_bloat(fresh_repo):
     """
-    Agent Cheat Attempt: Dump 500+ tokens of unstructured logs into state.md.
-    Kinetic Gate S: Pre-commit hook must block commit if > 350 tokens.
+    Agent Cheat Attempt: Dump 1500+ tokens of unstructured logs into state.md.
+    Kinetic Gate S: Pre-commit hook must block commit if exceeding elastic ceiling.
     """
     state_file = fresh_repo / "state.md"
     bloated_text = (
@@ -135,7 +135,7 @@ def test_gate_s_blocks_working_memory_bloat(fresh_repo):
         + "\n".join(
             [
                 f"- Step {i}: Conversation transcript dump with long detailed explanations that burn through context budget rapidly."
-                for i in range(30)
+                for i in range(80)
             ]
         )
         + """
@@ -144,7 +144,7 @@ def test_gate_s_blocks_working_memory_bloat(fresh_repo):
 - Continue working.
 """
     )
-    assert count_tokens(bloated_text) > 350
+    assert count_tokens(bloated_text) > 1200
 
     state_file.write_text(bloated_text, encoding="utf-8")
     run_git(fresh_repo, "add", "state.md")

@@ -149,21 +149,21 @@ if [ -n "$PYTHON_BIN" ] && [ "$SDCS_SKIP_AUTO_REPAIR" != "1" ]; then
     "$PYTHON_BIN" -m sdcs.cli repair --staged >/dev/null 2>&1 || true
 fi
 
-# Gate S: Working Memory Token Budget Gate (state.md <= 350 tokens)
+# Gate S: Working Memory Token Budget Gate (Dynamic Elastic Equation: Base 350 Tokens, Cap 1200 Tokens)
 # Enforces physical token ceiling on working memory to prevent context bloat
 if [ "$STATE_STAGED" = true ]; then
     if [ -z "$PYTHON_BIN" ]; then
         echo "⚠️ [SDCS Warning] No functional Python interpreter found to run Gate S token check."
     else
-        echo "[SDCS::GATE_S] Auditing state.md working memory token budget (<= 350 tokens)..."
+        echo "[SDCS::GATE_S] Auditing state.md working memory token budget (dynamic elastic equation, base <= 350 tokens)..."
         if ! "$PYTHON_BIN" -m sdcs.cli verify --state --max-tokens 350; then
             if [ "$SDCS_MODE" = "advisory" ]; then
                 echo "💡 [SDCS Advisory] state.md working memory budget exceeded, but running in advisory mode."
                 echo ""
             else
                 echo "🛑 [SDCS Gate Failure] Gate S: Working Memory Token Budget Exceeded!"
-                echo "   state.md exceeds the 350-token budget ceiling or has schema violations."
-                echo "   Prune state.md to <= 300 tokens before committing."
+                echo "   state.md exceeds the elastic budget ceiling or has schema violations."
+                echo "   Prune state.md before committing."
                 echo ""
                 ERRORS=$((ERRORS + 1))
             fi

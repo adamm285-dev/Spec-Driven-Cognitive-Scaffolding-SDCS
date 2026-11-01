@@ -359,7 +359,7 @@ if [ -z "$PYTHON_BIN" ]; then
   done
 fi
 
-# 2b. Working Memory Token Budget & Schema Gate (Gate S: state.md <= 500 tokens)
+# 2b. Working Memory Token Budget & Schema Gate (Gate S: Dynamic Elastic Equation, Base 350 Tokens)
 STATE_FILE=""
 if [ -f "state.md" ]; then
   STATE_FILE="state.md"
@@ -371,18 +371,18 @@ fi
 
 if [ -n "$STATE_FILE" ] && [ -n "$STATE_TOUCHED" ]; then
   if [ -n "$PYTHON_BIN" ]; then
-    if ! "$PYTHON_BIN" -m sdcs.cli verify --state --max-tokens 500; then
+    if ! "$PYTHON_BIN" -m sdcs.cli verify --state --max-tokens 350; then
       if [ "$SDCS_MODE" = "strict" ]; then
         echo "===================================================================="
         echo " [SDCS ERROR] GATE S: WORKING MEMORY TOKEN BUDGET EXCEEDED"
         echo "===================================================================="
-        echo "state.md exceeds the 500-token budget ceiling or has schema violations."
-        echo "Please prune state.md to <= 500 tokens before committing."
+        echo "state.md exceeds the dynamic elastic token budget ceiling or has schema violations."
+        echo "Please prune state.md before committing."
         echo "===================================================================="
         exit 1
       else
         echo "--------------------------------------------------------------------"
-        echo " [SDCS ADVISORY] Gate S: state.md exceeds 500 tokens or has schema warnings."
+        echo " [SDCS ADVISORY] Gate S: state.md exceeds dynamic elastic budget or has schema warnings."
         echo "--------------------------------------------------------------------"
       fi
     fi

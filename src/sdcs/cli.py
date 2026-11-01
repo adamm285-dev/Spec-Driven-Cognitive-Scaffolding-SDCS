@@ -307,8 +307,13 @@ def main():
     verify_parser.add_argument(
         "--max-tokens",
         type=int,
-        default=500,
-        help="Maximum allowed token budget for state.md (default: 500)",
+        default=350,
+        help="Maximum allowed base token budget for state.md (default: 350)",
+    )
+    verify_parser.add_argument(
+        "--no-elastic",
+        action="store_true",
+        help="Disable elastic budget calculation and enforce strict max-tokens",
     )
     verify_parser.add_argument(
         "--state-path",
@@ -720,8 +725,13 @@ def main():
     check_parser.add_argument(
         "--max-tokens",
         type=int,
-        default=500,
-        help="Maximum token budget for state.md (default: 500)",
+        default=350,
+        help="Maximum base token budget for state.md (default: 350)",
+    )
+    check_parser.add_argument(
+        "--no-elastic",
+        action="store_true",
+        help="Disable elastic budget calculation and enforce strict max-tokens",
     )
 
     args = parser.parse_args()
@@ -858,6 +868,7 @@ def main():
                 repo_root=repo_root,
                 state_path=args.state_path,
                 max_tokens=args.max_tokens,
+                elastic=not getattr(args, "no_elastic", False),
             )
             if state_code != 0:
                 exit_code = state_code
@@ -1178,7 +1189,11 @@ def main():
             ("Gate T (Topology)", lambda: run_topology_audit(repo_root=repo_root)),
             (
                 "Gate S (State Budget)",
-                lambda: run_state_audit(repo_root=repo_root, max_tokens=args.max_tokens),
+                lambda: run_state_audit(
+                    repo_root=repo_root,
+                    max_tokens=args.max_tokens,
+                    elastic=not getattr(args, "no_elastic", False),
+                ),
             ),
             ("Gate Cycles", lambda: run_cycle_audit(repo_root=repo_root)),
             ("Gate Q (Quality)", lambda: run_quality_audit(repo_root=repo_root)),
