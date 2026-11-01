@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.7] - 2026-10-31: CacheForge Symbol Windowing, sdcs check & Scale-Adaptive Boot Protocol
+
+### Added
+- **One-Shot Compact Verification Subcommand (sdcs check, src/sdcs/cli.py):** Runs pytest -q, auto-synchronizes pp_map.md cartography and evals.md SHA-256 fixture hashes quietly, audits all 7 kinetic gates (Topology, State Budget, Cycles, Quality, Env, Cache Invariance, and Mocks), and prints a deterministic 3-line receipt. Supports --repo-root, --max-tokens (default 500), and --skip-pytest.
+- **CacheForge AST Symbol-Window Slicer (extract_symbol_window_slice, src/sdcs/skeleton.py):** Parses AST to keep module-level imports, constants, @dataclass, Enum, and exception classes verbatim; keeps targeted and caller methods/functions byte-for-byte; and collapses untouched helpers (>= 2 lines) to a clean 1-line ... stub to preserve edit_file targeting while slashing KV-cache token consumption.
+- **Scale-Adaptive Context Compilation (sdcs hydrate --profile adaptive, src/sdcs/hydrate.py):** Emits # [PRE-HYDRATED SOURCE FILES] (Zero-Read Workspace Bundle) for small codebases (<= 4,000 tokens, <= 10 files) for immediate Turn-1 editing, or escalates to # [AST SKELETAL INTERFACES] and cartographic subsystem paging for larger codebases.
+- **Turn-1 Mid-Session Spec Lock (state.md <= 500 tokens):** Standardized rule commanding that when mid-session requirements arrive, the agent's very first tool call must be edit_file on state.md to lock exact parameter names, default values, formulas, return shapes, and ordering rules before editing code files.
+- **Symbol-Windowed Editing and Verification Protocol:** Updated TEMPLATE_AGENTS, AGENTS_MD, and CACHEFORGE_PROTOCOL_BLOCK across src/sdcs/init.py, sdcs_init.py, and root AGENTS.md.
+- **Gate S Default Token Budget Alignment:** Adjusted default ceiling from 300 to 500 tokens across sdcs verify --state and pre-commit hooks to support multi-module specification locking.
+
+---
+
 ## [1.9.1] - 2026-10-14: Gate L Undeclared Mock & Fake-Success AST Detector
 
 ### Added

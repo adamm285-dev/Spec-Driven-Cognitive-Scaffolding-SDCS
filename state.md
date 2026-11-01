@@ -2,15 +2,16 @@
 <!-- SPEC-001 Pillar 4 | Mutability: HIGH VOLATILITY | Budget: <= 300 Tokens -->
 
 ## Current Objective
-- [x] Update README.md with newly landed v1.9.7 features: sdcs check subcommand, AST symbol-window slicing (extract_symbol_window_slice), Scale-Adaptive Boot Context, Turn-1 Mid-Session Spec Lock (<= 500 tokens), and CacheForge Zero-Read bundle.
-- [x] Update docs/wiki/ pages across CLI-Command-Reference, Agent-Runbooks-&-SOPs, The-7-Cognitive-Pillars, Kinetic-Enforcement-Gates, Lossless-Compaction-Protocol, Architecture-&-Cybernetic-Ontology, Ontology-Lexicon-&-Glossary, and Home.
-- [x] Ensure 100% zero em-dashes across README.md and all wiki documentation files.
+- [x] Update release version to 1.9.7 across pyproject.toml, src/sdcs/__init__.py, .zenodo.json, and CHANGELOG.md.
+- [x] Author formal RELEASE_NOTES_v1.9.7.md and synchronize app_map.md cartography.
+- [x] Verify local PyPI packaging (wheel and sdist build passed via build and twine check).
+- [x] Stage, commit, tag v1.9.7, push, and publish GitHub Release to trigger automated PyPI publication workflow.
 
 ## Status & Gate Verification
+- Packaging: sdist and wheel built cleanly; twine check passed.
 - Gate Q: 248/248 tests passing via pytest.
 - Gate S: state.md verified within budget; canonical 3 headings preserved.
-- sdcs check: PASS (TESTS, SYNC, GATES all green).
-- Zero em-dashes verified across all updated documentation files.
+- Zero em-dashes verified across all release artifacts.
 
 ## Immediate Next Action
-- Stage, commit, and push documentation updates to origin/main.
+- Stage, commit, create git tag v1.9.7, push to origin, and publish GitHub release.
