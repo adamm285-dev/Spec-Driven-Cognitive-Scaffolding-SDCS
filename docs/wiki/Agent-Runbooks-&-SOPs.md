@@ -1,6 +1,6 @@
 # Agent Runbooks & Standard Operating Procedures (SOPs)
 
-This document specifies the operational runbooks governing autonomous coding agents operating within SDCS v1.9.7 repositories.
+This document specifies the operational runbooks governing autonomous coding agents operating within SDCS v1.9.8 repositories.
 
 ---
 
@@ -73,7 +73,7 @@ When product code must simulate external dependencies or fake real behavior:
 
 ## SOP-006: Scale-Adaptive Boot Hydration & Zero-Read Workspace Bundles
 
-In SDCS v1.9.7, repository scale governs Turn 1 boot hydration adaptively:
+In SDCS v1.9.8, repository scale governs Turn 1 boot hydration adaptively:
 1. **Small Repositories (<= 4,000 source tokens, <= 10 files):**
    - When `# [PRE-HYDRATED SOURCE FILES]` (or `# [CacheForge Zero-Read Workspace Bundle]`) is present in the prompt, the exact verbatim file contents are pre-hydrated directly from disk.
    - Do **NOT** call `list_files` or `read_file` on those files; start editing target `.py` files immediately on Turn 1 using `edit_file`.

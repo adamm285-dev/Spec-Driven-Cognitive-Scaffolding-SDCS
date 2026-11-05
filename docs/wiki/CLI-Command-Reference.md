@@ -1,6 +1,6 @@
 # CLI Command Reference (`sdcs`)
 
-The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.9.7).
+The `sdcs` command-line utility provides zero-dependency and standard-library tooling for initializing, auditing, verifying, and monitoring Spec-Driven Cognitive Scaffolding repositories (SPEC-001 v1.9.8).
 
 ---
 

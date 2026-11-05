@@ -1,6 +1,6 @@
 # The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth
 
-In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
+In **SDCS v1.9.8**, repository constraints are not suggestions: they are **physical laws of motion** enforced across spatial, cognitive, and epistemic defense tiers:
 
 | Defense Tier | Gate | Name | Trigger / Command | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
@@ -93,7 +93,7 @@ In **SDCS v1.9.7**, repository constraints are not suggestions: they are **physi
 
 ## 13. Unified One-Shot Verification Receipt: `sdcs check`
 
-To streamline shift close-out and CI/CD verification pipelines, SDCS v1.9.7 provides `sdcs check`, which runs `pytest -q`, quietly reconciles `app_map.md` and `evals.md` hashes, audits all 7 kinetic gates (Gates T, S, Cycles, Q, E, C-Cache, and L), and emits a compact 3-line receipt:
+To streamline shift close-out and CI/CD verification pipelines, SDCS v1.9.8 provides `sdcs check`, which runs `pytest -q`, quietly reconciles `app_map.md` and `evals.md` hashes, audits all 7 kinetic gates (Gates T, S, Cycles, Q, E, C-Cache, and L), and emits a compact 3-line receipt:
 
 ```text
 TESTS: PASS (248 passed in 38.98s)

@@ -127,6 +127,7 @@
 - `RELEASE_NOTES_v1.9.0.md`
 - `RELEASE_NOTES_v1.9.1.md`
 - `RELEASE_NOTES_v1.9.7.md`
+- `RELEASE_NOTES_v1.9.8.md`
 - `SECURITY.md`
 - `SPEC-001.md`
 - `audit_evals_corpus.py`

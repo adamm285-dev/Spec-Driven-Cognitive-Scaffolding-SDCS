@@ -18,7 +18,7 @@ pip install sdcs
 ---
 **Resources**
 * [GitHub Repo](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS)
-* [SPEC-001 v1.9.7](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/SPEC-001.md)
+* [SPEC-001 v1.9.8](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/blob/main/SPEC-001.md)
 * [PyPI Package (`pip install sdcs`)](https://pypi.org/project/sdcs/)
 * [Executive Video (YouTube)](https://youtu.be/Ap0bXGM0MbU)
 * [Audio Podcast (M4A)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/download/v1.4.1/Breaking_the_Turn_15_Wall_with_SDCS.m4a)

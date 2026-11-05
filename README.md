@@ -1,8 +1,8 @@
 # Spec-Driven Cognitive Scaffolding (SDCS) Framework
 
 [![PyPI](https://img.shields.io/pypi/v/sdcs.svg?style=flat-square&color=blue)](https://pypi.org/project/sdcs/)
-[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.9.7-0284c7.svg?style=flat-square)](SPEC-001.md)
-[![Version](https://img.shields.io/badge/release-v1.9.7-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.9.7)
+[![SPEC-001](https://img.shields.io/badge/SPEC--001-v1.9.8-0284c7.svg?style=flat-square)](SPEC-001.md)
+[![Version](https://img.shields.io/badge/release-v1.9.8-10b981.svg?style=flat-square)](https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS/releases/tag/v1.9.8)
 [![YouTube](https://img.shields.io/badge/YouTube-Watch%20Overview-FF0000.svg?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/Ap0bXGM0MbU)
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f59e0b.svg?style=flat-square)](LICENSE)
@@ -16,7 +16,7 @@
 
 ## Specifications & Empirical Telemetry
 
-- **[SPEC-001 (v1.9.7)](SPEC-001.md):** Single-Agent Cognitive Harness: The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
+- **[SPEC-001 (v1.9.8)](SPEC-001.md):** Single-Agent Cognitive Harness: The active specification governing repository-level working memory, negative decisions, and cryptographic test verification.
 - **[EVIDENCE.md (Empirical Benchmarks)](EVIDENCE.md):** Script-generated empirical telemetry, AST structural measurements, circuit breaker history replays, and gate accuracy audits on production codebases.
 
 ---
@@ -331,7 +331,7 @@ flowchart TD
 
 ### Scale-Adaptive Boot Context & Turn-1 Mid-Session Spec Lock
 
-In SDCS v1.9.7, repository scale governs Turn 1 boot hydration adaptively:
+In SDCS v1.9.8, repository scale governs Turn 1 boot hydration adaptively:
 
 1. **Scale-Adaptive Boot Profiles (`sdcs hydrate --profile adaptive`):**
    - **Small Repositories ($\le 4,000$ source tokens, $\le 10$ files):** Emits `AGENTS.md` + `state.md` + `# [PRE-HYDRATED SOURCE FILES]` (Zero-Read Workspace Bundle). The exact verbatim source contents from disk are pre-hydrated directly into Turn 1 prompt context, allowing agents to edit target `.py` files immediately on Turn 1 without burning tool calls on exploratory `list_files` or `read_file`.
@@ -381,7 +381,7 @@ When an agent initializes or restarts after a context reset, it MUST hydrate sta
 
 ![The Kinetic Enforcement Gates: Closed-Loop Defense-in-Depth](media/slides/slide_10.png)
 
-Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures: they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.9.7, the agent treats repository constraints as **physical laws of motion** enforced by **deterministic non-LLM oracles** (static AST visitors, cryptographic SHA-256 fixture audits, token-budget linters, and local formatters) executing in <50ms without model self-critique:
+Un-scaffolded agents often enter argumentative rationalization loops when encountering test failures: they rewrite tests, comment out assertions, or edit system rules. In SDCS v1.9.8, the agent treats repository constraints as **physical laws of motion** enforced by **deterministic non-LLM oracles** (static AST visitors, cryptographic SHA-256 fixture audits, token-budget linters, and local formatters) executing in <50ms without model self-critique:
 
 | Defense Tier | Gate | Name | Enforcement Trigger | Physical Failure Prevented |
 | :--- | :--- | :--- | :--- | :--- |
@@ -860,7 +860,7 @@ If you use SDCS or reference the SPEC-001 architecture in your research, agent f
   author = {Murphy, Adam},
   title = {Spec-Driven Cognitive Scaffolding (SPEC-001): A Deterministic Architecture for Autonomous Coding Agents},
   year = {2026},
-  version = {v1.9.7},
+  version = {v1.9.8},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/adamm285-dev/Spec-Driven-Cognitive-Scaffolding-SDCS}}
 }

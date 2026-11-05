@@ -1,6 +1,6 @@
 # Ontology Lexicon & Glossary
 
-A formal glossary of terms, paradigms, and failure modes formalized across **SPEC-001 v1.9.7**.
+A formal glossary of terms, paradigms, and failure modes formalized across **SPEC-001 v1.9.8**.
 
 ---
 
